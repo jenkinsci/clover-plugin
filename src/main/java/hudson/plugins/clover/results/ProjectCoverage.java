@@ -1,15 +1,19 @@
 package hudson.plugins.clover.results;
 
+import hudson.model.Build;
+
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
+
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Clover Coverage results for the entire project.
  * @author Stephen Connolly
  */
-public class ProjectCoverage extends AbstractFileAggregatedMetrics {
-
-    private int packages;
+public class ProjectCoverage extends AbstractPackageAggregatedMetrics {
 
     private List<PackageCoverage> packageCoverages = new ArrayList<PackageCoverage>();
 
@@ -19,6 +23,10 @@ public class ProjectCoverage extends AbstractFileAggregatedMetrics {
 
     public List<PackageCoverage> getPackageCoverages() {
         return packageCoverages;
+    }
+
+    public List<PackageCoverage> getChildren() {
+        return getPackageCoverages();
     }
 
     public PackageCoverage findPackageCoverage(String name) {
@@ -47,14 +55,19 @@ public class ProjectCoverage extends AbstractFileAggregatedMetrics {
         return null;
     }
 
-    /** {@inheritDoc} */
-    public int getPackages() {
-        return packages;
+    public PackageCoverage getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+        return findPackageCoverage(token);
     }
 
-    /** {@inheritDoc} */
-    public void setPackages(int packages) {
-        this.packages = packages;
+    public AbstractCloverMetrics getPreviousResult() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    @Override
+    public void setOwner(Build owner) {
+        super.setOwner(owner);    //To change body of overridden methods use File | Settings | File Templates.
+        for (PackageCoverage p: packageCoverages) {
+            p.setOwner(owner);
+        }
+    }
 }

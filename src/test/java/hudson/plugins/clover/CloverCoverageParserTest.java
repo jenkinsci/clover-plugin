@@ -6,6 +6,8 @@ import junit.framework.TestCase;
 import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.results.PackageCoverage;
 
+import java.io.File;
+
 /**
  * CloverCoverageParser Tester.
  *
@@ -26,17 +28,15 @@ public class CloverCoverageParserTest extends TestCase {
     }
 
     public void testFailureMode1() throws Exception {
-        CloverCoverageParser instance = new CloverCoverageParser();
         try {
-            instance.parse(null);
+            CloverCoverageParser.parse((File)null);
         } catch (NullPointerException e) {
             assertTrue("Expected exception thrown", true);
         }
     }
 
     public void testParse() throws Exception {
-        CloverCoverageParser instance = new CloverCoverageParser();
-        ProjectCoverage result = instance.parse(getClass().getResourceAsStream("clover.xml"));
+        ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover.xml"));
         assertNotNull(result);
         assertEquals(ProjectCoverage.class, result.getClass());
         assertEquals("Maven Cloverreport", result.getName());
@@ -48,8 +48,7 @@ public class CloverCoverageParserTest extends TestCase {
     }
 
     public void testParseMultiPackage() throws Exception {
-        CloverCoverageParser instance = new CloverCoverageParser();
-        ProjectCoverage result = instance.parse(getClass().getResourceAsStream("clover-two-packages.xml"));
+        ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover-two-packages.xml"));
         assertNotNull(result);
         assertEquals(ProjectCoverage.class, result.getClass());
         assertEquals("Maven Cloverreport", result.getName());

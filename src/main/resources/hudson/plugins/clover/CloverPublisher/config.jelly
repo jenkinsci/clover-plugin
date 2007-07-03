@@ -4,6 +4,6 @@
            Specify the path to the Clover XML report file, relative to
            &lt;a href='ws/'&gt;the workspace root&lt;/a&gt;
            ">
-    <f:textbox name="clover.name" value="${instance.name}"/>
+    <f:textbox name="clover.cloverReportDir" value="${instance.cloverReportDir}"/>
   </f:entry>
 </j:jelly>

@@ -1,5 +1,7 @@
 package hudson.plugins.clover.results;
 
+import hudson.model.Build;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -27,4 +29,15 @@ public class FileCoverage extends AbstractClassAggregatedMetrics {
     }
 
 
+    public AbstractCloverMetrics getPreviousResult() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setOwner(Build owner) {
+        super.setOwner(owner);    //To change body of overridden methods use File | Settings | File Templates.
+        for (ClassCoverage classCoverage : classCoverages) {
+            classCoverage.setOwner(owner);
+        }
+    }
 }

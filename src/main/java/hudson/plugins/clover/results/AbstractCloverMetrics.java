@@ -1,12 +1,37 @@
 package hudson.plugins.clover.results;
 
 import hudson.plugins.clover.Ratio;
+import hudson.model.Build;
+import hudson.util.ChartUtil;
+import hudson.util.DataSetBuilder;
+import hudson.util.ShiftedCategoryAxis;
+import hudson.util.ColorPalette;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.awt.*;
+
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Abstract Clover Coverage results.
  * @author Stephen Connolly
  */
 abstract public class AbstractCloverMetrics {
+
 
     private String name;
 
@@ -21,6 +46,7 @@ abstract public class AbstractCloverMetrics {
 
     private int elements;
     private int coveredelements;
+    public Build owner = null;
 
     public Ratio getMethodCoverage() {
         return Ratio.create(coveredmethods, methods);
@@ -198,5 +224,91 @@ abstract public class AbstractCloverMetrics {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Build getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Build owner) {
+        this.owner = owner;
+    }
+
+    abstract public AbstractCloverMetrics getPreviousResult();
+
+    /** Generates the graph that shows the coverage trend up to this report. */
+    public void doGraph(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        if (ChartUtil.awtProblem) {
+            // not available. send out error message
+            rsp.sendRedirect2(req.getContextPath() + "/images/headless.png");
+            return;
+        }
+
+        Build build = getOwner();
+        Calendar t = build.getTimestamp();
+
+        if (req.checkIfModified(t, rsp))
+            return; // up to date
+
+        DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dsb = new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
+
+        for (AbstractCloverMetrics a = this; a != null; a = a.getPreviousResult()) {
+            ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(a.getOwner());
+            dsb.add(a.getMethodCoverage().getPercentageFloat(), "method", label);
+            dsb.add(a.getConditionalCoverage().getPercentageFloat(), "conditional", label);
+            dsb.add(a.getStatementCoverage().getPercentageFloat(), "statement", label);
+        }
+
+        ChartUtil.generateGraph(req, rsp, createChart(dsb.build()), 400, 200);
+    }
+
+    private JFreeChart createChart(CategoryDataset dataset) {
+
+        final JFreeChart chart = ChartFactory.createLineChart(
+                null,                   // chart title
+                null,                   // unused
+                "%",                    // range axis label
+                dataset,                  // data
+                PlotOrientation.VERTICAL, // orientation
+                true,                     // include legend
+                true,                     // tooltips
+                false                     // urls
+        );
+
+        // NOW DO SOME OPTIONAL CUSTOMISATION OF THE CHART...
+
+        final LegendTitle legend = chart.getLegend();
+        legend.setPosition(RectangleEdge.RIGHT);
+
+        chart.setBackgroundPaint(Color.white);
+
+        final CategoryPlot plot = chart.getCategoryPlot();
+
+        // plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlinePaint(null);
+        plot.setRangeGridlinesVisible(true);
+        plot.setRangeGridlinePaint(Color.black);
+
+        CategoryAxis domainAxis = new ShiftedCategoryAxis(null);
+        plot.setDomainAxis(domainAxis);
+        domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+        domainAxis.setLowerMargin(0.0);
+        domainAxis.setUpperMargin(0.0);
+        domainAxis.setCategoryMargin(0.0);
+
+        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        rangeAxis.setUpperBound(100);
+        rangeAxis.setLowerBound(0);
+
+        final LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+        renderer.setStroke(new BasicStroke(4.0f));
+        ColorPalette.apply(renderer);
+
+        // crop extra space around the graph
+        plot.setInsets(new RectangleInsets(5.0, 0, 0, 5.0));
+
+        return chart;
     }
 }

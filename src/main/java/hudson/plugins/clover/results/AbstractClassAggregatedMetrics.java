@@ -1,10 +1,13 @@
 package hudson.plugins.clover.results;
 
+import hudson.model.Build;
+
 /**
  * Clover Coverage results for multiple classes.
  * @author Stephen Connolly
  */
 abstract public class AbstractClassAggregatedMetrics extends AbstractCloverMetrics {
+
     private int classes;
     private int loc;
     private int ncloc;
@@ -40,4 +43,6 @@ abstract public class AbstractClassAggregatedMetrics extends AbstractCloverMetri
     public void setNcloc(int ncloc) {
         this.ncloc = ncloc;
     }
+
+
 }
