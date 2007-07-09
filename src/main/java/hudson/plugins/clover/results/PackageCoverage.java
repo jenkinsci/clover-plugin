@@ -1,9 +1,15 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.Build;
+import hudson.model.Run;
+import hudson.plugins.clover.CloverBuildAction;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
+
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Clover Coverage results for a specific package.
@@ -12,6 +18,10 @@ import java.util.ArrayList;
 public class PackageCoverage extends AbstractFileAggregatedMetrics {
 
     private List<FileCoverage> fileCoverages = new ArrayList<FileCoverage>();
+
+    public List<FileCoverage> getChildren() {
+        return getFileCoverages();
+    }
 
     public boolean addFileCoverage(FileCoverage result) {
         return fileCoverages.add(result);
@@ -36,9 +46,28 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         return null;
     }
 
+    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+        boolean isPath = false;
+        for (FileCoverage i : fileCoverages) {
+            if (i.getName().equals(token)) return i;
+            if (i.getName().startsWith(token)) {
+                isPath = true;
+                break;
+            }
+        }
+        if (isPath) {
+            return new FilePathMapper(token + '/');
+        }
+        return null;
+    }
 
     public AbstractCloverMetrics getPreviousResult() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (owner == null) return null;
+        Run prevBuild = owner.getPreviousBuild();
+        if (prevBuild == null) return null;
+        CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
+        if (action == null) return null;
+        return action.findPackageCoverage(getName());
     }
 
     @Override
@@ -47,5 +76,30 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         for (FileCoverage fileCoverage : fileCoverages) {
             fileCoverage.setOwner(owner);
         }
+    }
+
+    public class FilePathMapper {
+        private final String pathSoFar;
+
+        public FilePathMapper(String pathSoFar) {
+            this.pathSoFar = pathSoFar;
+        }
+
+        public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+            final String testPath = pathSoFar + token;
+            boolean isPath = false;
+            for (FileCoverage i : fileCoverages) {
+                if (i.getName().equals(testPath)) return i;
+                if (i.getName().startsWith(testPath)) {
+                    isPath = true;
+                    break;
+                }
+            }
+            if (isPath) {
+                return new FilePathMapper(testPath + '/');
+            }
+            return null;
+        }
+
     }
 }

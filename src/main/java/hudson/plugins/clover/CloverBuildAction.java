@@ -21,6 +21,7 @@ import java.util.logging.Level;
  */
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy {
     public final Build owner;
+    private String buildBaseDir;
 
     private transient WeakReference<ProjectCoverage> report;
 
@@ -64,9 +65,15 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
-    CloverBuildAction(Build owner, ProjectCoverage r) {
+    CloverBuildAction(Build owner, String workspacePath, ProjectCoverage r) {
         this.owner = owner;
         this.report = new WeakReference<ProjectCoverage>(r);
+        this.buildBaseDir = workspacePath;
+        if (this.buildBaseDir == null) {
+            this.buildBaseDir = File.separator;
+        } else if (!this.buildBaseDir.endsWith(File.separator)) {
+            this.buildBaseDir += File.separator;
+        }
         r.setOwner(owner);
     }
 
@@ -81,7 +88,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         File reportFile = CloverPublisher.getCloverReport(owner);
         try {
 
-            ProjectCoverage r = CloverCoverageParser.parse(reportFile);;
+            ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);;
             r.setOwner(owner);
 
             report = new WeakReference<ProjectCoverage>(r);
@@ -198,7 +205,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(Build<?, ?> build, ProjectCoverage result) {
-        return new CloverBuildAction(build, result);
+    public static CloverBuildAction load(Build<?, ?> build, String workspacePath, ProjectCoverage result) {
+        return new CloverBuildAction(build, workspacePath, result);
     }
 }

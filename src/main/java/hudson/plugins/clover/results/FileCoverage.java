@@ -1,9 +1,15 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.Build;
+import hudson.model.Run;
+import hudson.plugins.clover.CloverBuildAction;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
+
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Clover Coverage results for a specific file.
@@ -12,6 +18,14 @@ import java.util.ArrayList;
 public class FileCoverage extends AbstractClassAggregatedMetrics {
 
     private List<ClassCoverage> classCoverages = new ArrayList<ClassCoverage>();
+
+    public List<ClassCoverage> getChildren() {
+        return getClassCoverages();
+    }
+
+    public ClassCoverage getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+        return findClassCoverage(token);
+    }
 
     public boolean addClassCoverage(ClassCoverage result) {
         return classCoverages.add(result);
@@ -28,9 +42,13 @@ public class FileCoverage extends AbstractClassAggregatedMetrics {
         return null;
     }
 
-
     public AbstractCloverMetrics getPreviousResult() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (owner == null) return null;
+        Run prevBuild = owner.getPreviousBuild();
+        if (prevBuild == null) return null;
+        CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
+        if (action == null) return null;
+        return action.findFileCoverage(getName());
     }
 
     @Override

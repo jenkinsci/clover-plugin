@@ -43,6 +43,8 @@ final public class Ratio implements Serializable {
      * Gets the percentage in float.
      */
     public float getPercentageFloat() {
+        if (Float.compare(denominator, numerator) == 0)
+            return 100; // fix the 0/0 case without being as big a hack!
         return 100*numerator/denominator;
     }
 

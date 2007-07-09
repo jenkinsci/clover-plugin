@@ -29,20 +29,30 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
             return "graph.gif";
         else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
             return "graph.gif";
+        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
+            return "graph.gif";
         else
             return null;
     }
 
     public String getDisplayName() {
         if (new File(CloverPublisher.getCloverReportDir(project), "index.html").exists())
-            return "Current Coverage Report";
+            return "Clover Coverage Report";
         else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
-            return "Current Coverage PDF";
+            return "Clover Coverage PDF";
+        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
+            return "Coverage Report";
         else
             return null;
     }
 
     public String getUrlName() {
+        if (new File(CloverPublisher.getCloverReportDir(project), "index.html").exists())
+            return "clover";
+        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
+            return "clover";
+        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
+            return "lastBuild/clover";
         return "clover";
     }
 

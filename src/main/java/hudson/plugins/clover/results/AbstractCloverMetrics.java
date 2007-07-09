@@ -303,7 +303,7 @@ abstract public class AbstractCloverMetrics {
         rangeAxis.setLowerBound(0);
 
         final LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
-        renderer.setStroke(new BasicStroke(4.0f));
+        renderer.setStroke(new BasicStroke(2.0f));
         ColorPalette.apply(renderer);
 
         // crop extra space around the graph

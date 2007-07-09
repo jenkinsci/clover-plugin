@@ -3,6 +3,7 @@ package hudson.plugins.clover;
 import hudson.Launcher;
 import hudson.FilePath;
 import hudson.Util;
+import hudson.remoting.VirtualChannel;
 import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.model.*;
 import hudson.tasks.Builder;
@@ -71,18 +72,35 @@ public class CloverPublisher extends Publisher {
             build.setResult(Result.FAILURE);
         }
 
+        String workspacePath = "";
+        try {
+            workspacePath = build.getParent().getWorkspace().act(new FilePath.FileCallable<String>() {
+                public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
+                    try {
+                        return file.getCanonicalPath();
+                    } catch (IOException e) {
+                        return file.getAbsolutePath();
+                    }
+                }
+            });
+        } catch (IOException e) {
+        }
+        if (!workspacePath.endsWith(File.separator)) {
+            workspacePath += File.separator;
+        }
+
         File cloverXmlReport = getCloverReport(build);
         if (cloverXmlReport.exists()) {
             listener.getLogger().println("Publishing Clover coverage results...");
             ProjectCoverage result = null;
             try {
-                result = CloverCoverageParser.parse(cloverXmlReport);
+                result = CloverCoverageParser.parse(cloverXmlReport, workspacePath);
             } catch (IOException e) {
                 Util.displayIOException(e, listener);
                 e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + target));
                 build.setResult(Result.FAILURE);
             }
-            final CloverBuildAction action = CloverBuildAction.load(build, result);
+            final CloverBuildAction action = CloverBuildAction.load(build, workspacePath, result);
 
             build.getActions().add(action);
 

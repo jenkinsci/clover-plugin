@@ -29,7 +29,7 @@ public class CloverCoverageParserTest extends TestCase {
 
     public void testFailureMode1() throws Exception {
         try {
-            CloverCoverageParser.parse((File)null);
+            CloverCoverageParser.parse(null, "");
         } catch (NullPointerException e) {
             assertTrue("Expected exception thrown", true);
         }
@@ -49,6 +49,7 @@ public class CloverCoverageParserTest extends TestCase {
 
     public void testParseMultiPackage() throws Exception {
         ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover-two-packages.xml"));
+        result = CloverCoverageParser.trimPaths(result, "C:\\local\\maven\\helpers\\hudson\\clover\\");
         assertNotNull(result);
         assertEquals(ProjectCoverage.class, result.getClass());
         assertEquals("Maven Cloverreport", result.getName());

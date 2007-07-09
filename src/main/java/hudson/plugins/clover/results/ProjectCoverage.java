@@ -1,6 +1,8 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.Build;
+import hudson.model.Run;
+import hudson.plugins.clover.CloverBuildAction;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class ProjectCoverage extends AbstractPackageAggregatedMetrics {
         for (PackageCoverage i : packageCoverages) {
             final String prefix = i.getName() + '.';
             if (name.startsWith(prefix)) {
-                ClassCoverage j = i.findClassCoverage(name.substring(prefix.length()));
+                ClassCoverage j = i.findClassCoverage(name);
                 if (j != null) return j;
             }
         }
@@ -60,7 +62,12 @@ public class ProjectCoverage extends AbstractPackageAggregatedMetrics {
     }
 
     public AbstractCloverMetrics getPreviousResult() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (owner == null) return null;
+        Run prevBuild = owner.getPreviousBuild();
+        if (prevBuild == null) return null;
+        CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
+        if (action == null) return null;
+        return action.getResult();
     }
 
     @Override
