@@ -5,7 +5,7 @@
     </div>
     <div>
         <a href="clover/">
-            <img src="lastBuild/clover/graph" />
+            <img src="clover/graph" />
         </a>
     </div>
 </j:jelly>

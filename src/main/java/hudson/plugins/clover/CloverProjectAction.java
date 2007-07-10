@@ -18,9 +18,9 @@ import javax.servlet.ServletException;
  */
 public class CloverProjectAction extends Actionable implements ProminentProjectAction {
 
-    private final AbstractItem project;
+    private final Project<?,?> project;
 
-    public CloverProjectAction(AbstractItem project) {
+    public CloverProjectAction(Project project) {
         this.project = project;
     }
 
@@ -54,6 +54,22 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
             return "lastBuild/clover";
         return "clover";
+    }
+
+    public CloverBuildAction getLastResult() {
+        for (Build<?, ?> b = project.getLastBuild(); b != null; b = b.getPreviousBuild()) {
+            if (b.getResult() == Result.FAILURE)
+                continue;
+            CloverBuildAction r = b.getAction(CloverBuildAction.class);
+            if (r != null)
+                return r;
+        }
+        return null;
+    }
+
+    public void doGraph(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        if (getLastResult() != null)
+            getLastResult().getResult().doGraph(req, rsp);
     }
 
     public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,

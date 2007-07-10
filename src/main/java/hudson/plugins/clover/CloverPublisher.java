@@ -5,13 +5,14 @@ import hudson.FilePath;
 import hudson.Util;
 import hudson.remoting.VirtualChannel;
 import hudson.plugins.clover.results.ProjectCoverage;
+import hudson.plugins.clover.targets.CoverageTarget;
+import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.model.*;
-import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.util.Set;
 
 /**
  * Clover {@link Publisher}.
@@ -22,6 +23,10 @@ public class CloverPublisher extends Publisher {
 
     private final String cloverReportDir;
 
+    private CoverageTarget healthyTarget;
+    private CoverageTarget unhealthyTarget;
+    private CoverageTarget failingTarget;
+
     /**
      *
      * @param name
@@ -29,10 +34,67 @@ public class CloverPublisher extends Publisher {
      */
     public CloverPublisher(String cloverReportDir) {
         this.cloverReportDir = cloverReportDir;
+        this.healthyTarget = new CoverageTarget();
+        this.unhealthyTarget = new CoverageTarget();
+        this.failingTarget = new CoverageTarget();
     }
 
     public String getCloverReportDir() {
         return cloverReportDir;
+    }
+
+    /**
+     * Getter for property 'healthyTarget'.
+     *
+     * @return Value for property 'healthyTarget'.
+     */
+    public CoverageTarget getHealthyTarget() {
+        return healthyTarget;
+    }
+
+    /**
+     * Setter for property 'healthyTarget'.
+     *
+     * @param healthyTarget Value to set for property 'healthyTarget'.
+     */
+    public void setHealthyTarget(CoverageTarget healthyTarget) {
+        this.healthyTarget = healthyTarget;
+    }
+
+    /**
+     * Getter for property 'unhealthyTarget'.
+     *
+     * @return Value for property 'unhealthyTarget'.
+     */
+    public CoverageTarget getUnhealthyTarget() {
+        return unhealthyTarget;
+    }
+
+    /**
+     * Setter for property 'unhealthyTarget'.
+     *
+     * @param unhealthyTarget Value to set for property 'unhealthyTarget'.
+     */
+    public void setUnhealthyTarget(CoverageTarget unhealthyTarget) {
+        this.unhealthyTarget = unhealthyTarget;
+    }
+
+    /**
+     * Getter for property 'failingTarget'.
+     *
+     * @return Value for property 'failingTarget'.
+     */
+    public CoverageTarget getFailingTarget() {
+        return failingTarget;
+    }
+
+    /**
+     * Setter for property 'failingTarget'.
+     *
+     * @param failingTarget Value to set for property 'failingTarget'.
+     */
+    public void setFailingTarget(CoverageTarget failingTarget) {
+        this.failingTarget = failingTarget;
     }
 
     /** Gets the directory where the Clover Report is stored for the given project. */
@@ -100,18 +162,27 @@ public class CloverPublisher extends Publisher {
                 e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + target));
                 build.setResult(Result.FAILURE);
             }
-            final CloverBuildAction action = CloverBuildAction.load(build, workspacePath, result);
+            final CloverBuildAction action = CloverBuildAction.load(build, workspacePath, result, healthyTarget, unhealthyTarget);
 
             build.getActions().add(action);
+            Set<CoverageMetric> failingMetrics = failingTarget.getFailingMetrics(result);
+            if (!failingMetrics.isEmpty()) {
+                listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
+                for (CoverageMetric metric : failingMetrics) {
+                    listener.getLogger().println("    " + metric);
+                }
+                listener.getLogger().println("Setting Build to unstable.");
+                build.setResult(Result.UNSTABLE);
+            }
 
         } else {
-            flagMissingXloverXml(listener, build);
+            flagMissingCloverXml(listener, build);
         }
 
         return true;
     }
 
-    private void flagMissingXloverXml(BuildListener listener, Build<?, ?> build) {
+    private void flagMissingCloverXml(BuildListener listener, Build<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/clover.xml'.  Did you generate " +
                 "the XML report for Clover?");
         build.setResult(Result.FAILURE);
@@ -157,7 +228,16 @@ public class CloverPublisher extends Publisher {
 
         /** Creates a new instance of {@link CloverPublisher} from a submitted form. */
         public CloverPublisher newInstance(StaplerRequest req) throws FormException {
-            return req.bindParameters(CloverPublisher.class, "clover.");
+            CloverPublisher instance = req.bindParameters(CloverPublisher.class, "clover.");
+            req.bindParameters(instance.failingTarget, "cloverFailingTarget.");
+            req.bindParameters(instance.healthyTarget, "cloverHealthyTarget.");
+            req.bindParameters(instance.unhealthyTarget, "cloverUnhealthyTarget.");
+            // start ugly hack
+            if (instance.healthyTarget.isEmpty()) {
+                instance.healthyTarget = new CoverageTarget(70, 80, 80);
+            }
+            // end ugly hack
+            return instance;
         }
     }
 }

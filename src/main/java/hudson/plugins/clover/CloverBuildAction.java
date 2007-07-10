@@ -1,17 +1,20 @@
 package hudson.plugins.clover;
 
-import org.kohsuke.stapler.StaplerProxy;
-import hudson.model.HealthReportingAction;
-import hudson.model.HealthReport;
 import hudson.model.Build;
+import hudson.model.HealthReport;
+import hudson.model.HealthReportingAction;
 import hudson.model.Result;
 import hudson.plugins.clover.results.*;
+import hudson.plugins.clover.targets.CoverageMetric;
+import hudson.plugins.clover.targets.CoverageTarget;
+import org.kohsuke.stapler.StaplerProxy;
 
-import java.lang.ref.WeakReference;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.lang.ref.WeakReference;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,11 +25,59 @@ import java.util.logging.Level;
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy {
     public final Build owner;
     private String buildBaseDir;
+    private CoverageTarget healthyTarget;
+    private CoverageTarget unhealthyTarget;
 
     private transient WeakReference<ProjectCoverage> report;
 
     public HealthReport getBuildHealth() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (healthyTarget == null || unhealthyTarget == null) return null;
+        ProjectCoverage projectCoverage = getResult();
+        Map<CoverageMetric, Integer> scores = healthyTarget.getRangeScores(unhealthyTarget, projectCoverage);
+        int minValue = 100;
+        CoverageMetric minKey = null;
+        for (Map.Entry<CoverageMetric, Integer> e : scores.entrySet()) {
+            if (e.getValue() < minValue) {
+                minKey = e.getKey();
+                minValue = e.getValue();
+            }
+        }
+        if (minKey == null) return null;
+
+        StringBuilder description = new StringBuilder("Clover Coverage: ");
+        switch (minKey) {
+            case METHOD:
+                description.append("Methods ");
+                description.append(projectCoverage.getMethodCoverage().getPercentage());
+                description.append("% (");
+                description.append(projectCoverage.getMethodCoverage().toString());
+                description.append(")");
+                break;
+            case CONDITIONAL:
+                description.append("Conditionals ");
+                description.append(projectCoverage.getConditionalCoverage().getPercentage());
+                description.append("% (");
+                description.append(projectCoverage.getConditionalCoverage().toString());
+                description.append(")");
+                break;
+            case STATEMENT:
+                description.append("Statements ");
+                description.append(projectCoverage.getStatementCoverage().getPercentage());
+                description.append("% (");
+                description.append(projectCoverage.getStatementCoverage().toString());
+                description.append(")");
+                break;
+            case ELEMENT:
+                description.append("Elements ");
+                description.append(projectCoverage.getElementCoverage().getPercentage());
+                description.append("% (");
+                description.append(projectCoverage.getElementCoverage().toString());
+                description.append(")");
+                break;
+            default:
+                return null;
+        }
+        return new HealthReport(minValue, description.toString());
     }
 
     public String getIconFileName() {
@@ -65,7 +116,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
-    CloverBuildAction(Build owner, String workspacePath, ProjectCoverage r) {
+    CloverBuildAction(Build owner, String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget,
+                      CoverageTarget unhealthyTarget) {
         this.owner = owner;
         this.report = new WeakReference<ProjectCoverage>(r);
         this.buildBaseDir = workspacePath;
@@ -74,6 +126,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         } else if (!this.buildBaseDir.endsWith(File.separator)) {
             this.buildBaseDir += File.separator;
         }
+        this.healthyTarget = healthyTarget;
+        this.unhealthyTarget = unhealthyTarget;
         r.setOwner(owner);
     }
 
@@ -88,7 +142,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         File reportFile = CloverPublisher.getCloverReport(owner);
         try {
 
-            ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);;
+            ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);
+            ;
             r.setOwner(owner);
 
             report = new WeakReference<ProjectCoverage>(r);
@@ -98,8 +153,6 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
             return null;
         }
     }
-
-
 
     // the following is ugly but I might need it
 
@@ -205,7 +258,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(Build<?, ?> build, String workspacePath, ProjectCoverage result) {
-        return new CloverBuildAction(build, workspacePath, result);
+    public static CloverBuildAction load(Build<?, ?> build, String workspacePath, ProjectCoverage result,
+                                         CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+        return new CloverBuildAction(build, workspacePath, result, healthyTarget, unhealthyTarget);
     }
 }
