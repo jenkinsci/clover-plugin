@@ -1,0 +1,9 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="Clover XML report"
+           description="
+           Specify the path to the Clover XML report file, relative to
+           &lt;a href='ws/'&gt;the workspace root&lt;/a&gt;
+           ">
+    <f:textbox name="clover.cloverReportDir" value="${instance.cloverReportDir}"/>
+  </f:entry>
+</j:jelly>
