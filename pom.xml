@@ -10,7 +10,7 @@
 
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4</version>
     <name>Hudson Clover plugin</name>
 
     <dependencies>
@@ -21,4 +21,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+  <scm>
+    <tag>clover-1_4</tag>
+  </scm>
 </project>
