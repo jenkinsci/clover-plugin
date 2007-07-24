@@ -9,11 +9,11 @@
     <f:entry title="Coverage Metric Targets"
              description="
              Configure health reporting thresholds. &lt;br/&gt;
-             For the &lt;img src='/images/16x16/health-80plus.gif' alt='100%'&gt;
+             For the &lt;img src='${rootURL}/images/16x16/health-80plus.gif' alt='100%'&gt;
              row, leave blank to use the default values (i.e. 70, 80, and 80 for methods, conditionals
              and statements respectively). &lt;br/&gt;
-             For the &lt;img src='/images/16x16/health-00to19.gif' alt='0%'&gt; and
-             &lt;img src='/images/16x16/yellow.gif' alt='0%'&gt; rows, leave blank to
+             For the &lt;img src='${rootURL}/images/16x16/health-00to19.gif' alt='0%'&gt; and
+             &lt;img src='${rootURL}/images/16x16/yellow.gif' alt='0%'&gt; rows, leave blank to
              use the default values (i.e. 0).
     ">
         <table>
@@ -28,7 +28,7 @@
             <tbody>
                 <tr>
                     <th>
-                        <img src="/images/16x16/health-80plus.gif" alt="100%"
+                        <img src="${rootURL}/images/16x16/health-80plus.gif" alt="100%"
                              title="Report health as 100% when coverage is greater than" />
                     </th>
                     <td>
@@ -46,7 +46,7 @@
                 </tr>
                 <tr>
                     <th>
-                        <img src="/images/16x16/health-00to19.gif" alt="0%"
+                        <img src="${rootURL}/images/16x16/health-00to19.gif" alt="0%"
                              title="Report health as 0% when coverage is less than" />
                     </th>
                     <td>
@@ -64,7 +64,7 @@
                 </tr>
                 <tr>
                     <th>
-                        <img src="/images/16x16/yellow.gif" alt="0%"
+                        <img src="${rootURL}/images/16x16/yellow.gif" alt="0%"
                              title="Mark the build as unstable when coverage is less than" />
                     </th>
                     <td>
