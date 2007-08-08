@@ -77,4 +77,8 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         new DirectoryBrowserSupport(this).serveFile(req, rsp,
                 new FilePath(CloverPublisher.getCloverReportDir(project)), "graph.gif", false);
     }
+
+    public String getSearchUrl() {
+        return getUrlName();
+    }
 }
