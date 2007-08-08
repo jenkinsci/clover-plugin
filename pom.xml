@@ -12,13 +12,4 @@
     <packaging>hpi</packaging>
     <version>1.5-SNAPSHOT</version>
     <name>Hudson Clover plugin</name>
-
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>
