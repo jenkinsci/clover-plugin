@@ -10,6 +10,10 @@
 
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.5</version>
     <name>Hudson Clover plugin</name>
+
+  <scm>
+    <tag>clover-1_5</tag>
+  </scm>
 </project>
