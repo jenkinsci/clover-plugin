@@ -10,13 +10,13 @@
                         <st:out value="${c.name}" />
                     </a>
                 </td>
-                <td data="${c.methodCoverage.percentageFloat}">${c.methodCoverage.percentageFloat}%
+                <td data="${c.methodCoverage.percentageFloat}">${c.methodCoverage.percentage}%
                     (${c.methodCoverage})
                 </td>
-                <td data="${c.conditionalCoverage.percentageFloat}">${c.conditionalCoverage.percentageFloat}%
+                <td data="${c.conditionalCoverage.percentageFloat}">${c.conditionalCoverage.percentage}%
                     (${c.conditionalCoverage})
                 </td>
-                <td data="${c.statementCoverage.percentageFloat}">${c.statementCoverage.percentageFloat}%
+                <td data="${c.statementCoverage.percentageFloat}">${c.statementCoverage.percentage}%
                     (${c.statementCoverage})
                 </td>
             </tr>

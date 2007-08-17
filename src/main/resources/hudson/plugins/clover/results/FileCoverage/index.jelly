@@ -4,7 +4,9 @@
         <st:include it="${it.owner}" page="sidepanel.jelly" />
         <l:main-panel>
             <h1>Clover Coverage Report</h1>
-            <clover:floatingTrendGraph />
+            <j:if test="${it.result.previousResult != null}">
+              <clover:floatingTrendGraph />
+            </j:if>
 
             <h2>Overall Coverage Summary</h2>
             <clover:summaryTable title="all classes" />
