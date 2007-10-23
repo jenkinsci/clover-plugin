@@ -1,15 +1,13 @@
 package hudson.plugins.clover;
 
-import hudson.model.*;
 import hudson.FilePath;
-
-import java.io.File;
-import java.io.IOException;
-
+import hudson.model.*;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Project level action.
@@ -18,7 +16,7 @@ import javax.servlet.ServletException;
  */
 public class CloverProjectAction extends Actionable implements ProminentProjectAction {
 
-    private final Project<?,?> project;
+    private final Project<?, ?> project;
 
     public CloverProjectAction(Project project) {
         this.project = project;
@@ -52,7 +50,7 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
             return "clover";
         else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
-            return "lastBuild/clover";
+            return "clover";
         return "clover";
     }
 
