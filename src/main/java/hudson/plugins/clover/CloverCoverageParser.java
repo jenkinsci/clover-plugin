@@ -5,6 +5,7 @@ import hudson.plugins.clover.results.FileCoverage;
 import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.Util;
+import hudson.util.IOException2;
 import hudson.model.Result;
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
@@ -85,7 +86,7 @@ public class CloverCoverageParser {
         try {
             return (ProjectCoverage) digester.parse(in);
         } catch (SAXException e) {
-            throw new IOException("Cannot parse coverage results", e);
+            throw new IOException2("Cannot parse coverage results", e);
         }
     }
 }
