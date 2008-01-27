@@ -10,7 +10,11 @@
 
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6</version>
     <name>Hudson Clover plugin</name>
     <url>http://hudson.gotdns.com/wiki/display/HUDSON/Clover+Plugin</url>
+
+  <scm>
+    <tag>clover-1_6</tag>
+  </scm>
 </project>
