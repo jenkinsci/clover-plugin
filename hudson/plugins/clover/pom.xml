@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jvnet.hudson.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>1.176</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>clover</artifactId>
+    <packaging>hpi</packaging>
+    <version>1.6</version>
+    <name>Hudson Clover plugin</name>
+    <url>http://hudson.gotdns.com/wiki/display/HUDSON/Clover+Plugin</url>
+
+  <scm>
+    <tag>clover-1_6</tag>
+  </scm>
+</project>

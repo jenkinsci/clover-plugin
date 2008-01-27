@@ -1,0 +1,25 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+         xmlns:clover="/hudson/plugins/clover/tags">
+    <table class="sortable" border="1">
+        <clover:captionLine />
+        <j:forEach var="c" items="${it.children}">
+            <tr>
+                <td bgcolor="${h.ifThenElse(c.failed,'red',null)}">
+                    <a href="${h.ifThenElse(nolink!=null,null,c.name+'/')}">
+                        <st:out value="${c.name}" />
+                    </a>
+                </td>
+                <td data="${c.methodCoverage.percentageFloat}">${c.methodCoverage.percentage}%
+                    (${c.methodCoverage})
+                </td>
+                <td data="${c.conditionalCoverage.percentageFloat}">${c.conditionalCoverage.percentage}%
+                    (${c.conditionalCoverage})
+                </td>
+                <td data="${c.statementCoverage.percentageFloat}">${c.statementCoverage.percentage}%
+                    (${c.statementCoverage})
+                </td>
+            </tr>
+        </j:forEach>
+    </table>
+</j:jelly>

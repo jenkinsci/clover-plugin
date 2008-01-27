@@ -1,0 +1,19 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+         xmlns:clover="/hudson/plugins/clover/tags">
+    <table border="1">
+        <clover:captionLine />
+        <tr>
+            <td>${title}</td>
+            <td data="${it.methodCoverage.percentageFloat}">${it.methodCoverage.percentage}%
+                (${it.methodCoverage})
+            </td>
+            <td data="${it.conditionalCoverage.percentageFloat}">${it.conditionalCoverage.percentage}%
+                (${it.conditionalCoverage})
+            </td>
+            <td data="${it.statementCoverage.percentageFloat}">${it.statementCoverage.percentage}%
+                (${it.statementCoverage})
+            </td>
+        </tr>
+    </table>
+</j:jelly>
