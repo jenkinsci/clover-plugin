@@ -1,10 +1,14 @@
 package hudson.plugins.clover;
 
-import hudson.model.Build;
+import hudson.model.AbstractBuild;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
 import hudson.model.Result;
-import hudson.plugins.clover.results.*;
+import hudson.plugins.clover.results.AbstractPackageAggregatedMetrics;
+import hudson.plugins.clover.results.ClassCoverage;
+import hudson.plugins.clover.results.FileCoverage;
+import hudson.plugins.clover.results.PackageCoverage;
+import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.plugins.clover.targets.CoverageTarget;
 import org.kohsuke.stapler.StaplerProxy;
@@ -16,6 +20,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.kohsuke.stapler.StaplerProxy;
+
 /**
  * Created by IntelliJ IDEA.
  *
@@ -23,7 +29,7 @@ import java.util.logging.Logger;
  * @since 03-Jul-2007 08:43:08
  */
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy {
-    public final Build owner;
+    public final AbstractBuild owner;
     private String buildBaseDir;
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -102,8 +108,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     /** Gets the previous {@link CloverBuildAction} of the given build. */
     /*package*/
-    static CloverBuildAction getPreviousResult(Build start) {
-        Build<?, ?> b = start;
+    static CloverBuildAction getPreviousResult(AbstractBuild start) {
+        AbstractBuild<?, ?> b = start;
         while (true) {
             b = b.getPreviousBuild();
             if (b == null)
@@ -116,7 +122,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
-    CloverBuildAction(Build owner, String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget,
+    CloverBuildAction(AbstractBuild owner, String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget,
                       CoverageTarget unhealthyTarget) {
         this.owner = owner;
         this.report = new WeakReference<ProjectCoverage>(r);
@@ -258,7 +264,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(Build<?, ?> build, String workspacePath, ProjectCoverage result,
+    public static CloverBuildAction load(AbstractBuild<?, ?> build, String workspacePath, ProjectCoverage result,
                                          CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         return new CloverBuildAction(build, workspacePath, result, healthyTarget, unhealthyTarget);
     }

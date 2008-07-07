@@ -1,12 +1,12 @@
 package hudson.plugins.clover.results;
 
-import hudson.model.Build;
+import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -70,8 +70,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         return action.findPackageCoverage(getName());
     }
 
-    @Override
-    public void setOwner(Build owner) {
+    public void setOwner(AbstractBuild owner) {
         super.setOwner(owner);    //To change body of overridden methods use File | Settings | File Templates.
         for (FileCoverage fileCoverage : fileCoverages) {
             fileCoverage.setOwner(owner);
