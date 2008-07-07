@@ -1,30 +1,32 @@
 package hudson.plugins.clover.results;
 
-import hudson.plugins.clover.Ratio;
+import hudson.model.AbstractBuild;
 import hudson.model.Build;
+import hudson.plugins.clover.Ratio;
 import hudson.util.ChartUtil;
+import hudson.util.ColorPalette;
 import hudson.util.DataSetBuilder;
 import hudson.util.ShiftedCategoryAxis;
-import hudson.util.ColorPalette;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Calendar;
-import java.awt.*;
 
-import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.title.LegendTitle;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Abstract Clover Coverage results.
@@ -46,7 +48,7 @@ abstract public class AbstractCloverMetrics {
 
     private int elements;
     private int coveredelements;
-    public Build owner = null;
+    public AbstractBuild owner = null;
 
     public Ratio getMethodCoverage() {
         return Ratio.create(coveredmethods, methods);
@@ -226,11 +228,11 @@ abstract public class AbstractCloverMetrics {
         this.name = name;
     }
 
-    public Build getOwner() {
+    public AbstractBuild getOwner() {
         return owner;
     }
 
-    public void setOwner(Build owner) {
+    public void setOwner(AbstractBuild owner) {
         this.owner = owner;
     }
 
@@ -244,7 +246,7 @@ abstract public class AbstractCloverMetrics {
             return;
         }
 
-        Build build = getOwner();
+        AbstractBuild build = getOwner();
         Calendar t = build.getTimestamp();
 
         if (req.checkIfModified(t, rsp))

@@ -4,13 +4,19 @@
     <parent>
         <groupId>org.jvnet.hudson.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.232</version>
+        <version>1.229</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.7</version>
     <name>Hudson Clover plugin</name>
     <url>http://hudson.gotdns.com/wiki/display/HUDSON/Clover+Plugin</url>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/clover-1.7</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/clover-1.7</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/clover/tags/clover-1.7</url>
+  </scm>
 </project>

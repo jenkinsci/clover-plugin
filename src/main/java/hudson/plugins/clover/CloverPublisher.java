@@ -104,12 +104,12 @@ public class CloverPublisher extends Publisher {
 
     /** Gets the directory where the Clover Report is stored for the given project. */
     /*package*/
-    static File getCloverReport(Build build) {
+    static File getCloverReport(AbstractBuild<?, ?> build) {
         return new File(build.getRootDir(), "clover.xml");
     }
 
 
-    public boolean perform(Build<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
         listener.getLogger().println("Publishing Clover coverage report...");
         FilePath coverageReport = build.getParent().getWorkspace().child(cloverReportDir);
 
@@ -182,7 +182,7 @@ public class CloverPublisher extends Publisher {
         return true;
     }
 
-    private void flagMissingCloverXml(BuildListener listener, Build<?, ?> build) {
+    private void flagMissingCloverXml(BuildListener listener, AbstractBuild<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/clover.xml'.  Did you generate " +
                 "the XML report for Clover?");
         build.setResult(Result.FAILURE);
