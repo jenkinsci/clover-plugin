@@ -3,7 +3,7 @@
          xmlns:f="/lib/form" xmlns:i="jelly:fmt">
     <t:summary icon="graph.gif">
         Clover: method coverage ${it.methodCoverage},
-        monditional coverage ${it.conditionalCoverage},
+        conditional coverage ${it.conditionalCoverage},
         statement coverage ${it.statementCoverage}.
     </t:summary>
 </j:jelly>
