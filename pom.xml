@@ -12,5 +12,5 @@
     <packaging>hpi</packaging>
     <version>1.8-SNAPSHOT</version>
     <name>Hudson Clover plugin</name>
-    <url>http://hudson.gotdns.com/wiki/display/HUDSON/Clover+Plugin</url>
+    <url>http://wiki.hudson-ci.org/display/HUDSON/Clover+Plugin</url>
 </project>
