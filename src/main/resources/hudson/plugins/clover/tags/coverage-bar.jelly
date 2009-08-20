@@ -1,0 +1,30 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+         xmlns:clover="/hudson/plugins/clover/tags">
+
+<div>
+
+    <style type="text/css">
+        <!-- Just a dash of the Clover Secret Sauce ;) -->
+        .barEmpty { FONT-SIZE: 2px; BACKGROUND: #c0c0c0; BORDER: #9c9c9c 1px solid; HEIGHT: 12px; WIDTH: 100%; }
+        .barNegative { FONT-SIZE: 2px; BACKGROUND: #DF0000; BORDER: #9c9c9c 1px solid; TEXT-ALIGN: left; HEIGHT: 12px; WIDTH: 100%; }
+        .barPositive { FONT-SIZE: 2px; BACKGROUND: #00DF00; HEIGHT: 12}
+    </style>
+
+    <div style="width: 100px; font-size:0px;"></div>
+
+
+    <j:if test="${provider.hasData eq 'false'}">
+        <div title="Empty" class="barEmpty" style="min-width: 100px;"></div>
+    </j:if>
+
+    <j:if test="${provider.hasData eq 'true'}">
+
+        <div title="${provider.pcUncovered} Not Covered" style="min-width: 100px;" class="barNegative ">
+            <div title="${provider.pcCovered} Covered" class="barPositive" style="width: ${provider.pcWidth}"></div>
+        </div>
+    </j:if>
+
+</div>
+
+</j:jelly>

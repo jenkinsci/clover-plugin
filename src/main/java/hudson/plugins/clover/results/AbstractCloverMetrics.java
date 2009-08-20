@@ -1,7 +1,6 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.AbstractBuild;
-import hudson.model.Build;
 import hudson.plugins.clover.Ratio;
 import hudson.util.ChartUtil;
 import hudson.util.ColorPalette;
@@ -254,11 +253,11 @@ abstract public class AbstractCloverMetrics {
 
         DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dsb = new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
 
-        for (AbstractCloverMetrics a = this; a != null; a = a.getPreviousResult()) {
-            ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(a.getOwner());
-            dsb.add(a.getMethodCoverage().getPercentageFloat(), "method", label);
-            dsb.add(a.getConditionalCoverage().getPercentageFloat(), "conditional", label);
-            dsb.add(a.getStatementCoverage().getPercentageFloat(), "statement", label);
+        for (AbstractCloverMetrics metrics = this; metrics != null; metrics = metrics.getPreviousResult()) {
+            ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(metrics.getOwner());
+            dsb.add(metrics.getMethodCoverage().getPercentageFloat(), "method", label);
+            dsb.add(metrics.getConditionalCoverage().getPercentageFloat(), "conditional", label);
+            dsb.add(metrics.getStatementCoverage().getPercentageFloat(), "statement", label);
         }
 
         ChartUtil.generateGraph(req, rsp, createChart(dsb.build()), 400, 200);

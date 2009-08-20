@@ -13,6 +13,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.*;
 import java.util.Set;
+import java.util.List;
 
 /**
  * Clover {@link Publisher}.
@@ -28,8 +29,7 @@ public class CloverPublisher extends Publisher {
     private CoverageTarget failingTarget;
 
     /**
-     *
-     * @param name
+     * @param cloverReportDir
      * @stapler-constructor
      */
     public CloverPublisher(String cloverReportDir) {
@@ -97,43 +97,64 @@ public class CloverPublisher extends Publisher {
         this.failingTarget = failingTarget;
     }
 
-    /** Gets the directory where the Clover Report is stored for the given project. */
-    /*package*/ static File getCloverReportDir(AbstractItem project) {
-        return new File(project.getRootDir(), "clover");
-    }
-
-    /** Gets the directory where the Clover Report is stored for the given project. */
+    /**
+     * Gets the directory where the Clover Report is stored for the given project.
+     */
     /*package*/
-    static File getCloverReport(AbstractBuild<?, ?> build) {
+    static File getCloverXmlReport(AbstractBuild<?, ?> build) {
         return new File(build.getRootDir(), "clover.xml");
     }
 
 
-    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
-        listener.getLogger().println("Publishing Clover coverage report...");
-        FilePath coverageReport = build.getParent().getWorkspace().child(cloverReportDir);
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
 
-        FilePath target = new FilePath(getCloverReportDir(build.getParent()));
-        final File buildCloverDir = build.getRootDir();
-        FilePath buildTarget = new FilePath(buildCloverDir);
 
+        final File buildRootDir = build.getRootDir(); // should this top level?
+        final FilePath buildTarget = new FilePath(buildRootDir);
+        final FilePath workspace = build.getParent().getWorkspace();
+        FilePath coverageReportDir = workspace.child(cloverReportDir);
         try {
+            listener.getLogger().println("Publishing Clover coverage report...");
+
+            // search one deep for the report dir, if it doesn't exist. 
+            if (!coverageReportDir.exists()) {
+                coverageReportDir = findOneDirDeep(workspace, cloverReportDir);
+            }
+            
             // if the build has failed, then there's not
             // much point in reporting an error
-            if (build.getResult().isWorseOrEqualTo(Result.FAILURE) && !coverageReport.exists())
+            final boolean buildFailure = build.getResult().isWorseOrEqualTo(Result.FAILURE);
+            final boolean missingReport = !coverageReportDir.exists();
+            
+            if (buildFailure && missingReport) {
+                listener.getLogger().println("No Clover report will be published due to a " + (buildFailure ? "Build Failure" : "missing report"));
                 return true;
+            }
 
-            // Copy the code
-            coverageReport.copyRecursiveTo("**/*", target);
-            // Copy the xml report
+            final boolean htmlExists = copyHtmlReport(coverageReportDir, buildTarget, listener);
+            final boolean xmlExists = copyXmlReport(coverageReportDir, buildTarget, listener);
 
-            coverageReport.copyRecursiveTo("clover.xml", buildTarget);
+            if (htmlExists) { 
+                // only add the HTML build action, if the HTML report is available
+                build.getActions().add(new CloverHtmlBuildAction(buildTarget));
+            }
+            processCloverXml(build, listener, coverageReportDir, buildTarget);
+
         } catch (IOException e) {
             Util.displayIOException(e, listener);
-            e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + target));
+            e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReportDir + " to " + buildTarget));
             build.setResult(Result.FAILURE);
         }
 
+
+        return true;
+    }
+
+    /**
+     * Process the clover.xml from the build directory. The clover.xml must have been already copied to the build dir.
+     * 
+     */
+    private void processCloverXml(AbstractBuild<?, ?> build, BuildListener listener, FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
         String workspacePath = "";
         try {
             workspacePath = build.getParent().getWorkspace().act(new FilePath.FileCallable<String>() {
@@ -151,7 +172,7 @@ public class CloverPublisher extends Publisher {
             workspacePath += File.separator;
         }
 
-        File cloverXmlReport = getCloverReport(build);
+        final File cloverXmlReport = getCloverXmlReport(build);
         if (cloverXmlReport.exists()) {
             listener.getLogger().println("Publishing Clover coverage results...");
             ProjectCoverage result = null;
@@ -159,7 +180,7 @@ public class CloverPublisher extends Publisher {
                 result = CloverCoverageParser.parse(cloverXmlReport, workspacePath);
             } catch (IOException e) {
                 Util.displayIOException(e, listener);
-                e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + target));
+                e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + buildTarget));
                 build.setResult(Result.FAILURE);
             }
             final CloverBuildAction action = CloverBuildAction.load(build, workspacePath, result, healthyTarget, unhealthyTarget);
@@ -178,17 +199,69 @@ public class CloverPublisher extends Publisher {
         } else {
             flagMissingCloverXml(listener, build);
         }
+    }
 
-        return true;
+    private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener) throws IOException, InterruptedException {
+        // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
+        // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
+        final FilePath cloverXmlPath = findOneDirDeep(coverageReport, "clover.xml");
+        if (cloverXmlPath.exists()) {
+            cloverXmlPath.copyTo(buildTarget.child("clover.xml"));
+            listener.getLogger().println("Published clover Xml report.");
+            return true;
+        } else {
+            listener.getLogger().println("Clover xml file does not exist at: " + cloverXmlPath);
+            return false;
+        }
+    }
+
+    private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener) throws IOException, InterruptedException {
+        // Copy the HTML coverage report
+        final FilePath htmlIndexHtmlPath = findOneDirDeep(coverageReport, "index.html");
+        if (htmlIndexHtmlPath.exists()) {
+            final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
+            htmlDirPath.copyRecursiveTo("**/*", buildTarget);
+            listener.getLogger().println("Published Clover HTML report.");
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Searches the current directory and its immediate children directories for filename.
+     * The first occurence is returned.
+     * @param startDir the dir to start searching in
+     * @param filename the filename to search for
+     * @return the path of filename
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private FilePath findOneDirDeep(final FilePath startDir, final String filename) throws IOException, InterruptedException {
+
+        FilePath dirContainingFile = startDir;
+        if (!dirContainingFile.child(filename).exists()) {
+            // use the first directory with filename in it
+            final List<FilePath> dirs = dirContainingFile.listDirectories();
+            if (dirs != null) {
+                for (FilePath dir : dirs) {
+                    if (dir.child(filename).exists()) {
+                        dirContainingFile = dir;
+                        break;
+                    }
+                }
+            }
+        }
+        return dirContainingFile.child(filename);
     }
 
     private void flagMissingCloverXml(BuildListener listener, AbstractBuild<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/clover.xml'.  Did you generate " +
                 "the XML report for Clover?");
-        build.setResult(Result.FAILURE);
     }
 
 
+    @Override
     public Action getProjectAction(Project project) {
         return new CloverProjectAction(project);
     }
@@ -198,7 +271,9 @@ public class CloverPublisher extends Publisher {
         return DESCRIPTOR;
     }
 
-    /** Descriptor should be singleton. */
+    /**
+     * Descriptor should be singleton.
+     */
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     /**
@@ -214,7 +289,9 @@ public class CloverPublisher extends Publisher {
             super(CloverPublisher.class);
         }
 
-        /** This human readable name is used in the configuration screen. */
+        /**
+         * This human readable name is used in the configuration screen.
+         */
         public String getDisplayName() {
             return "Publish Clover Coverage Report";
         }
@@ -226,7 +303,9 @@ public class CloverPublisher extends Publisher {
             return super.configure(req);    //To change body of overridden methods use File | Settings | File Templates.
         }
 
-        /** Creates a new instance of {@link CloverPublisher} from a submitted form. */
+        /**
+         * Creates a new instance of {@link CloverPublisher} from a submitted form.
+         */
         public CloverPublisher newInstance(StaplerRequest req) throws FormException {
             CloverPublisher instance = req.bindParameters(CloverPublisher.class, "clover.");
             req.bindParameters(instance.failingTarget, "cloverFailingTarget.");

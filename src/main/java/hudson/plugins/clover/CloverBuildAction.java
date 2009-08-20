@@ -20,10 +20,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.kohsuke.stapler.StaplerProxy;
 
 /**
- * Created by IntelliJ IDEA.
+ * A health reporter for the individual build page.
+ *
  *
  * @author connollys
  * @since 03-Jul-2007 08:43:08
@@ -87,19 +87,19 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     public String getIconFileName() {
-        return "graph.gif";  //To change body of implemented methods use File | Settings | File Templates.
+        return CloverProjectAction.ICON;
     }
 
     public String getDisplayName() {
-        return "Coverage Report";  //To change body of implemented methods use File | Settings | File Templates.
+        return "Clover Summary Report";
     }
 
     public String getUrlName() {
-        return "clover";  //To change body of implemented methods use File | Settings | File Templates.
+        return "clover";
     }
 
     public Object getTarget() {
-        return getResult();  //To change body of implemented methods use File | Settings | File Templates.
+        return getResult();
     }
 
     public CloverBuildAction getPreviousResult() {
@@ -137,7 +137,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         r.setOwner(owner);
     }
 
-
+    
     /** Obtains the detailed {@link CoverageReport} instance. */
     public synchronized ProjectCoverage getResult() {
         if (report != null) {
@@ -145,11 +145,11 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
             if (r != null) return r;
         }
 
-        File reportFile = CloverPublisher.getCloverReport(owner);
+        File reportFile = CloverPublisher.getCloverXmlReport(owner);
         try {
 
             ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);
-            ;
+
             r.setOwner(owner);
 
             report = new WeakReference<ProjectCoverage>(r);
@@ -179,87 +179,87 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     /** {@inheritDoc} */
     public int getPackages() {
-        return getResult().getPackages();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getPackages();
     }
 
     /** {@inheritDoc} */
     public int getFiles() {
-        return getResult().getFiles();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getFiles();
     }
 
     /** {@inheritDoc} */
     public int getClasses() {
-        return getResult().getClasses();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getClasses();
     }
 
     /** {@inheritDoc} */
     public int getLoc() {
-        return getResult().getLoc();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getLoc();
     }
 
     /** {@inheritDoc} */
     public int getNcloc() {
-        return getResult().getNcloc();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getNcloc();
     }
 
     /** {@inheritDoc} */
     public Ratio getMethodCoverage() {
-        return getResult().getMethodCoverage();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getMethodCoverage();
     }
 
     /** {@inheritDoc} */
     public Ratio getStatementCoverage() {
-        return getResult().getStatementCoverage();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getStatementCoverage();
     }
 
     /** {@inheritDoc} */
     public Ratio getConditionalCoverage() {
-        return getResult().getConditionalCoverage();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getConditionalCoverage();
     }
 
     /** {@inheritDoc} */
     public Ratio getElementCoverage() {
-        return getResult().getElementCoverage();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getElementCoverage();
     }
 
     /** {@inheritDoc} */
     public int getConditionals() {
-        return getResult().getConditionals();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getConditionals();
     }
 
     /** {@inheritDoc} */
     public int getMethods() {
-        return getResult().getMethods();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getMethods();
     }
 
     /** {@inheritDoc} */
     public int getCoveredstatements() {
-        return getResult().getCoveredstatements();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getCoveredstatements();
     }
 
     /** {@inheritDoc} */
     public int getCoveredmethods() {
-        return getResult().getCoveredmethods();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getCoveredmethods();
     }
 
     /** {@inheritDoc} */
     public int getCoveredconditionals() {
-        return getResult().getCoveredconditionals();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getCoveredconditionals();
     }
 
     /** {@inheritDoc} */
     public int getStatements() {
-        return getResult().getStatements();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getStatements();
     }
 
     /** {@inheritDoc} */
     public int getCoveredelements() {
-        return getResult().getCoveredelements();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getCoveredelements();
     }
 
     /** {@inheritDoc} */
     public int getElements() {
-        return getResult().getElements();    //To change body of overridden methods use File | Settings | File Templates.
+        return getResult().getElements();
     }
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());

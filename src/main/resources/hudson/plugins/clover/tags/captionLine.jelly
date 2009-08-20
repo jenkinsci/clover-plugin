@@ -3,6 +3,7 @@
          xmlns:clover="/hudson/plugins/clover/tags">
     <tr>
         <th>name</th>
+        <th>Total Coverage %</th>
         <th>method, %</th>
         <th>conditionals, %</th>
         <th>statements, %</th>

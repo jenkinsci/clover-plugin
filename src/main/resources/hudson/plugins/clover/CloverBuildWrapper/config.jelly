@@ -1,0 +1,14 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:entry title="Generate an historical report" help="/plugin/clover/help-historical.html">
+        <f:checkbox name="clover.historical" checked="${instance.historical}"/>
+    </f:entry>
+
+    <f:entry title="Generate a json report" help="/plugin/clover/help-json.html">
+        <f:checkbox name="clover.json" checked="${instance.json}"/>
+    </f:entry>
+    
+    <f:entry title="Clover License String" help="/plugin/clover/help-license.html">
+        Either enter Clover license string, or leave blank to use the <a href="/configure">global clover license</a> configured for this Hudson instance.
+        <f:textarea name="clover.licenseCert" value="${instance.licenseCert}" />
+    </f:entry>
+</j:jelly>

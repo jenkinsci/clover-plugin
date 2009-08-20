@@ -10,13 +10,18 @@
                         <st:out value="${c.name}" />
                     </a>
                 </td>
-                <td data="${c.methodCoverage.percentageFloat}">${c.methodCoverage.percentage}%
+                <td>
+                    <j:set var="provider" value="${c.elementCoverage}"/>
+                    <clover:coverage-bar/>
+                </td>
+                
+                <td data="${c.methodCoverage.percentageFloat}">${c.methodCoverage.percentageStr}
                     (${c.methodCoverage})
                 </td>
-                <td data="${c.conditionalCoverage.percentageFloat}">${c.conditionalCoverage.percentage}%
+                <td data="${c.conditionalCoverage.percentageFloat}">${c.conditionalCoverage.percentageStr}
                     (${c.conditionalCoverage})
                 </td>
-                <td data="${c.statementCoverage.percentageFloat}">${c.statementCoverage.percentage}%
+                <td data="${c.statementCoverage.percentageFloat}">${c.statementCoverage.percentageStr}
                     (${c.statementCoverage})
                 </td>
             </tr>

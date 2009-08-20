@@ -1,7 +1,12 @@
 package hudson.plugins.clover;
 
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.Project;
+import hudson.model.ProminentProjectAction;
+import hudson.model.Build;
+import hudson.model.Result;
+import hudson.model.DirectoryBrowserSupport;
+import hudson.model.Action;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -12,10 +17,14 @@ import java.io.IOException;
 /**
  * Project level action.
  *
+ * TODO: refactor this action in a similar manner to JavadocArchiver and BaseJavadocAction etc to avoid duplication.
+ *
  * @author Stephen Connolly
  */
-public class CloverProjectAction extends Actionable implements ProminentProjectAction {
+public class CloverProjectAction implements Action, ProminentProjectAction {
 
+    static final String ICON = "/plugin/clover/clover_48x48.png";
+    
     private final Project<?, ?> project;
 
     public CloverProjectAction(Project project) {
@@ -23,38 +32,44 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
     }
 
     public String getIconFileName() {
-        if (new File(CloverPublisher.getCloverReportDir(project), "index.html").exists())
-            return "graph.gif";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
-            return "graph.gif";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
-            return "graph.gif";
-        else
+
+        final File reportDir = getLastBuildReportDir();
+        if (reportDir != null &&
+             (new File(reportDir, "index.html").exists()
+           || new File(reportDir, "clover.pdf").exists()
+           || new File(reportDir, "clover.xml").exists())) {
+            return ICON;
+        } else {
             return null;
+        }
+    }
+
+    private File getLastBuildReportDir() {
+        if (project.getLastBuild() == null) {
+            // no clover report links, until there is at least one build
+            return null;
+        }
+        final File reportDir = project.getLastBuild().getRootDir();
+        return reportDir;
     }
 
     public String getDisplayName() {
-        if (new File(CloverPublisher.getCloverReportDir(project), "index.html").exists())
-            return "Clover Coverage Report";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
-            return "Clover Coverage PDF";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
-            return "Coverage Report";
-        else
-            return null;
+        final File reportDir = getLastBuildReportDir();
+
+        if (reportDir == null) return null;
+        if (new File(reportDir, "index.html").exists()) return "Clover HTML Coverage Report";
+        if (new File(reportDir, "clover.pdf").exists()) return "Clover PDF Coverage";
+        if (new File(reportDir, "clover.xml").exists()) return "Coverage Report";
+
+        return null;
+
     }
 
     public String getUrlName() {
-        if (new File(CloverPublisher.getCloverReportDir(project), "index.html").exists())
-            return "clover";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.pdf").exists())
-            return "clover";
-        else if (new File(CloverPublisher.getCloverReportDir(project), "clover.xml").exists())
-            return "clover";
         return "clover";
     }
 
-    public CloverBuildAction getLastResult() {
+    public CloverBuildAction getLastSuccessfulResult() {
         for (Build<?, ?> b = project.getLastBuild(); b != null; b = b.getPreviousBuild()) {
             if (b.getResult() == Result.FAILURE)
                 continue;
@@ -66,14 +81,22 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
     }
 
     public void doGraph(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        if (getLastResult() != null)
-            getLastResult().getResult().doGraph(req, rsp);
+        if (getLastSuccessfulResult() != null) {
+            getLastSuccessfulResult().getResult().doGraph(req, rsp);
+        }
     }
 
-    public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,
+    public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,
             InterruptedException {
-        new DirectoryBrowserSupport(this).serveFile(req, rsp,
-                new FilePath(CloverPublisher.getCloverReportDir(project)), "graph.gif", false);
+
+        // there is a report if there was a build already, and there is a report
+        if (project.getLastBuild() != null && getDisplayName() != null) {
+            return new DirectoryBrowserSupport(this,
+                    new FilePath(project.getLastBuild().getRootDir()),"Clover Html Report",  "/clover/clover.gif", false);
+
+        } else {
+            return null;
+        }        
     }
 
     public String getSearchUrl() {

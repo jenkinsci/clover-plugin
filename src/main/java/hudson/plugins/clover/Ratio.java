@@ -1,16 +1,23 @@
 package hudson.plugins.clover;
 
-import java.io.IOException;
 import java.io.Serializable;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 /**
  * Represents <tt>x/y</tt> where x={@link #numerator} and y={@link #denominator}.
  *
  * @author Kohsuke Kawaguchi
  */
-final public class Ratio implements Serializable {
+final public class Ratio implements Serializable, CoverageBarProvider {
+    
     public final float numerator;
     public final float denominator;
+
+    public static final NumberFormat PC_WIDTH_FORMAT = NumberFormat.getInstance(Locale.US);
+    static {
+        PC_WIDTH_FORMAT.setMaximumFractionDigits(1);
+    }
 
     private Ratio(float numerator, float denominator) {
         this.numerator = numerator;
@@ -31,6 +38,41 @@ final public class Ratio implements Serializable {
         else
             return String.valueOf(f);
     }
+
+    /**
+     * Gets the percentage in integer.
+     */
+    public String getPercentage1d() {
+        return PC_WIDTH_FORMAT.format(getPercentageFloat());
+    }
+
+    public String getPercentageStr() {
+        return denominator > 0 ? PC_WIDTH_FORMAT.format(getPercentageFloat()) + "%" : "-";
+    }
+
+
+    private String pcFormat(float pc) {
+        return Ratio.PC_WIDTH_FORMAT.format(pc) + "%";
+    }
+
+    public String getPcWidth() {
+        return pcFormat(getPercentageFloat());
+    }
+
+
+    public String getPcUncovered() {
+        float pcUncovered = 100.0f - getPercentageFloat();
+        return pcFormat(pcUncovered);
+    }
+
+    public String getPcCovered() {
+        return getPercentageStr();
+    }
+
+    public String getHasData() {
+        return "" + (denominator > 0);
+    }
+
 
     /**
      * Gets the percentage in integer.

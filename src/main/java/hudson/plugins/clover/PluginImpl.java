@@ -2,7 +2,6 @@ package hudson.plugins.clover;
 
 import hudson.Plugin;
 import hudson.tasks.BuildStep;
-import hudson.plugins.clover.CloverPublisher;
 
 /**
  * Entry point of a plugin.
@@ -15,6 +14,7 @@ import hudson.plugins.clover.CloverPublisher;
  * @plugin
  */
 public class PluginImpl extends Plugin {
+    
     public void start() throws Exception {
         // plugins normally extend Hudson by providing custom implementations
         // of 'extension points'. In this example, we'll add one builder.
