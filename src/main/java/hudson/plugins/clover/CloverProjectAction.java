@@ -6,7 +6,7 @@ import hudson.model.ProminentProjectAction;
 import hudson.model.Build;
 import hudson.model.Result;
 import hudson.model.DirectoryBrowserSupport;
-import hudson.model.Action;
+import hudson.model.Actionable;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -21,7 +21,7 @@ import java.io.IOException;
  *
  * @author Stephen Connolly
  */
-public class CloverProjectAction implements Action, ProminentProjectAction {
+public class CloverProjectAction extends Actionable implements ProminentProjectAction {
 
     static final String ICON = "/plugin/clover/clover_48x48.png";
     
@@ -69,6 +69,12 @@ public class CloverProjectAction implements Action, ProminentProjectAction {
         return "clover";
     }
 
+    /**
+     * Returns the last Result that was successful.
+     *
+     * WARNING: this method is invoked dynamically from CloverProjectAction/floatingBox.jelly
+     * @return the last successful build result
+     */
     public CloverBuildAction getLastSuccessfulResult() {
         for (Build<?, ?> b = project.getLastBuild(); b != null; b = b.getPreviousBuild()) {
             if (b.getResult() == Result.FAILURE)

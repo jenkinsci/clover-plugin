@@ -1,8 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local" xmlns:clover="/hudson/plugins/clover/tags">
-    <j:set var="lastResult" value="${from.lastResult.result}"/>
+    <j:set var="lastResult" value="${from.lastSuccessfulResult.result}"/>
     <j:if test="${lastResult != null}">
-        <j:set var="elementCoverage" value="${from.lastResult.elementCoverage}"/>
+        <j:set var="elementCoverage" value="${from.lastSuccessfulResult.elementCoverage}"/>
 
         <p/>
         <div class="test-trend-caption">
@@ -22,7 +22,7 @@
                   </tr>
               </table>
                 
-                <j:set var="provider" value="${from.lastResult.elementCoverage}"/>
+                <j:set var="provider" value="${from.lastSuccessfulResult.elementCoverage}"/>
                 <clover:coverage-bar/>
                <p/>
               <div>
@@ -42,7 +42,7 @@
                   <table style="height: 3px; padding: 0 10px; width:380px;">
                       <tr>
                           <td>
-                              <j:set var="provider" value="${from.lastResult.methodCoverage}"/>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.methodCoverage}"/>
                               <clover:coverage-bar/>
 
                           </td>
@@ -57,7 +57,7 @@
                   <table style="padding: 0 10px; width:380px;">
                       <tr>
                           <td>
-                              <j:set var="provider" value="${from.lastResult.conditionalCoverage}"/>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.conditionalCoverage}"/>
                               <clover:coverage-bar/>
                           </td>
 
@@ -72,7 +72,7 @@
                   <table style="padding: 0 10px; padding-bottom:5px; width:380px;">
                       <tr>
                           <td>
-                              <j:set var="provider" value="${from.lastResult.statementCoverage}"/>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.statementCoverage}"/>
                               <clover:coverage-bar/>
                           </td>
                       </tr>

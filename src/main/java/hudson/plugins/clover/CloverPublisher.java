@@ -206,8 +206,8 @@ public class CloverPublisher extends Publisher {
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, "clover.xml");
         if (cloverXmlPath.exists()) {
+            listener.getLogger().println("Publishing Clover XML report...");
             cloverXmlPath.copyTo(buildTarget.child("clover.xml"));
-            listener.getLogger().println("Published clover Xml report.");
             return true;
         } else {
             listener.getLogger().println("Clover xml file does not exist at: " + cloverXmlPath);
@@ -220,8 +220,8 @@ public class CloverPublisher extends Publisher {
         final FilePath htmlIndexHtmlPath = findOneDirDeep(coverageReport, "index.html");
         if (htmlIndexHtmlPath.exists()) {
             final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
+            listener.getLogger().println("Publishing Clover HTML report...");
             htmlDirPath.copyRecursiveTo("**/*", buildTarget);
-            listener.getLogger().println("Published Clover HTML report.");
             return true;
         } else {
             return false;

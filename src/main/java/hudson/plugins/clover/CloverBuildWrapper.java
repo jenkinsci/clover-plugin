@@ -47,12 +47,12 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        addCloverPublisher(build, listener);
         addCloverProjectAction(build, listener);
-        addCloverBuildAction(build, listener);
         return new Environment() {};
     }
 
-    private void addCloverProjectAction(AbstractBuild build, BuildListener listener) throws IOException {
+    private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
         DescribableList publishers = build.getProject().getPublishersList();
         if (!publishers.contains(CloverPublisher.DESCRIPTOR)) {
             final String reportDir = "clover";
@@ -61,7 +61,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
     }
 
-    private void addCloverBuildAction(AbstractBuild build, BuildListener listener) {
+    private void addCloverProjectAction(AbstractBuild build, BuildListener listener) {
         try {
             if (build.getProject().getAction(CloverProjectAction.class) == null) {
                 if (build.getProject() instanceof Project) {
