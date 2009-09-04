@@ -37,7 +37,10 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     private transient WeakReference<ProjectCoverage> report;
 
     public HealthReport getBuildHealth() {
-        if (healthyTarget == null || unhealthyTarget == null) return null;
+        if (healthyTarget == null || unhealthyTarget == null)
+        {
+            return null;
+        }
         ProjectCoverage projectCoverage = getResult();
         Map<CoverageMetric, Integer> scores = healthyTarget.getRangeScores(unhealthyTarget, projectCoverage);
         int minValue = 100;

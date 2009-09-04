@@ -93,17 +93,21 @@ public class CloverBuildWrapper extends BuildWrapper {
             @Override
             public Proc launch(ProcStarter starter) throws IOException {
 
-                Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
-                // decorateArguments takes a list of just the targets. does not include '/usr/bin/ant'
-                integrator.decorateArguments(starter.cmds().subList(1, starter.cmds().size() - 1));
+                if (!starter.cmds().isEmpty() && !starter.cmds().get(0).endsWith("ant")) {
 
-                // masks.length must equal cmds.length
-                boolean[] masks = new boolean[starter.cmds().size()];
-                for (int i = 0; i < starter.masks().length; i++) {
-                    masks[i] = starter.masks()[i];
+                } else {
+
+                    Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
+                    // decorateArguments takes a list of just the targets. does not include '/usr/bin/ant'
+                    integrator.decorateArguments(starter.cmds().subList(1, starter.cmds().size() - 1));
+
+                    // masks.length must equal cmds.length
+                    boolean[] masks = new boolean[starter.cmds().size()];
+                    for (int i = 0; i < starter.masks().length; i++) {
+                        masks[i] = starter.masks()[i];
+                    }
+                    starter.masks(masks);
                 }
-                starter.masks(masks);
-
                 return outer.launch(starter);
             }
 
@@ -145,7 +149,7 @@ public class CloverBuildWrapper extends BuildWrapper {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "<img src='"+CloverProjectAction.ICON+"' height='24'/> Automatically record and report Code Coverage using <a href='http://atlassian.com/clover'>Clover.</a>";
+            return "<img src='"+CloverProjectAction.ICON+"' height='24'/> Automatically record and report Code Coverage using <a href='http://atlassian.com/clover'>Clover.</a>. Currently for Ant builds only.";
         }
 
         @Override
@@ -162,7 +166,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         public boolean isApplicable(AbstractProject item) {
-            // TOOD: is there a better way to detect Ant builds?
+            // TODO: is there a better way to detect Ant builds?
             // should only be enabled for Ant projects.
             
             return (item instanceof FreeStyleProject);
