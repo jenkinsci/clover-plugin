@@ -17,6 +17,8 @@ import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.model.Project;
 import hudson.model.FreeStyleProject;
+import hudson.model.Action;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
@@ -48,7 +50,6 @@ public class CloverBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         addCloverPublisher(build, listener);
-        addCloverProjectAction(build, listener);
         return new Environment() {};
     }
 
@@ -61,18 +62,10 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
     }
 
-    private void addCloverProjectAction(AbstractBuild build, BuildListener listener) {
-        try {
-            if (build.getProject().getAction(CloverProjectAction.class) == null) {
-                if (build.getProject() instanceof Project) {
-                    // only add the project action, if this is a Project for now
-                    build.getProject().addAction(new CloverProjectAction((Project) build.getProject()));
-                }
-            }
-        } catch (UnsupportedOperationException e) {
-            // TODO: determine why the action list sometimes becomes unmodifiable.. (hot deployment maybe?)
-            listener.getLogger().println("Clover Project Action not added since action list is Unmodifiable: " + e.getMessage());
-        }
+    @Override
+    public Action getProjectAction(AbstractProject job) {
+
+        return new CloverProjectAction((Project) job);
     }
 
     @Override
@@ -168,7 +161,6 @@ public class CloverBuildWrapper extends BuildWrapper {
         public boolean isApplicable(AbstractProject item) {
             // TODO: is there a better way to detect Ant builds?
             // should only be enabled for Ant projects.
-            
             return (item instanceof FreeStyleProject);
 
         }
