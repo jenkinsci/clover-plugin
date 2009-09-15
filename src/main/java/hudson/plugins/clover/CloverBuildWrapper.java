@@ -64,7 +64,6 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     @Override
     public Action getProjectAction(AbstractProject job) {
-
         return new CloverProjectAction((Project) job);
     }
 
