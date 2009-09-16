@@ -64,7 +64,11 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     @Override
     public Action getProjectAction(AbstractProject job) {
-        return new CloverProjectAction((Project) job);
+        // ensure only one project action exists on the project
+        if (job.getAction(CloverProjectAction.class) == null) {
+            return new CloverProjectAction((Project) job);
+        }
+        return super.getProjectAction(job);
     }
 
     @Override
