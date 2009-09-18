@@ -93,6 +93,8 @@ public class CloverBuildWrapper extends BuildWrapper {
 
                 } else {
 
+                    // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
+                    options.fullClean(starter.cmds().size() > 1);
                     Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
                     // decorateArguments takes a list of just the targets. does not include '/usr/bin/ant'
                     final int toindex = (starter.cmds().size() == 1) ? 1 : starter.cmds().size() - 1;
