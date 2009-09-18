@@ -95,7 +95,8 @@ public class CloverBuildWrapper extends BuildWrapper {
 
                     Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
                     // decorateArguments takes a list of just the targets. does not include '/usr/bin/ant'
-                    integrator.decorateArguments(starter.cmds().subList(1, starter.cmds().size() - 1));
+                    final int toindex = (starter.cmds().size() == 1) ? 1 : starter.cmds().size() - 1;
+                    integrator.decorateArguments(starter.cmds().subList(1, toindex));
 
                     // masks.length must equal cmds.length
                     boolean[] masks = new boolean[starter.cmds().size()];
