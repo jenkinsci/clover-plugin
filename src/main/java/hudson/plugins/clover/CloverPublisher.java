@@ -1,5 +1,6 @@
 package hudson.plugins.clover;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath;
 import hudson.Util;
@@ -8,19 +9,23 @@ import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.targets.CoverageTarget;
 import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.model.*;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.*;
 import java.util.Set;
 import java.util.List;
+import net.sf.json.JSONObject;
 
 /**
  * Clover {@link Publisher}.
  *
  * @author Stephen Connolly
  */
-public class CloverPublisher extends Publisher {
+public class CloverPublisher extends Recorder {
 
     private final String cloverReportDir;
 
@@ -108,10 +113,9 @@ public class CloverPublisher extends Publisher {
 
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
 
-
         final File buildRootDir = build.getRootDir(); // should this top level?
         final FilePath buildTarget = new FilePath(buildRootDir);
-        final FilePath workspace = build.getParent().getWorkspace();
+        final FilePath workspace = build.getWorkspace();
         FilePath coverageReportDir = workspace.child(cloverReportDir);
         try {
             listener.getLogger().println("Publishing Clover coverage report...");
@@ -157,7 +161,7 @@ public class CloverPublisher extends Publisher {
     private void processCloverXml(AbstractBuild<?, ?> build, BuildListener listener, FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
         String workspacePath = "";
         try {
-            workspacePath = build.getParent().getWorkspace().act(new FilePath.FileCallable<String>() {
+            workspacePath = build.getWorkspace().act(new FilePath.FileCallable<String>() {
                 public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
                     try {
                         return file.getCanonicalPath();
@@ -262,18 +266,24 @@ public class CloverPublisher extends Publisher {
 
 
     @Override
-    public Action getProjectAction(Project project) {
-        return new CloverProjectAction(project);
+    public Action getProjectAction(AbstractProject<?,?> project) {
+        return project instanceof Project ? new CloverProjectAction((Project)project) : null;
     }
 
-    public Descriptor<Publisher> getDescriptor() {
+    @Override
+    public BuildStepDescriptor<Publisher> getDescriptor() {
         // see Descriptor javadoc for more about what a descriptor is.
         return DESCRIPTOR;
+    }
+
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.BUILD;
     }
 
     /**
      * Descriptor should be singleton.
      */
+    @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     /**
@@ -284,7 +294,7 @@ public class CloverPublisher extends Publisher {
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */
-    public static final class DescriptorImpl extends Descriptor<Publisher> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         DescriptorImpl() {
             super(CloverPublisher.class);
         }
@@ -296,17 +306,18 @@ public class CloverPublisher extends Publisher {
             return "Publish Clover Coverage Report";
         }
 
-
-        public boolean configure(StaplerRequest req) throws FormException {
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
             req.bindParameters(this, "clover.");
             save();
-            return super.configure(req);    //To change body of overridden methods use File | Settings | File Templates.
+            return super.configure(req, formData);
         }
 
         /**
          * Creates a new instance of {@link CloverPublisher} from a submitted form.
          */
-        public CloverPublisher newInstance(StaplerRequest req) throws FormException {
+        @Override
+        public CloverPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             CloverPublisher instance = req.bindParameters(CloverPublisher.class, "clover.");
             req.bindParameters(instance.failingTarget, "cloverFailingTarget.");
             req.bindParameters(instance.healthyTarget, "cloverHealthyTarget.");
@@ -317,6 +328,11 @@ public class CloverPublisher extends Publisher {
             }
             // end ugly hack
             return instance;
+        }
+
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
         }
     }
 }

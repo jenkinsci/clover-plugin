@@ -19,6 +19,7 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jvnet.localizer.Localizable;
 
 
 /**
@@ -53,40 +54,32 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
         if (minKey == null) return null;
 
-        StringBuilder description = new StringBuilder("Clover Coverage: ");
+        Localizable description = null;
         switch (minKey) {
             case METHOD:
-                description.append("Methods ");
-                description.append(projectCoverage.getMethodCoverage().getPercentage());
-                description.append("% (");
-                description.append(projectCoverage.getMethodCoverage().toString());
-                description.append(")");
+                description = Messages._CloverBuildAction_MethodCoverage(
+                        projectCoverage.getMethodCoverage().getPercentage(),
+                        projectCoverage.getMethodCoverage().toString());
                 break;
             case CONDITIONAL:
-                description.append("Conditionals ");
-                description.append(projectCoverage.getConditionalCoverage().getPercentage());
-                description.append("% (");
-                description.append(projectCoverage.getConditionalCoverage().toString());
-                description.append(")");
+                description = Messages._CloverBuildAction_ConditionalCoverage(
+                        projectCoverage.getConditionalCoverage().getPercentage(),
+                        projectCoverage.getConditionalCoverage().toString());
                 break;
             case STATEMENT:
-                description.append("Statements ");
-                description.append(projectCoverage.getStatementCoverage().getPercentage());
-                description.append("% (");
-                description.append(projectCoverage.getStatementCoverage().toString());
-                description.append(")");
+                description = Messages._CloverBuildAction_StatementCoverage(
+                        projectCoverage.getStatementCoverage().getPercentage(),
+                        projectCoverage.getStatementCoverage().toString());
                 break;
             case ELEMENT:
-                description.append("Elements ");
-                description.append(projectCoverage.getElementCoverage().getPercentage());
-                description.append("% (");
-                description.append(projectCoverage.getElementCoverage().toString());
-                description.append(")");
+                description = Messages._CloverBuildAction_ElementCoverage(
+                        projectCoverage.getElementCoverage().getPercentage(),
+                        projectCoverage.getElementCoverage().toString());
                 break;
             default:
                 return null;
         }
-        return new HealthReport(minValue, description.toString());
+        return new HealthReport(minValue, description);
     }
 
     public String getIconFileName() {
@@ -186,82 +179,82 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     /** {@inheritDoc} */
-    public int getFiles() {
+    @Override public int getFiles() {
         return getResult().getFiles();
     }
 
     /** {@inheritDoc} */
-    public int getClasses() {
+    @Override public int getClasses() {
         return getResult().getClasses();
     }
 
     /** {@inheritDoc} */
-    public int getLoc() {
+    @Override public int getLoc() {
         return getResult().getLoc();
     }
 
     /** {@inheritDoc} */
-    public int getNcloc() {
+    @Override public int getNcloc() {
         return getResult().getNcloc();
     }
 
     /** {@inheritDoc} */
-    public Ratio getMethodCoverage() {
+    @Override public Ratio getMethodCoverage() {
         return getResult().getMethodCoverage();
     }
 
     /** {@inheritDoc} */
-    public Ratio getStatementCoverage() {
+    @Override public Ratio getStatementCoverage() {
         return getResult().getStatementCoverage();
     }
 
     /** {@inheritDoc} */
-    public Ratio getConditionalCoverage() {
+    @Override public Ratio getConditionalCoverage() {
         return getResult().getConditionalCoverage();
     }
 
     /** {@inheritDoc} */
-    public Ratio getElementCoverage() {
+    @Override public Ratio getElementCoverage() {
         return getResult().getElementCoverage();
     }
 
     /** {@inheritDoc} */
-    public int getConditionals() {
+    @Override public int getConditionals() {
         return getResult().getConditionals();
     }
 
     /** {@inheritDoc} */
-    public int getMethods() {
+    @Override public int getMethods() {
         return getResult().getMethods();
     }
 
     /** {@inheritDoc} */
-    public int getCoveredstatements() {
+    @Override public int getCoveredstatements() {
         return getResult().getCoveredstatements();
     }
 
     /** {@inheritDoc} */
-    public int getCoveredmethods() {
+    @Override public int getCoveredmethods() {
         return getResult().getCoveredmethods();
     }
 
     /** {@inheritDoc} */
-    public int getCoveredconditionals() {
+    @Override public int getCoveredconditionals() {
         return getResult().getCoveredconditionals();
     }
 
     /** {@inheritDoc} */
-    public int getStatements() {
+    @Override public int getStatements() {
         return getResult().getStatements();
     }
 
     /** {@inheritDoc} */
-    public int getCoveredelements() {
+    @Override public int getCoveredelements() {
         return getResult().getCoveredelements();
     }
 
     /** {@inheritDoc} */
-    public int getElements() {
+    @Override public int getElements() {
         return getResult().getElements();
     }
 
