@@ -21,7 +21,12 @@ import hudson.model.Action;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.File;
 import java.util.Map;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -81,46 +86,10 @@ public class CloverBuildWrapper extends BuildWrapper {
         final CIOptions.Builder options = new CIOptions.Builder().
                 json(this.json).
                 historical(this.historical).
-                licenseCert(license).
                 fullClean(true);
 
         final Launcher outer = launcher;
-        return new Launcher(outer) {
-            @Override
-            public Proc launch(ProcStarter starter) throws IOException {
-
-                if (!starter.cmds().isEmpty() && !starter.cmds().get(0).endsWith("ant")) {
-
-                } else {
-
-                    // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
-                    options.fullClean(starter.cmds().size() > 1);
-                    Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
-                    // decorateArguments takes a list of just the targets. does not include '/usr/bin/ant'
-                    final int toindex = (starter.cmds().size() == 1) ? 1 : starter.cmds().size() - 1;
-                    integrator.decorateArguments(starter.cmds().subList(1, toindex));
-
-                    // masks.length must equal cmds.length
-                    boolean[] masks = new boolean[starter.cmds().size()];
-                    for (int i = 0; i < starter.masks().length; i++) {
-                        masks[i] = starter.masks()[i];
-                    }
-                    starter.masks(masks);
-                }
-                return outer.launch(starter);
-            }
-
-            @Override
-            public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
-                return outer.launchChannel(cmd, out, workDir, envVars);
-            }
-
-            @Override
-            public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
-                outer.kill(modelEnvVars);
-            }
-
-        };
+        return new CloverDecoratingLauncher(outer, options, license);
     }
 
     public static final Descriptor<BuildWrapper> DESCRIPTOR = new DescriptorImpl();
@@ -171,6 +140,137 @@ public class CloverBuildWrapper extends BuildWrapper {
 
         }
 
+
+    }
+
+    public static class CloverDecoratingLauncher extends Launcher {
+        private final Launcher outer;
+        private final CIOptions.Builder options;
+        private final String license;
+
+        public CloverDecoratingLauncher(Launcher outer, CIOptions.Builder options, String license) {
+            super(outer);
+            this.outer = outer;
+            this.options = options;
+            this.license = license;
+        }
+
+        @Override
+        public Proc launch(ProcStarter starter) throws IOException {
+
+            decorateArgs(starter);
+            return outer.launch(starter);
+        }
+
+        public void decorateArgs(ProcStarter starter) throws IOException {
+
+            List<String> userArgs = new LinkedList<String>();
+            List<String> preSystemArgs = new LinkedList<String>();
+            List<String> postSystemArgs = new LinkedList<String>();
+
+            final List<String>  cmds = new ArrayList<String>();
+            cmds.addAll(starter.cmds());
+
+            // on windows - the cmds are wrapped of the form:
+            // "cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\""
+            // this hacky code is used to parse out just the user specified args. ie clean test.run
+            
+            final int numPreSystemCmds = 2; // hack hack hack - there are 2 commands prepended on windows...
+            final String sysArgSplitter = "&&";
+            
+            if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant"))
+            {
+                preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
+
+                // get the index of the "ant.bat 
+                String argString = cmds.get(numPreSystemCmds);
+                // trim leading and trailing " if they exist...
+                argString = argString.replaceAll("\"", "");
+
+                String[] tokens = argString.split(" ");
+                preSystemArgs.add(tokens[0]);
+
+                for (int i = 1; i < tokens.length; i++)
+                {   // chop the ant.bat
+                    String arg = tokens[i];
+                    if (sysArgSplitter.equals(arg))
+                    {
+                        // anything after the &&, break.
+                        postSystemArgs.addAll(Arrays.asList(tokens).subList(i, tokens.length));
+                        break;
+                    }
+                    userArgs.add(arg);
+                }
+            }
+            else 
+            {
+                if (cmds.size() > 0)
+                {
+                    preSystemArgs.add(cmds.get(0));                    
+                }
+                if (cmds.size() > 1)
+                {
+                    userArgs.addAll(cmds.subList(1, cmds.size()));
+                }
+            }
+
+            if (!userArgs.isEmpty())
+            {
+
+                // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
+                options.fullClean(true);
+
+                setupLicense(starter);
+
+                Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
+                
+                integrator.decorateArguments(userArgs);
+                starter.cmds(new ArrayList<String>());
+
+                // re-assemble all commands
+                List<String> allCommands = new ArrayList<String>();
+                allCommands.addAll(preSystemArgs);
+                allCommands.addAll(userArgs);
+                allCommands.addAll(postSystemArgs);
+                starter.cmds(allCommands);
+                
+                // masks.length must equal cmds.length
+                boolean[] masks = new boolean[starter.cmds().size()];
+                for (int i = 0; i < starter.masks().length; i++) {
+                    masks[i] = starter.masks()[i];
+                }
+                starter.masks(masks);
+            }
+        }
+
+        private void setupLicense(ProcStarter starter) throws IOException {
+
+            if (license == null) {
+                listener.getLogger().println("No Clover license configured. Please download a free 30 day license from http://my.atlassian.com.");
+                return;
+            }
+
+            // create a tmp license file.
+            FilePath licenseFile = new FilePath(starter.pwd(), ".clover/clover.license");
+            try {
+                licenseFile.write(license, "UTF-8");
+                options.license(new File(licenseFile.toURI()));
+            } catch (InterruptedException e) {
+                listener.getLogger().print("Could not create license file at: " + licenseFile + ". Setting as a system property.");
+                listener.getLogger().print(e.getMessage());
+                options.licenseCert(license);
+            }
+        }
+
+        @Override
+            public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
+            return outer.launchChannel(cmd, out, workDir, envVars);
+        }
+
+        @Override
+            public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
+            outer.kill(modelEnvVars);
+        }
 
     }
 }
