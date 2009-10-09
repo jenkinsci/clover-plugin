@@ -63,7 +63,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         if (!publishers.contains(CloverPublisher.DESCRIPTOR)) {
             final String reportDir = "clover";
             listener.getLogger().println("Adding Clover Publisher with reportDir: " + reportDir);
-            build.getProject().getPublishersList().add(new CloverPublisher(reportDir));
+            build.getProject().getPublishersList().add(new CloverPublisher(reportDir, null));
         }
     }
 
