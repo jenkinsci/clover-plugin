@@ -28,6 +28,7 @@ import net.sf.json.JSONObject;
 public class CloverPublisher extends Recorder {
 
     private final String cloverReportDir;
+    private final String cloverReportFileName;
 
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -35,10 +36,12 @@ public class CloverPublisher extends Recorder {
 
     /**
      * @param cloverReportDir
+     * @param cloverReportFileName
      * @stapler-constructor
      */
-    public CloverPublisher(String cloverReportDir) {
+    public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
+        this.cloverReportFileName = cloverReportFileName;
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
@@ -46,6 +49,10 @@ public class CloverPublisher extends Recorder {
 
     public String getCloverReportDir() {
         return cloverReportDir;
+    }
+
+    public String getCloverReportFileName() {
+        return cloverReportFileName == null || cloverReportFileName.trim().length() == 0 ? "clover.xml" : cloverReportFileName;
     }
 
     /**
@@ -103,7 +110,7 @@ public class CloverPublisher extends Recorder {
     }
 
     /**
-     * Gets the directory where the Clover Report is stored for the given project.
+     * Gets the directory where the Clover Report is stored for the given build.
      */
     /*package*/
     static File getCloverXmlReport(AbstractBuild<?, ?> build) {
@@ -208,13 +215,16 @@ public class CloverPublisher extends Recorder {
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener) throws IOException, InterruptedException {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
-        final FilePath cloverXmlPath = findOneDirDeep(coverageReport, "clover.xml");
+        final FilePath cloverXmlPath = findOneDirDeep(coverageReport, getCloverReportFileName());
+        final FilePath toFile = buildTarget.child("clover.xml");
         if (cloverXmlPath.exists()) {
             listener.getLogger().println("Publishing Clover XML report...");
-            cloverXmlPath.copyTo(buildTarget.child("clover.xml"));
+            cloverXmlPath.copyTo(toFile);
             return true;
         } else {
-            listener.getLogger().println("Clover xml file does not exist at: " + cloverXmlPath);
+            listener.getLogger().println("Clover xml file does not exist in: " + coverageReport +
+                                         " called: " + getCloverReportFileName() +
+                                         " and will not be copied to: " + toFile);
             return false;
         }
     }
@@ -260,7 +270,7 @@ public class CloverPublisher extends Recorder {
     }
 
     private void flagMissingCloverXml(BuildListener listener, AbstractBuild<?, ?> build) {
-        listener.getLogger().println("Could not find '" + cloverReportDir + "/clover.xml'.  Did you generate " +
+        listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName() + "'.  Did you generate " +
                 "the XML report for Clover?");
     }
 

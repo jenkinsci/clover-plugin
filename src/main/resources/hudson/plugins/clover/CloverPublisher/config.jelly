@@ -6,6 +6,14 @@
            Clover must be configured to generate XML reports for this plugin to function fully.
            ">
     <f:textbox name="clover.cloverReportDir" value="${instance.cloverReportDir}"/>
+    
+  </f:entry>
+    <f:entry title="Clover report file name"
+           description="
+           Specify the name of the Clover xml file generated relative to the Clover report directory specified above.
+           If not specified - 'clover.xml' is assumed.
+           ">
+    <f:textbox name="clover.cloverReportFileName" value="${instance.cloverReportFileName}"/>
   </f:entry>
     <f:entry title="Coverage Metric Targets"
              description="
