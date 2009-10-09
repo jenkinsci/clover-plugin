@@ -1,0 +1,84 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local" xmlns:clover="/hudson/plugins/clover/tags">
+    <j:set var="lastResult" value="${from.lastSuccessfulResult.result}"/>
+    <j:if test="${lastResult != null}">
+        <j:set var="elementCoverage" value="${from.lastSuccessfulResult.elementCoverage}"/>
+
+        <p/>
+        <div class="test-trend-caption">
+            Code Coverage - ${elementCoverage.percentage1d}% (${elementCoverage} elements)
+        </div>
+
+        <j:choose>
+            <j:when test="${lastResult.previousResult != null}">
+              <table style="width:380px;">
+                  <tr>
+                      <th>Methods</th>
+                      <td>${lastResult.methodCoverage.percentage1d}%</td>
+                      <th>Conditionals</th>
+                      <td>${lastResult.conditionalCoverage.percentage1d}%</td>
+                      <th>Statements</th>
+                      <td>${lastResult.statementCoverage.percentage1d}%</td>
+                  </tr>
+              </table>
+                
+                <j:set var="provider" value="${from.lastSuccessfulResult.elementCoverage}"/>
+                <clover:coverage-bar/>
+               <p/>
+              <div>
+                  <a href="${from.urlName}/">
+                      <img src="${from.urlName}/graph" />
+                  </a>
+              </div>
+            </j:when>
+            <j:otherwise>
+              <div style="border: 1px solid #eee; ">
+                  <table style="padding: 0 10px; padding-top: 5px; width:380px;">
+                      <tr>
+                          <th align="left">Methods</th>
+                          <td align="right">${lastResult.methodCoverage.percentage}%</td>
+                      </tr>
+                  </table>
+                  <table style="height: 3px; padding: 0 10px; width:380px;">
+                      <tr>
+                          <td>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.methodCoverage}"/>
+                              <clover:coverage-bar/>
+
+                          </td>
+                      </tr>
+                  </table>
+                  <table style="padding: 0 10px; width:380px;">
+                      <tr>
+                          <th align="left">Conditionals</th>
+                          <td align="right">${lastResult.conditionalCoverage.percentage}%</td>
+                      </tr>
+                  </table>
+                  <table style="padding: 0 10px; width:380px;">
+                      <tr>
+                          <td>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.conditionalCoverage}"/>
+                              <clover:coverage-bar/>
+                          </td>
+
+                      </tr>
+                  </table>
+                  <table style="padding: 0 10px; width:380px;">
+                      <tr>
+                          <th align="left">Statements</th>
+                          <td align="right">${lastResult.statementCoverage.percentage}%</td>
+                      </tr>
+                  </table>
+                  <table style="padding: 0 10px; padding-bottom:5px; width:380px;">
+                      <tr>
+                          <td>
+                              <j:set var="provider" value="${from.lastSuccessfulResult.statementCoverage}"/>
+                              <clover:coverage-bar/>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+            </j:otherwise>
+        </j:choose>
+    </j:if>
+</j:jelly>

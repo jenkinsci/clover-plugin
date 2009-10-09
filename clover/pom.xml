@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jvnet.hudson.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>1.323</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>clover</artifactId>
+    <packaging>hpi</packaging>
+    <version>2.4</version>
+    <name>Hudson Clover plugin</name>
+    <url>http://wiki.hudson-ci.org/display/HUDSON/Clover+Plugin</url>
+    <developers>
+        <developer>
+            <id>npellow</id>
+            <name>Nick Pellow</name>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+          <groupId>com.cenqua.clover</groupId>
+          <artifactId>clover</artifactId>
+          <version>2.6.1</version>
+        </dependency>
+
+        <!-- Build breaks without these: -->        
+        <dependency>
+          <groupId>jfree</groupId>
+          <artifactId>jcommon</artifactId>
+          <version>1.0.16</version>
+        </dependency>
+        <dependency>
+          <groupId>jfree</groupId>
+          <artifactId>jfreechart</artifactId>
+          <version>1.0.13</version>
+        </dependency>
+
+    </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/clover-2.4</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/clover-2.4</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/clover/tags/clover-2.4</url>
+  </scm>
+</project>
