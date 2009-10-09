@@ -10,7 +10,7 @@
 
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>2.4-SNAPSHOT</version>
+    <version>2.4</version>
     <name>Hudson Clover plugin</name>
     <url>http://wiki.hudson-ci.org/display/HUDSON/Clover+Plugin</url>
     <developers>
@@ -39,4 +39,10 @@
         </dependency>
 
     </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/clover-2.4</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/clover-2.4</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/clover/tags/clover-2.4</url>
+  </scm>
 </project>
