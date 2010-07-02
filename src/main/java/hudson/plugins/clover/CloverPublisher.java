@@ -1,24 +1,33 @@
 package hudson.plugins.clover;
 
 import hudson.Extension;
-import hudson.Launcher;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
-import hudson.remoting.VirtualChannel;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.Project;
+import hudson.model.Result;
 import hudson.plugins.clover.results.ProjectCoverage;
-import hudson.plugins.clover.targets.CoverageTarget;
 import hudson.plugins.clover.targets.CoverageMetric;
-import hudson.model.*;
+import hudson.plugins.clover.targets.CoverageTarget;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.*;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+
 import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Clover {@link Publisher}.
@@ -39,6 +48,7 @@ public class CloverPublisher extends Recorder {
      * @param cloverReportFileName
      * @stapler-constructor
      */
+    @DataBoundConstructor
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
@@ -118,6 +128,7 @@ public class CloverPublisher extends Recorder {
     }
 
 
+    @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
 
         final File buildRootDir = build.getRootDir(); // should this top level?
@@ -127,16 +138,16 @@ public class CloverPublisher extends Recorder {
         try {
             listener.getLogger().println("Publishing Clover coverage report...");
 
-            // search one deep for the report dir, if it doesn't exist. 
+            // search one deep for the report dir, if it doesn't exist.
             if (!coverageReportDir.exists()) {
                 coverageReportDir = findOneDirDeep(workspace, cloverReportDir);
             }
-            
+
             // if the build has failed, then there's not
             // much point in reporting an error
             final boolean buildFailure = build.getResult().isWorseOrEqualTo(Result.FAILURE);
             final boolean missingReport = !coverageReportDir.exists();
-            
+
             if (buildFailure && missingReport) {
                 listener.getLogger().println("No Clover report will be published due to a " + (buildFailure ? "Build Failure" : "missing report"));
                 return true;
@@ -145,7 +156,7 @@ public class CloverPublisher extends Recorder {
             final boolean htmlExists = copyHtmlReport(coverageReportDir, buildTarget, listener);
             final boolean xmlExists = copyXmlReport(coverageReportDir, buildTarget, listener);
 
-            if (htmlExists) { 
+            if (htmlExists) {
                 // only add the HTML build action, if the HTML report is available
                 build.getActions().add(new CloverHtmlBuildAction(buildTarget));
             }
@@ -163,7 +174,7 @@ public class CloverPublisher extends Recorder {
 
     /**
      * Process the clover.xml from the build directory. The clover.xml must have been already copied to the build dir.
-     * 
+     *
      */
     private void processCloverXml(AbstractBuild<?, ?> build, BuildListener listener, FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
         String workspacePath = "";
@@ -312,6 +323,7 @@ public class CloverPublisher extends Recorder {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Override
         public String getDisplayName() {
             return "Publish Clover Coverage Report";
         }
