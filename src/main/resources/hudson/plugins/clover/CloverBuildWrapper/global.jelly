@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:section title="Manage Clover">
         <f:entry title="Clover License String" help="/plugin/clover/help-license.html">
-            <img src="/plugin/clover/clover_48x48.png" style="float:left"/>
+            <img src="${rootURL}/plugin/clover/clover_48x48.png" style="float:left"/>
             Configure a clover license to be used by default by all builds in this instance of Hudson. <br/>
             Clover evaluation licenses can be obtained instantly <a href="http://my.atlassian.com" target="_license">online</a>
             <f:textarea name="clover.licenseCert" value="${descriptor.licenseCert}"/>

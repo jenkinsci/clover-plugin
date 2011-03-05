@@ -117,7 +117,8 @@ public class CloverBuildWrapper extends BuildWrapper {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "<img src='"+CloverProjectAction.ICON+"' height='24'/> Automatically record and report Code Coverage using <a href='http://atlassian.com/clover'>Clover.</a>. Currently for Ant builds only.";
+            String rootURL = Hudson.getInstance().getRootUrl();
+            return "<img src='" +rootURL+CloverProjectAction.ICON+"' height='24'/> Automatically record and report Code Coverage using <a href='http://atlassian.com/clover'>Clover.</a>. Currently for Ant builds only.";
         }
 
         @Override
