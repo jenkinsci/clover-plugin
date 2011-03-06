@@ -4,7 +4,7 @@
         <st:include it="${it.owner}" page="sidepanel.jelly" />
         <l:main-panel>
             <h1>Clover Coverage Report</h1>
-            <j:if test="${it.result.previousResult != null}">
+            <j:if test="${it.previousResult != null}">
               <clover:floatingTrendGraph />
             </j:if>
 
