@@ -25,11 +25,11 @@
                 <j:set var="provider" value="${from.lastSuccessfulResult.elementCoverage}"/>
                 <clover:coverage-bar/>
                <p/>
-              <div>
-                  <a href="${from.urlName}/">
-                      <img src="${from.urlName}/graph" />
-                  </a>
-              </div>
+                 <div>
+                   <a href="${from.urlName}/">
+                      <img src="${from.urlName}/trendGraph/png?width=500&amp;height=200" />
+                   </a>
+                </div>
             </j:when>
             <j:otherwise>
               <div style="border: 1px solid #eee; ">

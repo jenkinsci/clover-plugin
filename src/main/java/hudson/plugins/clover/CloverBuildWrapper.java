@@ -22,6 +22,7 @@ import hudson.model.Action;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.File;
+import java.util.Collection;
 import java.util.Map;
 import java.util.List;
 import java.util.LinkedList;
@@ -33,6 +34,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import net.sf.json.JSONObject;
 import com.atlassian.clover.api.ci.CIOptions;
 import com.atlassian.clover.api.ci.Integrator;
+import java.util.Collections;
 
 /**
  * A BuildWrapper that decorates the command line just before a build starts with targets and properties that will automatically
@@ -68,12 +70,12 @@ public class CloverBuildWrapper extends BuildWrapper {
     }
 
     @Override
-    public Action getProjectAction(AbstractProject job) {
+    public Collection<? extends Action> getProjectActions(AbstractProject job) {
         // ensure only one project action exists on the project
         if (job.getAction(CloverProjectAction.class) == null) {
-            return new CloverProjectAction((Project) job);
+            return Collections.singletonList(new CloverProjectAction((Project) job));
         }
-        return super.getProjectAction(job);
+        return super.getProjectActions(job);
     }
 
     @Override

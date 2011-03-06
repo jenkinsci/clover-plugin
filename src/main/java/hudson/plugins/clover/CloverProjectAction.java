@@ -7,6 +7,7 @@ import hudson.model.Build;
 import hudson.model.Result;
 import hudson.model.DirectoryBrowserSupport;
 import hudson.model.Actionable;
+import hudson.util.Graph;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -86,10 +87,11 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         return null;
     }
 
-    public void doGraph(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        if (getLastSuccessfulResult() != null) {
-            getLastSuccessfulResult().getResult().doGraph(req, rsp);
-        }
+    public Graph getTrendGraph() {
+        CloverBuildAction action= getLastSuccessfulResult();
+        if (action != null)
+            return action.getResult().getTrendGraph();
+        return null;
     }
 
     public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,
