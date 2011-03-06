@@ -13,6 +13,10 @@ public class ClassCoverage extends AbstractCloverMetrics {
         Run prevBuild = owner.getPreviousBuild();
         if (prevBuild == null) return null;
         CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
+        while (action == null && prevBuild != null) {
+            prevBuild = prevBuild.getPreviousBuild();
+            action = prevBuild.getAction(CloverBuildAction.class);
+        }
         if (action == null) return null;
         return action.findClassCoverage(getName());
     }

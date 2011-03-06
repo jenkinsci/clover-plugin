@@ -1,7 +1,5 @@
 package hudson.plugins.clover.results;
 
-import hudson.model.Build;
-
 /**
  * Clover Coverage results for multiple classes.
  * @author Stephen Connolly
