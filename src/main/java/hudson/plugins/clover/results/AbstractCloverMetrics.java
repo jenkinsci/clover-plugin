@@ -1,6 +1,8 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
+import hudson.plugins.clover.CloverBuildAction;
 import hudson.plugins.clover.Ratio;
 import hudson.util.ChartUtil;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
@@ -235,6 +237,27 @@ abstract public class AbstractCloverMetrics {
     }
 
     abstract public AbstractCloverMetrics getPreviousResult();
+
+    protected CloverBuildAction getPreviousCloverBuildAction() {
+        if (owner == null) {
+            return null;
+        }
+        
+        Run<?, ?> prevBuild = owner.getPreviousBuild();
+        if (prevBuild == null) {
+            return null;
+        }
+        
+        CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
+        while (action == null && prevBuild != null) {
+            prevBuild = prevBuild.getPreviousBuild();
+            if (prevBuild != null) {
+                action = prevBuild.getAction(CloverBuildAction.class);
+            }
+        }
+
+        return action;
+    }
 
     public Graph getTrendGraph() {
         AbstractBuild build = getOwner();

@@ -1,6 +1,5 @@
 package hudson.plugins.clover.results;
 
-import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
 
 /**
@@ -9,16 +8,11 @@ import hudson.plugins.clover.CloverBuildAction;
  */
 public class ClassCoverage extends AbstractCloverMetrics {
     public AbstractCloverMetrics getPreviousResult() {
-        if (owner == null) return null;
-        Run prevBuild = owner.getPreviousBuild();
-        if (prevBuild == null) return null;
-        CloverBuildAction action = prevBuild.getAction(CloverBuildAction.class);
-        while (action == null && prevBuild != null) {
-            prevBuild = prevBuild.getPreviousBuild();
-            if (prevBuild != null)
-                action = prevBuild.getAction(CloverBuildAction.class);
+        CloverBuildAction action = getPreviousCloverBuildAction();
+        if (action == null) {
+            return null;
         }
-        if (action == null) return null;
         return action.findClassCoverage(getName());
     }
 }
+
