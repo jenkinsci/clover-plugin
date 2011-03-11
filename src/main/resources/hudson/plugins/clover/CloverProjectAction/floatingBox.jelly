@@ -6,7 +6,7 @@
 
         <p/>
         <div class="test-trend-caption">
-            Code Coverage - ${elementCoverage.percentage1d}% (${elementCoverage} elements)
+            ${%test.trend.caption(elementCoverage.percentage1d,  elementCoverage)}
         </div>
 
         <j:choose>

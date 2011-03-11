@@ -22,7 +22,7 @@ public class CloverHtmlBuildAction implements Action {
     }
 
     public String getDisplayName() {
-        return "Clover HTML Report";
+        return Messages.CloverHtmlBuildAction_DisplayName();
     }
 
     public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,

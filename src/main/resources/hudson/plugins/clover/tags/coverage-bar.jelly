@@ -15,13 +15,13 @@
 
 
     <j:if test="${provider.hasData eq 'false'}">
-        <div title="Empty" class="barEmpty" style="min-width: 100px;"></div>
+        <div title="${%Empty}" class="barEmpty" style="min-width: 100px;"></div>
     </j:if>
 
     <j:if test="${provider.hasData eq 'true'}">
 
-        <div title="${provider.pcUncovered} Not Covered" style="min-width: 100px;" class="barNegative ">
-            <div title="${provider.pcCovered} Covered" class="barPositive" style="width: ${provider.pcWidth}"></div>
+        <div title="${provider.pcUncovered} ${%Not Covered}" style="min-width: 100px;" class="barNegative ">
+            <div title="${provider.pcCovered} ${%Covered}" class="barPositive" style="width: ${provider.pcWidth}"></div>
         </div>
     </j:if>
 

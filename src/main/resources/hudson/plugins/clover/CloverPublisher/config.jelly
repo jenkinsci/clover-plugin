@@ -1,44 +1,29 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="Clover report directory"
-           description="
-           Specify the path to the directory that contains the clover.xml report file, relative to
-           &lt;a href='ws/'&gt;the workspace root&lt;/a&gt;.&lt;br/&gt;
-           Clover must be configured to generate XML reports for this plugin to function fully.
-           ">
+  <f:entry title="${%Clover report directory}"
+           description="${%description.cloverReportDir}">
     <f:textbox name="clover.cloverReportDir" value="${instance.cloverReportDir}"/>
     
   </f:entry>
-    <f:entry title="Clover report file name"
-           description="
-           Specify the name of the Clover xml file generated relative to the Clover report directory specified above.
-           If not specified - 'clover.xml' is assumed.
-           ">
+    <f:entry title="${%Clover report file name}"
+           description="${%description.cloverReportFileName}">
     <f:textbox name="clover.cloverReportFileName" value="${instance.cloverReportFileName}"/>
   </f:entry>
-    <f:entry title="Coverage Metric Targets"
-             description="
-             Configure health reporting thresholds. &lt;br/&gt;
-             For the &lt;img src='${rootURL}/images/16x16/health-80plus.gif' alt='100%'&gt;
-             row, leave blank to use the default values (i.e. 70, 80, and 80 for methods, conditionals
-             and statements respectively). &lt;br/&gt;
-             For the &lt;img src='${rootURL}/images/16x16/health-00to19.gif' alt='0%'&gt; and
-             &lt;img src='${rootURL}/images/16x16/yellow.gif' alt='0%'&gt; rows, leave blank to
-             use the default values (i.e. 0).
-    ">
+    <f:entry title="${%Coverage Metric Targets}"
+             description="${%description.metric.targets}">
         <table>
             <thead>
                 <tr>
                     <td width="20%"></td>
-                    <td width="20%">% Methods</td>
-                    <td width="20%">% Conditionals</td>
-                    <td width="20%">% Statements</td>
+                    <td width="20%">% ${%Methods}</td>
+                    <td width="20%">% ${%Conditionals}</td>
+                    <td width="20%">% ${%Statements}</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <th>
                         <img src="${rootURL}/images/16x16/health-80plus.gif" alt="100%"
-                             title="Report health as 100% when coverage is greater than" />
+                             title="${%Report health as 100% when coverage is greater than}" />
                     </th>
                     <td>
                         <f:textbox name="cloverHealthyTarget.methodCoverage"
@@ -56,7 +41,7 @@
                 <tr>
                     <th>
                         <img src="${rootURL}/images/16x16/health-00to19.gif" alt="0%"
-                             title="Report health as 0% when coverage is less than" />
+                             title="${%Report health as 0% when coverage is less than}" />
                     </th>
                     <td>
                         <f:textbox name="cloverUnhealthyTarget.methodCoverage"
@@ -74,7 +59,7 @@
                 <tr>
                     <th>
                         <img src="${rootURL}/images/16x16/yellow.gif" alt="0%"
-                             title="Mark the build as unstable when coverage is less than" />
+                             title="${%Mark the build as unstable when coverage is less than}" />
                     </th>
                     <td>
                         <f:textbox name="cloverFailingTarget.methodCoverage"

@@ -2,10 +2,10 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form"
          xmlns:clover="/hudson/plugins/clover/tags">
     <tr>
-        <th>name</th>
-        <th>Total Coverage %</th>
-        <th>method, %</th>
-        <th>conditionals, %</th>
-        <th>statements, %</th>
+        <th>${%name}</th>
+        <th>${%Total Coverage} %</th>
+        <th>${%method,} %</th>
+        <th>${%conditionals,} %</th>
+        <th>${%statements,} %</th>
     </tr>
 </j:jelly>

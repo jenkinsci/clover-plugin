@@ -3,10 +3,7 @@
          xmlns:f="/lib/form" xmlns:i="jelly:fmt"
          xmlns:clover="/hudson/plugins/clover/tags">
     <t:summary icon="/plugin/clover/clover_48x48.png">
-        Clover Code Coverage - ${it.elementCoverage.percentage1d}% 
-        method ${it.methodCoverage},
-        conditional ${it.conditionalCoverage},
-        statement ${it.statementCoverage}.
+        ${%description(it.elementCoverage.percentage1d, it.methodCoverage, it.conditionalCoverage, it.statementCoverage)}
 
         <j:set var="provider" value="${it.elementCoverage}"/>
         <clover:coverage-bar/>

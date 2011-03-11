@@ -3,15 +3,15 @@
     <l:layout xmlns:clover="/hudson/plugins/clover/tags">
         <st:include it="${it.owner}" page="sidepanel.jelly" />
         <l:main-panel>
-            <h1>Clover Coverage Report</h1>
+            <h1>${%Clover Coverage Report}</h1>
             <j:if test="${it.previousResult != null}">
               <clover:floatingTrendGraph />
             </j:if>
 
-            <h2>Overall Coverage Summary</h2>
-            <clover:summaryTable title="all classes" />
+            <h2>${%Overall Coverage Summary}</h2>
+            <clover:summaryTable title="${%all classes}" />
 
-            <h2>Coverage Breakdown by Package</h2>
+            <h2>${%Coverage Breakdown by Package}</h2>
             <clover:breakdownTable />
         </l:main-panel>
     </l:layout>
