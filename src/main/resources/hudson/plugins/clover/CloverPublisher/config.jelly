@@ -9,7 +9,7 @@
     <f:textbox name="clover.cloverReportFileName" value="${instance.cloverReportFileName}"/>
   </f:entry>
     <f:entry title="${%Coverage Metric Targets}"
-             description="${%description.metric.targets}">
+             description="${%description.metric.targets(rootURL)}">
         <table>
             <thead>
                 <tr>

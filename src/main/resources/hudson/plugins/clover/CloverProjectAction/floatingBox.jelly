@@ -13,11 +13,11 @@
             <j:when test="${lastResult.previousResult != null}">
               <table style="width:380px;">
                   <tr>
-                      <th>Methods</th>
+                      <th>${%Methods}</th>
                       <td>${lastResult.methodCoverage.percentage1d}%</td>
-                      <th>Conditionals</th>
+                      <th>${%Conditionals}</th>
                       <td>${lastResult.conditionalCoverage.percentage1d}%</td>
-                      <th>Statements</th>
+                      <th>${%Statements}</th>
                       <td>${lastResult.statementCoverage.percentage1d}%</td>
                   </tr>
               </table>

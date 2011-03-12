@@ -87,7 +87,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     public String getDisplayName() {
-        return "Clover Summary Report";
+        return Messages.CloverBuildAction_DisplayName();
     }
 
     public String getUrlName() {

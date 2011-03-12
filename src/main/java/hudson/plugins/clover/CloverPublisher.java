@@ -325,7 +325,7 @@ public class CloverPublisher extends Recorder {
          */
         @Override
         public String getDisplayName() {
-            return "Publish Clover Coverage Report";
+            return Messages.CloverPublisher_DisplayName();
         }
 
         @Override

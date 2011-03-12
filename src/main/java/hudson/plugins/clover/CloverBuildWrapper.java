@@ -120,7 +120,7 @@ public class CloverBuildWrapper extends BuildWrapper {
          */
         public String getDisplayName() {
             String rootURL = Hudson.getInstance().getRootUrl();
-            return "<img src='" +rootURL+CloverProjectAction.ICON+"' height='24'/> Automatically record and report Code Coverage using <a href='http://atlassian.com/clover'>Clover.</a>. Currently for Ant builds only.";
+            return Messages.CloverBuildWrapper_DisplayName( rootURL + CloverProjectAction.ICON);
         }
 
         @Override

@@ -269,9 +269,9 @@ abstract public class AbstractCloverMetrics {
                         = new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
                 for (AbstractCloverMetrics m = metrics; m != null; m = m.getPreviousResult()) {
                     ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(m.getOwner());
-                    dsb.add(m.getMethodCoverage().getPercentageFloat(), "method", label);
-                    dsb.add(m.getConditionalCoverage().getPercentageFloat(), "conditional", label);
-                    dsb.add(m.getStatementCoverage().getPercentageFloat(), "statement", label);
+                    dsb.add(m.getMethodCoverage().getPercentageFloat(), Messages.AbstractCloverMetrics_Label_method(), label);
+                    dsb.add(m.getConditionalCoverage().getPercentageFloat(), Messages.AbstractCloverMetrics_Label_conditional(), label);
+                    dsb.add(m.getStatementCoverage().getPercentageFloat(), Messages.AbstractCloverMetrics_Label_statement(), label);
                 }
                 return dsb;
             }

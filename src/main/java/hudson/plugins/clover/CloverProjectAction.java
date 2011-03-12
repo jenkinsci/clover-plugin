@@ -58,9 +58,9 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         final File reportDir = getLastBuildReportDir();
 
         if (reportDir == null) return null;
-        if (new File(reportDir, "index.html").exists()) return "Clover HTML Coverage Report";
-        if (new File(reportDir, "clover.pdf").exists()) return "Clover PDF Coverage";
-        if (new File(reportDir, "clover.xml").exists()) return "Coverage Report";
+        if (new File(reportDir, "index.html").exists()) return Messages.CloverProjectAction_HTML_DisplayName();
+        if (new File(reportDir, "clover.pdf").exists()) return Messages.CloverProjectAction_PDF_DisplayName();
+        if (new File(reportDir, "clover.xml").exists()) return Messages.CloverProjectAction_XML_DisplayName();
 
         return null;
 
