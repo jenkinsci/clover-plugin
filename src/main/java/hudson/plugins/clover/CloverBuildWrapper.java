@@ -120,7 +120,7 @@ public class CloverBuildWrapper extends BuildWrapper {
          */
         public String getDisplayName() {
             String rootURL = Hudson.getInstance().getRootUrl();
-            return Messages.CloverBuildWrapper_DisplayName( rootURL + CloverProjectAction.ICON);
+            return Messages.CloverBuildWrapper_DisplayName();
         }
 
         @Override
