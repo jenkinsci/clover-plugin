@@ -119,7 +119,6 @@ public class CloverBuildWrapper extends BuildWrapper {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            String rootURL = Hudson.getInstance().getRootUrl();
             return Messages.CloverBuildWrapper_DisplayName();
         }
 
