@@ -34,7 +34,20 @@
         <dependency>
             <groupId>com.cenqua.clover</groupId>
             <artifactId>clover</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
+        </dependency>
+        <!--Build breaks without these:-->
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jcommon</artifactId>
+            <version>1.0.16</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.0.13</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
