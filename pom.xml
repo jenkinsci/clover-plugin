@@ -56,6 +56,10 @@
             <id>m.g.o-public</id>
             <url>http://maven.glassfish.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>atlassian</id>
+            <url>https://maven.atlassian.com/public</url>
+        </repository>
     </repositories>
 
 </project>
