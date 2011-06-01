@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
@@ -7,59 +7,59 @@
     <version>1.399</version>
   </parent>
 
-    <artifactId>clover</artifactId>
-    <packaging>hpi</packaging>
-    <version>4.0.2-SNAPSHOT</version>
-    <name>Jenkins Clover plugin</name>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
+  <artifactId>clover</artifactId>
+  <packaging>hpi</packaging>
+  <version>4.0.2-SNAPSHOT</version>
+  <name>Jenkins Clover plugin</name>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
 
-    <developers>
-        <developer>
-            <id>npellow</id>
-            <name>Nick Pellow</name>
-        </developer>
-    </developers>
+  <developers>
+    <developer>
+      <id>npellow</id>
+      <name>Nick Pellow</name>
+    </developer>
+  </developers>
 
-    <scm>
-        <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
-        <url>http://github.com/jenkinsci/clover-plugin</url>
-    </scm>
+  <scm>
+    <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
+    <url>http://github.com/jenkinsci/clover-plugin</url>
+  </scm>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
   
-    <dependencies>
-        <dependency>
-            <groupId>com.cenqua.clover</groupId>
-            <artifactId>clover</artifactId>
-            <version>3.1.0</version>
-        </dependency>
-        <!--Build breaks without these:-->
-        <dependency>
-            <groupId>jfree</groupId>
-            <artifactId>jcommon</artifactId>
-            <version>1.0.16</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.0.13</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.cenqua.clover</groupId>
+      <artifactId>clover</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <!--Build breaks without these:-->
+    <dependency>
+      <groupId>jfree</groupId>
+      <artifactId>jcommon</artifactId>
+      <version>1.0.16</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+      <version>1.0.13</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
-    <repositories>
-        <repository>
-            <id>m.g.o-public</id>
-            <url>http://maven.glassfish.org/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>atlassian</id>
-            <url>https://maven.atlassian.com/public</url>
-        </repository>
-    </repositories>
+  <repositories>
+    <repository>
+      <id>m.g.o-public</id>
+      <url>http://maven.glassfish.org/content/groups/public/</url>
+    </repository>
+    <repository>
+      <id>atlassian</id>
+      <url>https://maven.atlassian.com/public</url>
+    </repository>
+  </repositories>
 
 </project>
