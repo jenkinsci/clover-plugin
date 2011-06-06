@@ -9,7 +9,7 @@
 
   <artifactId>clover</artifactId>
   <packaging>hpi</packaging>
-  <version>4.0.2-SNAPSHOT</version>
+  <version>4.0.2</version>
   <name>Jenkins Clover plugin</name>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
 
