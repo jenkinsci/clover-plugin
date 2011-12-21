@@ -35,6 +35,8 @@ import net.sf.json.JSONObject;
 import com.atlassian.clover.api.ci.CIOptions;
 import com.atlassian.clover.api.ci.Integrator;
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A BuildWrapper that decorates the command line just before a build starts with targets and properties that will automatically
@@ -184,21 +186,29 @@ public class CloverBuildWrapper extends BuildWrapper {
             {
                 preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
 
-                // get the index of the "ant.bat 
+                // get the index of the "ant.bat
                 String argString = cmds.get(numPreSystemCmds);
-                // trim leading and trailing " if they exist...
-                argString = argString.replaceAll("\"", "");
+                // trim leading and trailing " or ' if they exist...
+                argString = argString.startsWith("'") ? argString.substring(1, argString.length()) : argString;
+                argString = argString.startsWith("\"") ? argString.substring(1, argString.length()) : argString;
+                argString = argString.endsWith("'") ? argString.substring(0, argString.length() - 1) : argString;
+                argString = argString.endsWith("\"") ? argString.substring(0, argString.length() - 1) : argString;
+                Matcher matcher = Pattern.compile("(\"[^\"]*?\"|\\S+)+").matcher(argString);
+                
+                List<String> tokens = new LinkedList<String>();
+                while(matcher.find()) {
+                    tokens.add(matcher.group(0));
+                }
 
-                String[] tokens = argString.split(" ");
-                preSystemArgs.add(tokens[0]);
+                preSystemArgs.add(tokens.get(0));
 
-                for (int i = 1; i < tokens.length; i++)
+                for (int i = 1; i < tokens.size(); i++)
                 {   // chop the ant.bat
-                    String arg = tokens[i];
+                    String arg = tokens.get(i);
                     if (sysArgSplitter.equals(arg))
                     {
                         // anything after the &&, break.
-                        postSystemArgs.addAll(Arrays.asList(tokens).subList(i, tokens.length));
+                        postSystemArgs.addAll(tokens.subList(i, tokens.size()));
                         break;
                     }
                     userArgs.add(arg);
