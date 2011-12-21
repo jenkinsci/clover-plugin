@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.File;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 import java.util.LinkedList;
@@ -168,6 +169,7 @@ public class CloverBuildWrapper extends BuildWrapper {
 
         public void decorateArgs(ProcStarter starter) throws IOException {
 
+            List<String> windowsCmdArgs = new LinkedList<String>();
             List<String> userArgs = new LinkedList<String>();
             List<String> preSystemArgs = new LinkedList<String>();
             List<String> postSystemArgs = new LinkedList<String>();
@@ -179,20 +181,25 @@ public class CloverBuildWrapper extends BuildWrapper {
             // "cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\""
             // this hacky code is used to parse out just the user specified args. ie clean test.run
             
-            final int numPreSystemCmds = 2; // hack hack hack - there are 2 commands prepended on windows...
+            final int windowsCmdArgsLength = 2; // hack hack hack - there are 2 commands prepended on windows...
             final String sysArgSplitter = "&&";
+            boolean singleQuoteSurrounds = false;
+            boolean doubleQuoteSurrounds = false;
             
-            if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant"))
+            if (!cmds.isEmpty() && cmds.size() >= windowsCmdArgsLength && !cmds.get(0).endsWith("ant"))
             {
-                preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
+                windowsCmdArgs.addAll(cmds.subList(0, windowsCmdArgsLength));
 
                 // get the index of the "ant.bat
-                String argString = cmds.get(numPreSystemCmds);
+                String argString = cmds.get(windowsCmdArgsLength);
+                
                 // trim leading and trailing " or ' if they exist...
-                argString = argString.startsWith("'") ? argString.substring(1, argString.length()) : argString;
-                argString = argString.startsWith("\"") ? argString.substring(1, argString.length()) : argString;
-                argString = argString.endsWith("'") ? argString.substring(0, argString.length() - 1) : argString;
-                argString = argString.endsWith("\"") ? argString.substring(0, argString.length() - 1) : argString;
+                singleQuoteSurrounds = argString.startsWith("'") && argString.endsWith("'");
+                argString = singleQuoteSurrounds ? argString.substring(1, argString.length() - 1) : argString;
+                
+                doubleQuoteSurrounds = argString.startsWith("\"") && argString.endsWith("\"");
+                argString = doubleQuoteSurrounds ? argString.substring(1, argString.length() - 1) : argString;
+
                 Matcher matcher = Pattern.compile("(\"[^\"]*?\"|\\S+)+").matcher(argString);
                 
                 List<String> tokens = new LinkedList<String>();
@@ -240,10 +247,43 @@ public class CloverBuildWrapper extends BuildWrapper {
                 starter.cmds(new ArrayList<String>());
 
                 // re-assemble all commands
+                StringBuilder command = new StringBuilder("");
+                if (singleQuoteSurrounds) {
+                    command.append('\'');
+                }
+                if (doubleQuoteSurrounds) {
+                    command.append('\"');
+                }
+                
+                for (Iterator<String> it = preSystemArgs.iterator(); it.hasNext();) {
+                    command.append(it.next());
+                    if (it.hasNext() || userArgs.size() > 0 || postSystemArgs.size() > 0) {
+                        command.append(' ');
+                    }
+                }
+                for (Iterator<String> it = userArgs.iterator(); it.hasNext();) {
+                    command.append(it.next());
+                    if (it.hasNext() || postSystemArgs.size() > 0) {
+                        command.append(' ');
+                    }
+                }
+                for (Iterator<String> it = postSystemArgs.iterator(); it.hasNext();) {
+                    command.append(it.next());
+                    if (it.hasNext()) {
+                        command.append(' ');
+                    }
+                }
+                if (doubleQuoteSurrounds) {
+                    command.append('\"');
+                }
+                if (singleQuoteSurrounds) {
+                    command.append('\'');
+                }
+
                 List<String> allCommands = new ArrayList<String>();
-                allCommands.addAll(preSystemArgs);
-                allCommands.addAll(userArgs);
-                allCommands.addAll(postSystemArgs);
+                allCommands.addAll(windowsCmdArgs);
+                allCommands.add(command.toString());
+
                 starter.cmds(allCommands);
                 
                 // masks.length must equal cmds.length

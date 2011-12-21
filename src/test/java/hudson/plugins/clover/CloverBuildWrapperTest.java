@@ -1,5 +1,6 @@
 package hudson.plugins.clover;
 
+import com_cenqua_clover.Clover;
 import junit.framework.TestCase;
 import hudson.util.LogTaskListener;
 import hudson.Launcher;
@@ -8,6 +9,7 @@ import hudson.FilePath;
 import hudson.remoting.Channel;
 import hudson.model.TaskListener;
 
+import java.io.File;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Map;
@@ -47,21 +49,23 @@ public class CloverBuildWrapperTest extends TestCase
         }.launch();
     }
 
-    public void testDecoratinLauncher() throws IOException
-    {
-        starter.cmds("cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\"");
+    public void testDecoratinLauncher() throws IOException, InterruptedException {
+        starter.cmds("cmd.exe", "/C", "\"ant.bat clean test.run && exit %%ERRORLEVEL%%\"");
         starter.pwd("target");
         starter.masks(new boolean[starter.cmds().size()]);
         cloverLauncher.decorateArgs(starter);
         int i = 0;
         assertEquals("cmd.exe", starter.cmds().get(i++));
         assertEquals("/C", starter.cmds().get(i++));
-        assertEquals("ant.bat", starter.cmds().get(i++));
-        assertEquals("clover.fullclean", starter.cmds().get(i++));
+        assertEquals(
+            String.format(
+                "\"ant.bat clover.fullclean clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib %s -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=%s && exit %%%%ERRORLEVEL%%%%\"",
+                calcCloverJar(),
+                calcCloverLicense()),
+            starter.cmds().get(i++));
     }
 
-    public void testDecoratinLauncherWithSpacesAndQuotes() throws IOException
-    {
+    public void testDecoratinLauncherWithSpacesAndQuotes() throws IOException, InterruptedException {
         starter.cmds("cmd.exe", "/C", "'\"\"c:\\Program Files\\apache-ant-1.8.2\\bin\\ant.bat\" -file build.xml clean test.run && exit %%ERRORLEVEL%%\"'");
         starter.pwd("target");
         starter.masks(new boolean[starter.cmds().size()]);
@@ -69,8 +73,21 @@ public class CloverBuildWrapperTest extends TestCase
         int i = 0;
         assertEquals("cmd.exe", starter.cmds().get(i++));
         assertEquals("/C", starter.cmds().get(i++));
-        assertEquals("\"c:\\Program Files\\apache-ant-1.8.2\\bin\\ant.bat\"", starter.cmds().get(i++));
-        assertEquals("clover.fullclean", starter.cmds().get(i++));
+        assertEquals(
+            String.format(
+                "'\"\"c:\\Program Files\\apache-ant-1.8.2\\bin\\ant.bat\" clover.fullclean -file build.xml clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib %s -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=%s && exit %%%%ERRORLEVEL%%%%\"'",
+                calcCloverJar(),
+                calcCloverLicense()),
+            starter.cmds().get(i++));
+    }
+
+    private String calcCloverLicense() throws IOException, InterruptedException {
+        return new File(new FilePath(starter.pwd(), ".clover/clover.license").toURI()).getAbsolutePath();
+    }
+
+    private String calcCloverJar() {
+        String path = Clover.class.getClassLoader().getResource(Clover.class.getName().replace('.', '/') + ".class").getPath();
+        return path.substring(0, path.indexOf("!")).replace("file:", "");
     }
 
 }
