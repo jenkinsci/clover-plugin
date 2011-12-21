@@ -59,7 +59,7 @@ public class CloverBuildWrapperTest extends TestCase
         assertEquals("/C", starter.cmds().get(i++));
         assertEquals(
             String.format(
-                "\"ant.bat clover.fullclean clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib %s -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=%s && exit %%%%ERRORLEVEL%%%%\"",
+                "\"ant.bat clover.fullclean clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib \"%s\" -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=\"%s\" && exit %%%%ERRORLEVEL%%%%\"",
                 calcCloverJar(),
                 calcCloverLicense()),
             starter.cmds().get(i++));
@@ -75,7 +75,7 @@ public class CloverBuildWrapperTest extends TestCase
         assertEquals("/C", starter.cmds().get(i++));
         assertEquals(
             String.format(
-                "'\"\"c:\\Program Files\\apache-ant-1.8.2\\bin\\ant.bat\" clover.fullclean -file build.xml clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib %s -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=%s && exit %%%%ERRORLEVEL%%%%\"'",
+                "'\"\"c:\\Program Files\\apache-ant-1.8.2\\bin\\ant.bat\" clover.fullclean -file build.xml clean test.run -Dclover.skip.json=true -Dclover.skip.report=true -Dclover.optimization.enabled=false -lib \"%s\" -listener com.atlassian.clover.ci.AntIntegrationListener -Dclover.license.path=\"%s\" && exit %%%%ERRORLEVEL%%%%\"'",
                 calcCloverJar(),
                 calcCloverLicense()),
             starter.cmds().get(i++));
