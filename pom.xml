@@ -18,6 +18,10 @@
       <id>npellow</id>
       <name>Nick Pellow</name>
     </developer>
+    <developer>
+      <id>olamy</id>
+      <name>Olivier Lamy</name>
+    </developer>
   </developers>
 
   <scm>
