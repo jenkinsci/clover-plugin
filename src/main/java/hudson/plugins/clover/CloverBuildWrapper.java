@@ -158,6 +158,11 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         @Override
+        public boolean isUnix() {
+            return outer.isUnix();
+        }
+
+        @Override
         public Proc launch(ProcStarter starter) throws IOException {
 
             decorateArgs(starter);
