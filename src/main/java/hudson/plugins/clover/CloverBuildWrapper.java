@@ -1,5 +1,7 @@
 package hudson.plugins.clover;
 
+import com.cenqua.clover.util.ClassPathUtil;
+import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.Launcher;
@@ -62,7 +64,7 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
         DescribableList publishers = build.getProject().getPublishersList();
-        if (!publishers.contains(CloverPublisher.DESCRIPTOR)) {
+        if (!publishers.contains(getDescriptor())) {
             final String reportDir = "clover";
             listener.getLogger().println("Adding Clover Publisher with reportDir: " + reportDir);
             build.getProject().getPublishersList().add(new CloverPublisher(reportDir, null));
@@ -91,11 +93,8 @@ public class CloverBuildWrapper extends BuildWrapper {
                 fullClean(true);
 
         final Launcher outer = launcher;
-        return new CloverDecoratingLauncher(outer, options, license);
+        return new CloverDecoratingLauncher(this, outer, options, license);
     }
-
-    public static final Descriptor<BuildWrapper> DESCRIPTOR = new DescriptorImpl();
-
 
     /**
      * Descriptor for {@link CloverPublisher}. Used as a singleton. The class is marked as public so that it can be
@@ -149,9 +148,11 @@ public class CloverBuildWrapper extends BuildWrapper {
         private final Launcher outer;
         private final CIOptions.Builder options;
         private final String license;
+        private final CloverBuildWrapper wrapper;
 
-        public CloverDecoratingLauncher(Launcher outer, CIOptions.Builder options, String license) {
+        public CloverDecoratingLauncher(CloverBuildWrapper cloverBuildWrapper, Launcher outer, CIOptions.Builder options, String license) {
             super(outer);
+            this.wrapper = cloverBuildWrapper;
             this.outer = outer;
             this.options = options;
             this.license = license;
@@ -171,7 +172,7 @@ public class CloverBuildWrapper extends BuildWrapper {
 
         public void decorateArgs(ProcStarter starter) throws IOException {
 
-            List<String> userArgs = new LinkedList<String>();
+            final List<String> userArgs = new LinkedList<String>();
             List<String> preSystemArgs = new LinkedList<String>();
             List<String> postSystemArgs = new LinkedList<String>();
 
@@ -223,16 +224,47 @@ public class CloverBuildWrapper extends BuildWrapper {
 
             if (!userArgs.isEmpty())
             {
+                // We can't use clover AntDecorator as this one isn't serializable on jenkins remoting
+                // and expect to be loaded from clover.jar, not remoting classloader
 
                 // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
-                options.fullClean(true);
+                userArgs.add(0, "clover.fullclean");
 
-                setupLicense(starter);
+                // As decompiled from com.atlassian.clover.ci.AntIntegrator;
+                if(!wrapper.json) {
+                    userArgs.add("-Dclover.skip.json=true");
+                }
 
-                Integrator integrator = Integrator.Factory.newAntIntegrator(options.build());
-                
-                integrator.decorateArguments(userArgs);
-                starter.cmds(new ArrayList<String>());
+                if(!wrapper.historical) {
+                    userArgs.add("-Dclover.skip.report=true");
+                } else {
+                    userArgs.add("-Dclover.skip.current=true");
+                }
+
+                FilePath cloverJar = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.jar");
+                try {
+                    String cloverJarLocation = ClassPathUtil.getCloverJarPath();
+                    cloverJar.copyFrom(new FilePath(new File(cloverJarLocation)));
+                    userArgs.add("-lib");
+                    userArgs.add("\"" + cloverJar.getRemote() + "\"");
+                } catch (InterruptedException e) {
+                    listener.getLogger().print("Could not create clover library file at: " + cloverJar + ".  Please supply '-lib /path/to/clover.jar'.");
+                    listener.getLogger().print(e.getMessage());
+                }
+
+                FilePath licenseFile = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.license");
+                try {
+                    if (license == null) {
+                        listener.getLogger().println("No Clover license configured. Please download a free 30 day license from http://my.atlassian.com.");
+                        return;
+                    }
+                    licenseFile.write(license, "UTF-8");
+                    userArgs.add("-Dclover.license.path=\"" + licenseFile.getRemote() + "\"");
+                } catch (InterruptedException e) {
+                    listener.getLogger().print("Could not create license file at: " + licenseFile + ". Setting as a system property.");
+                    listener.getLogger().print(e.getMessage());
+                    userArgs.add("-Dclover.license.cert=\"" + license + "\"");
+                }
 
                 // re-assemble all commands
                 List<String> allCommands = new ArrayList<String>();
@@ -250,25 +282,6 @@ public class CloverBuildWrapper extends BuildWrapper {
             }
         }
 
-        private void setupLicense(ProcStarter starter) throws IOException {
-
-            if (license == null) {
-                listener.getLogger().println("No Clover license configured. Please download a free 30 day license from http://my.atlassian.com.");
-                return;
-            }
-
-            // create a tmp license file.
-            FilePath licenseFile = new FilePath(starter.pwd(), ".clover/clover.license");
-            try {
-                licenseFile.write(license, "UTF-8");
-                options.license(new File(licenseFile.toURI()));
-            } catch (InterruptedException e) {
-                listener.getLogger().print("Could not create license file at: " + licenseFile + ". Setting as a system property.");
-                listener.getLogger().print(e.getMessage());
-                options.licenseCert(license);
-            }
-        }
-
         @Override
             public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
             return outer.launchChannel(cmd, out, workDir, envVars);
@@ -280,4 +293,5 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
     }
+
 }
