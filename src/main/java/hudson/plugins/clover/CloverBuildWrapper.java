@@ -1,5 +1,6 @@
 package hudson.plugins.clover;
 
+import com.atlassian.clover.ci.AntIntegrationListener;
 import com.cenqua.clover.util.ClassPathUtil;
 import hudson.remoting.Callable;
 import hudson.tasks.BuildWrapper;
@@ -240,6 +241,9 @@ public class CloverBuildWrapper extends BuildWrapper {
                 } else {
                     userArgs.add("-Dclover.skip.current=true");
                 }
+
+                userArgs.add("-listener");
+                userArgs.add(AntIntegrationListener.class.getName());
 
                 FilePath cloverJar = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.jar");
                 try {
