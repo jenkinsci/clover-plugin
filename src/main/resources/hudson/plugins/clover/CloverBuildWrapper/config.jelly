@@ -1,4 +1,17 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <j:invokeStatic var="cloverInstallations" className="hudson.plugins.clover.CloverInstallation" method="installations"/>
+    <j:if test="${not empty cloverInstallations}">
+        <f:entry title="${%Clover installation}" field="clover">
+            <select class="setting-input" name="clover">
+                <option value="(Default)">(${%Default})</option>
+                <j:forEach var="inst" items="${cloverInstallations}">
+                    <f:option selected="${inst.name==instance.clover}" value="${inst.name}">${inst.name}</f:option>
+                </j:forEach>
+            </select>
+        </f:entry>
+    </j:if>
+
     <f:entry title="${%Generate an historical report}" help="/plugin/clover/help-historical.html">
         <f:checkbox name="clover.historical" checked="${instance.historical}"/>
     </f:entry>

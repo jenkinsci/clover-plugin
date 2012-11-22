@@ -2,7 +2,7 @@ package hudson.plugins.clover;
 
 import com.atlassian.clover.ci.AntIntegrationListener;
 import com.cenqua.clover.util.ClassPathUtil;
-import hudson.remoting.Callable;
+import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.Launcher;
@@ -12,15 +12,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.util.DescribableList;
 import hudson.remoting.Channel;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.Run;
-import hudson.model.Descriptor;
-import hudson.model.AbstractProject;
-import hudson.model.Hudson;
-import hudson.model.Project;
-import hudson.model.FreeStyleProject;
-import hudson.model.Action;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,7 +27,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.DataBoundConstructor;
 import net.sf.json.JSONObject;
 import com.atlassian.clover.api.ci.CIOptions;
-import com.atlassian.clover.api.ci.Integrator;
+
 import java.util.Collections;
 
 /**
@@ -49,12 +40,14 @@ public class CloverBuildWrapper extends BuildWrapper {
     public boolean historical = true;
     public boolean json = true;
     public String licenseCert;
+    public String clover;
 
     @DataBoundConstructor
-    public CloverBuildWrapper(boolean historical, boolean json, String licenseCert) {
+    public CloverBuildWrapper(boolean historical, boolean json, String licenseCert, String clover) {
         this.historical = historical;
         this.json = json;
         this.licenseCert = licenseCert;
+        this.clover = clover;
     }
 
     @Override
@@ -84,7 +77,6 @@ public class CloverBuildWrapper extends BuildWrapper {
     @Override
     public Launcher decorateLauncher(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
 
-
         final DescriptorImpl descriptor = Hudson.getInstance().getDescriptorByType(DescriptorImpl.class);
 
         final String license = Util.nullify(licenseCert) == null ? descriptor.licenseCert : licenseCert;
@@ -94,7 +86,13 @@ public class CloverBuildWrapper extends BuildWrapper {
                 fullClean(true);
 
         final Launcher outer = launcher;
-        return new CloverDecoratingLauncher(this, outer, options, license);
+
+        CloverInstallation installation = CloverInstallation.forName(clover);
+        if (installation != null) {
+            installation = installation.forNode(build.getBuiltOn(), outer.getListener());
+        }
+
+        return new CloverDecoratingLauncher(this, installation, outer, options, license);
     }
 
     /**
@@ -141,8 +139,6 @@ public class CloverBuildWrapper extends BuildWrapper {
             return (item instanceof FreeStyleProject);
 
         }
-
-
     }
 
     public static class CloverDecoratingLauncher extends Launcher {
@@ -150,10 +146,12 @@ public class CloverBuildWrapper extends BuildWrapper {
         private final CIOptions.Builder options;
         private final String license;
         private final CloverBuildWrapper wrapper;
+        private final CloverInstallation clover;
 
-        public CloverDecoratingLauncher(CloverBuildWrapper cloverBuildWrapper, Launcher outer, CIOptions.Builder options, String license) {
+        public CloverDecoratingLauncher(CloverBuildWrapper cloverBuildWrapper, CloverInstallation clover, Launcher outer, CIOptions.Builder options, String license) {
             super(outer);
             this.wrapper = cloverBuildWrapper;
+            this.clover = clover;
             this.outer = outer;
             this.options = options;
             this.license = license;
@@ -163,6 +161,8 @@ public class CloverBuildWrapper extends BuildWrapper {
         public boolean isUnix() {
             return outer.isUnix();
         }
+
+
 
         @Override
         public Proc launch(ProcStarter starter) throws IOException {
@@ -245,16 +245,24 @@ public class CloverBuildWrapper extends BuildWrapper {
                 userArgs.add("-listener");
                 userArgs.add(AntIntegrationListener.class.getName());
 
-                FilePath cloverJar = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.jar");
-                try {
-                    String cloverJarLocation = ClassPathUtil.getCloverJarPath();
-                    cloverJar.copyFrom(new FilePath(new File(cloverJarLocation)));
+
+                if (clover != null) {
                     userArgs.add("-lib");
-                    userArgs.add("\"" + cloverJar.getRemote() + "\"");
-                } catch (InterruptedException e) {
-                    listener.getLogger().print("Could not create clover library file at: " + cloverJar + ".  Please supply '-lib /path/to/clover.jar'.");
-                    listener.getLogger().print(e.getMessage());
+                    userArgs.add("\"" + clover.getHome() + "\"");
+                } else {
+                    // Fall back to the embedded clover.jar
+                    FilePath path = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.jar");
+                    try {
+                        String cloverJarLocation = ClassPathUtil.getCloverJarPath();
+                        path.copyFrom(new FilePath(new File(cloverJarLocation)));
+                        userArgs.add("-lib");
+                        userArgs.add("\"" + path.getRemote() + "\"");
+                    } catch (InterruptedException e) {
+                        listener.getLogger().print("Could not create clover library file at: " + path + ".  Please supply '-lib /path/to/clover.jar'.");
+                        listener.getLogger().print(e.getMessage());
+                    }
                 }
+
 
                 FilePath licenseFile = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.license");
                 try {
