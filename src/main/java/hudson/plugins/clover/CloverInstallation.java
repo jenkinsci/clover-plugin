@@ -51,6 +51,7 @@ public class CloverInstallation extends ToolInstallation implements NodeSpecific
     public static final class DescriptorImpl extends ToolDescriptor<CloverInstallation> {
 
         public DescriptorImpl() {
+            super.setInstallations(new CloverInstallation[0]);
             load();
         }
 
