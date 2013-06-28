@@ -39,7 +39,7 @@
     <dependency>
       <groupId>com.cenqua.clover</groupId>
       <artifactId>clover</artifactId>
-      <version>3.1.7</version>
+      <version>3.1.12</version>
     </dependency>
     <!--Build breaks without these:-->
     <dependency>
