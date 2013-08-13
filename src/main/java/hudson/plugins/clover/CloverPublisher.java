@@ -158,7 +158,7 @@ public class CloverPublisher extends Recorder {
 
             if (htmlExists) {
                 // only add the HTML build action, if the HTML report is available
-                build.getActions().add(new CloverHtmlBuildAction(buildTarget));
+                build.addAction(new CloverHtmlBuildAction(buildTarget));
             }
             processCloverXml(build, listener, coverageReportDir, buildTarget);
 

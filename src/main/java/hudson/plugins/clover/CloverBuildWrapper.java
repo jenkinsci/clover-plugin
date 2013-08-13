@@ -10,6 +10,7 @@ import hudson.Proc;
 import hudson.FilePath;
 import hudson.Extension;
 import hudson.Util;
+import hudson.tasks.Publisher;
 import hudson.util.DescribableList;
 import hudson.remoting.Channel;
 
@@ -56,12 +57,32 @@ public class CloverBuildWrapper extends BuildWrapper {
         return new Environment() {};
     }
 
+    /**
+     * Add CloverPublisher to the project. Used in case of automatic Clover integration. Do not add if there is
+     * another CloverPublisher defined already (i.e. was added manually by user) having the default value of the
+     * report directory.
+     * @param build
+     * @param listener
+     * @throws IOException
+     */
     private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
-        DescribableList publishers = build.getProject().getPublishersList();
-        if (!publishers.contains(getDescriptor())) {
-            final String reportDir = "clover";
-            listener.getLogger().println("Adding Clover Publisher with reportDir: " + reportDir);
-            build.getProject().getPublishersList().add(new CloverPublisher(reportDir, null));
+        final String DEFAULT_REPORT_DIR = "clover";
+        final DescribableList<Publisher,Descriptor<Publisher>> publishers = build.getProject().getPublishersList();
+        boolean isAlreadyDefined = false;
+
+        // search for existing CloverPublisher with the same report directory
+        for (Publisher publisher : publishers) {
+            if (publisher instanceof CloverPublisher) {
+                if ( DEFAULT_REPORT_DIR.equals(((CloverPublisher)publisher).getCloverReportDir()) ) {
+                    isAlreadyDefined = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isAlreadyDefined) {
+            listener.getLogger().println("Adding Clover Publisher with reportDir: " + DEFAULT_REPORT_DIR);
+            build.getProject().getPublishersList().add(new CloverPublisher(DEFAULT_REPORT_DIR, null));
         }
     }
 
