@@ -33,13 +33,13 @@ public class RatioTest extends TestCase {
      * @throws Exception
      */
     public void testGetPercentageFloat() throws Exception {
-        assertEquals(Ratio.create(  0,0).getPercentageFloat(), 100.0f, 0.005f);
-        assertEquals(Ratio.create(  1,0).getPercentageFloat(), 100.0f, 0.005f);
-        assertEquals(Ratio.create(100,0).getPercentageFloat(), 100.0f, 0.005f);
+        assertEquals("0/0   => 100", Ratio.create(  0,0).getPercentageFloat(), 100.0f, 0.005f);
+        assertEquals("1/0   => 100", Ratio.create(  1,0).getPercentageFloat(), 100.0f, 0.005f);
+        assertEquals("100/0 => 100", Ratio.create(100,0).getPercentageFloat(), 100.0f, 0.005f);
 
-        assertEquals(Ratio.create(0,5).getPercentageFloat(),   0.0f, 0.005f);
-        assertEquals(Ratio.create(4,5).getPercentageFloat(),  80.0f, 0.005f);
-        assertEquals(Ratio.create(5,5).getPercentageFloat(), 100.0f, 0.005f);
+        assertEquals("0/5 =>   0", Ratio.create(0,5).getPercentageFloat(),   0.0f, 0.005f);
+        assertEquals("4/5 =>  80", Ratio.create(4,5).getPercentageFloat(),  80.0f, 0.005f);
+        assertEquals("5/5 => 100", Ratio.create(5,5).getPercentageFloat(), 100.0f, 0.005f);
     }
 
 }
