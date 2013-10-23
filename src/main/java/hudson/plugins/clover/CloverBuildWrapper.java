@@ -1,8 +1,16 @@
 package hudson.plugins.clover;
 
 import com.atlassian.clover.ci.AntIntegrationListener;
-import com.cenqua.clover.util.ClassPathUtil;
-import hudson.model.*;
+import com.atlassian.clover.util.ClassPathUtil;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleProject;
+import hudson.model.Hudson;
+import hudson.model.Project;
+import hudson.model.Run;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.Launcher;
