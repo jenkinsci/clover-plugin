@@ -85,11 +85,11 @@ final public class Ratio implements Serializable, CoverageBarProvider {
      * Gets the percentage in float.
      */
     public float getPercentageFloat() {
-        if (Float.compare(denominator, numerator) == 0)
-            return 100; // n == d, even if d == 0
-        if (denominator == 0.0f)
+        if (Float.compare(numerator, denominator) >= 0)
+            return 100; // n >= d, even if d == 0
+        if (Float.compare(denominator, 0.0f) == 0)
             return 0.0f; // any other case where d == 0
-        return 100*numerator/denominator;
+        return 100 * numerator / denominator;
     }
 
     public boolean equals(Object o) {
