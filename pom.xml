@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.3.1-SNAPSHOT</version>
+    <version>4.4.0-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
@@ -24,16 +24,16 @@
         <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/clover-plugin</url>
-        <tag>clover-4.3.0</tag>
+        <tag>clover-4.4.0</tag>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.cenqua.clover</groupId>
+            <groupId>com.atlassian.clover</groupId>
             <artifactId>clover</artifactId>
-            <version>3.3.0</version>
+            <version>4.0.0</version>
         </dependency>
         <!--Build breaks without these:-->
         <dependency>
@@ -50,12 +50,23 @@
         </dependency>
     </dependencies>
     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.5</version>
                 </plugin>
             </plugins>
         </pluginManagement>
