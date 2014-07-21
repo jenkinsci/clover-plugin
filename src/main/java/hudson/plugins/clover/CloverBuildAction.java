@@ -15,7 +15,7 @@ import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +35,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
 
-    private transient WeakReference<ProjectCoverage> report;
+    private transient SoftReference<ProjectCoverage> report;
 
     public HealthReport getBuildHealth() {
         if (healthyTarget == null || unhealthyTarget == null)
@@ -121,7 +121,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     CloverBuildAction(AbstractBuild owner, String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget,
                       CoverageTarget unhealthyTarget) {
         this.owner = owner;
-        this.report = new WeakReference<ProjectCoverage>(r);
+        this.report = new SoftReference<ProjectCoverage>(r);
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {
             this.buildBaseDir = File.separator;
@@ -148,7 +148,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
             r.setOwner(owner);
 
-            report = new WeakReference<ProjectCoverage>(r);
+            report = new SoftReference<ProjectCoverage>(r);
             return r;
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to load " + reportFile, e);
