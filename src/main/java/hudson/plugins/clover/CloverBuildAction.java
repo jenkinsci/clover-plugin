@@ -4,6 +4,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.plugins.clover.results.AbstractPackageAggregatedMetrics;
 import hudson.plugins.clover.results.ClassCoverage;
 import hudson.plugins.clover.results.FileCoverage;
@@ -19,6 +20,7 @@ import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.RunAction2;
 import org.jvnet.localizer.Localizable;
 
 
@@ -29,8 +31,8 @@ import org.jvnet.localizer.Localizable;
  * @author connollys
  * @since 03-Jul-2007 08:43:08
  */
-public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy {
-    public final AbstractBuild owner;
+public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2 {
+    public transient AbstractBuild owner;
     private String buildBaseDir;
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -118,9 +120,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
-    CloverBuildAction(AbstractBuild owner, String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget,
-                      CoverageTarget unhealthyTarget) {
-        this.owner = owner;
+    CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         this.report = new SoftReference<ProjectCoverage>(r);
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {
@@ -130,9 +130,21 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
-        r.setOwner(owner);
     }
 
+    @Override public void onAttached(Run<?,?> r) {
+        owner = (AbstractBuild) r;
+        if (report != null) {
+            ProjectCoverage c = report.get();
+            if (c != null) {
+                c.setOwner(owner);
+            }
+        }
+    }
+
+    @Override public void onLoad(Run<?,?> r) {
+        owner = (AbstractBuild) r;
+    }
     
     /** Obtains the detailed {@link CoverageReport} instance. */
     public synchronized ProjectCoverage getResult() {
@@ -260,8 +272,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(AbstractBuild<?, ?> build, String workspacePath, ProjectCoverage result,
-                                         CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
-        return new CloverBuildAction(build, workspacePath, result, healthyTarget, unhealthyTarget);
+    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+        return new CloverBuildAction(workspacePath, result, healthyTarget, unhealthyTarget);
     }
 }

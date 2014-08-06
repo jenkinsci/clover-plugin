@@ -205,9 +205,7 @@ public class CloverPublisher extends Recorder {
                 e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + buildTarget));
                 build.setResult(Result.FAILURE);
             }
-            final CloverBuildAction action = CloverBuildAction.load(build, workspacePath, result, healthyTarget, unhealthyTarget);
-
-            build.getActions().add(action);
+            build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
             Set<CoverageMetric> failingMetrics = failingTarget.getFailingMetrics(result);
             if (!failingMetrics.isEmpty()) {
                 listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
