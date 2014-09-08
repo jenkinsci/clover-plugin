@@ -1,5 +1,6 @@
 package hudson.plugins.clover;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -129,18 +130,20 @@ public class CloverPublisher extends Recorder {
 
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
 
+        final EnvVars env = build.getEnvironment(listener);
         final File buildRootDir = build.getRootDir(); // should this top level?
         final FilePath buildTarget = new FilePath(buildRootDir);
         final FilePath workspace = build.getWorkspace();
-        FilePath coverageReportDir = workspace.child(cloverReportDir);
+        String reportDir = env.expand(cloverReportDir);
+        FilePath coverageReportDir = workspace.child(reportDir);
         try {
             listener.getLogger().println("Publishing Clover coverage report...");
 
             // search one deep for the report dir, if it doesn't exist.
             if (!coverageReportDir.exists()) {
-                coverageReportDir = findOneDirDeep(workspace, cloverReportDir);
+                coverageReportDir = findOneDirDeep(workspace, reportDir);
             }
 
             // if the build has failed, then there's not
@@ -154,7 +157,7 @@ public class CloverPublisher extends Recorder {
             }
 
             final boolean htmlExists = copyHtmlReport(coverageReportDir, buildTarget, listener);
-            final boolean xmlExists = copyXmlReport(coverageReportDir, buildTarget, listener);
+            final boolean xmlExists = copyXmlReport(coverageReportDir, buildTarget, listener, env.expand(getCloverReportFileName()));
 
             if (htmlExists) {
                 // only add the HTML build action, if the HTML report is available
@@ -221,10 +224,10 @@ public class CloverPublisher extends Recorder {
         }
     }
 
-    private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener) throws IOException, InterruptedException {
+    private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener, String fileName) throws IOException, InterruptedException {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
-        final FilePath cloverXmlPath = findOneDirDeep(coverageReport, getCloverReportFileName());
+        final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
         final FilePath toFile = buildTarget.child("clover.xml");
         if (cloverXmlPath.exists()) {
             listener.getLogger().println("Publishing Clover XML report...");
@@ -232,7 +235,7 @@ public class CloverPublisher extends Recorder {
             return true;
         } else {
             listener.getLogger().println("Clover xml file does not exist in: " + coverageReport +
-                                         " called: " + getCloverReportFileName() +
+                                         " called: " + fileName +
                                          " and will not be copied to: " + toFile);
             return false;
         }
