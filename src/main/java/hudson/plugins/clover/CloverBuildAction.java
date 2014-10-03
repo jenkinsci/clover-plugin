@@ -43,7 +43,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final LoadingCache<CloverBuildAction,ProjectCoverage> reports = CacheBuilder.newBuilder().
         weakKeys().
-        expireAfterAccess(15, TimeUnit.MINUTES).
+        expireAfterAccess(60, TimeUnit.MINUTES).
         build(new CacheLoader<CloverBuildAction,ProjectCoverage>() {
             @Override public ProjectCoverage load(CloverBuildAction k) throws IOException {
                 return k.computeResult();
