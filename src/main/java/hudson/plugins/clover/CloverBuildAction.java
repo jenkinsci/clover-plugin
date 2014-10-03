@@ -1,5 +1,8 @@
 package hudson.plugins.clover;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import hudson.model.AbstractBuild;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
@@ -16,8 +19,9 @@ import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.RunAction2;
@@ -37,7 +41,14 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
 
-    private transient WeakReference<ProjectCoverage> report;
+    private static final LoadingCache<CloverBuildAction,ProjectCoverage> reports = CacheBuilder.newBuilder().
+        weakKeys().
+        expireAfterAccess(15, TimeUnit.MINUTES).
+        build(new CacheLoader<CloverBuildAction,ProjectCoverage>() {
+            @Override public ProjectCoverage load(CloverBuildAction k) throws IOException {
+                return k.computeResult();
+            }
+        });
 
     public HealthReport getBuildHealth() {
         if (healthyTarget == null || unhealthyTarget == null)
@@ -121,7 +132,9 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
-        this.report = new WeakReference<ProjectCoverage>(r);
+        if (r != null) {
+            reports.put(this, r);
+        }
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {
             this.buildBaseDir = File.separator;
@@ -134,11 +147,9 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     @Override public void onAttached(Run<?,?> r) {
         owner = (AbstractBuild) r;
-        if (report != null) {
-            ProjectCoverage c = report.get();
-            if (c != null) {
-                c.setOwner(owner);
-            }
+        ProjectCoverage c = reports.getIfPresent(this);
+        if (c != null) {
+            c.setOwner(owner);
         }
     }
 
@@ -148,24 +159,19 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     
     /** Obtains the detailed {@link CoverageReport} instance. */
     public synchronized ProjectCoverage getResult() {
-        if (report != null) {
-            ProjectCoverage r = report.get();
-            if (r != null) return r;
-        }
-
-        File reportFile = CloverPublisher.getCloverXmlReport(owner);
         try {
-
-            ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);
-
-            r.setOwner(owner);
-
-            report = new WeakReference<ProjectCoverage>(r);
-            return r;
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to load " + reportFile, e);
+            return reports.get(this);
+        } catch (ExecutionException e) {
+            logger.log(Level.WARNING, "Failed to load " + CloverPublisher.getCloverXmlReport(owner), e);
             return null;
         }
+    }
+
+    private ProjectCoverage computeResult() throws IOException {
+        File reportFile = CloverPublisher.getCloverXmlReport(owner);
+        ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);
+        r.setOwner(owner);
+        return r;
     }
 
     // the following is ugly but I might need it
