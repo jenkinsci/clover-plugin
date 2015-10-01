@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.509.3</version>
+        <version>1.580.3</version>
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
@@ -28,6 +28,7 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <workflow-jenkins-plugin.version>1.7</workflow-jenkins-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -47,6 +48,12 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-aggregator</artifactId>
+            <version>${workflow-jenkins-plugin.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

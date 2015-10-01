@@ -228,7 +228,7 @@ abstract public class AbstractCloverMetrics {
         this.name = name;
     }
 
-    public AbstractBuild getOwner() {
+    public Run<?, ?> getOwner() {
         return owner;
     }
 
@@ -260,7 +260,7 @@ abstract public class AbstractCloverMetrics {
     }
 
     public Graph getTrendGraph() {
-        AbstractBuild build = getOwner();
+        Run<?, ?> build = getOwner();
         Calendar t = build.getTimestamp();
         return new GraphImpl(this, t) {
             @Override
