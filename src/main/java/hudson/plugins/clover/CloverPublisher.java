@@ -126,6 +126,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     /**
      * Gets the directory where the Clover Report is stored for the given build.
+     *
+     * @deprecated see {@link #getCloverXmlReport(Run)}
      */
     @Deprecated
     /*package*/
@@ -141,6 +143,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return new File(build.getRootDir(), "clover.xml");
     }
 
+    /**
+     * @param build
+     * @param launcher
+     * @param listener
+     * @return boolean
+     * @throws InterruptedException
+     * @throws IOException
+     * @deprecated see {@link #perform(Run, FilePath, Launcher, TaskListener)}
+     */
     @Deprecated
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -233,6 +244,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * Process the clover.xml from the build directory. The clover.xml must have been already copied to the build dir.
      *
+     * @deprecated see {@link #processCloverXml(Run, FilePath, TaskListener, FilePath, FilePath)}
      */
     @Deprecated
     private void processCloverXml(AbstractBuild<?, ?> build, BuildListener listener, FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
@@ -327,6 +339,16 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
+    /**
+     * @param coverageReport
+     * @param buildTarget
+     * @param listener
+     * @param fileName
+     * @return boolean
+     * @throws IOException
+     * @throws InterruptedException
+     * @deprecated see {@link #copyXmlReport(FilePath, FilePath, TaskListener, String)}
+     */
     @Deprecated
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener, String fileName) throws IOException, InterruptedException {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
@@ -363,6 +385,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
+    /**
+     * @param coverageReport
+     * @param buildTarget
+     * @param listener
+     * @return boolean
+     * @throws IOException
+     * @throws InterruptedException
+     * @deprecated see {@link #copyHtmlReport(FilePath, FilePath, TaskListener)}
+     */
     @Deprecated
     private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, BuildListener listener) throws IOException, InterruptedException {
         // Copy the HTML coverage report
@@ -393,7 +424,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     /**
      * Searches the current directory and its immediate children directories for filename.
-     * The first occurence is returned.
+     * The first occurrence is returned.
      * @param startDir the dir to start searching in
      * @param filename the filename to search for
      * @return the path of filename
@@ -418,6 +449,11 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return dirContainingFile.child(filename);
     }
 
+    /**
+     * @param listener
+     * @param build
+     * @deprecated see {@link #flagMissingCloverXml(TaskListener, Run)}
+     */
     @Deprecated
     private void flagMissingCloverXml(BuildListener listener, AbstractBuild<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName() + "'.  Did you generate " +
