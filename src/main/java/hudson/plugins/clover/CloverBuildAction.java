@@ -36,7 +36,7 @@ import org.jvnet.localizer.Localizable;
  * @since 03-Jul-2007 08:43:08
  */
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2 {
-    public transient AbstractBuild owner;
+    public transient Run<?, ?> owner;
     private String buildBaseDir;
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -117,8 +117,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     /** Gets the previous {@link CloverBuildAction} of the given build. */
     /*package*/
-    static CloverBuildAction getPreviousResult(AbstractBuild start) {
-        AbstractBuild<?, ?> b = start;
+    static CloverBuildAction getPreviousResult(Run<?, ?> start) {
+        Run<?, ?> b = start;
         while (true) {
             b = b.getPreviousBuild();
             if (b == null)
@@ -145,11 +145,10 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         this.unhealthyTarget = unhealthyTarget;
     }
 
-    @Override public void onAttached(Run<?,?> r) {
-        owner = (AbstractBuild) r;
+    @Override public void onAttached(Run<?,?> build) {
         ProjectCoverage c = reports.getIfPresent(this);
         if (c != null) {
-            c.setOwner(owner);
+            c.setOwner(build);
         }
     }
 

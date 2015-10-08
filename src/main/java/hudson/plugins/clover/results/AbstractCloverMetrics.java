@@ -48,7 +48,7 @@ abstract public class AbstractCloverMetrics {
 
     private int elements;
     private int coveredelements;
-    public AbstractBuild owner = null;
+    public Run<?, ?> owner = null;
 
     public Ratio getMethodCoverage() {
         return Ratio.create(coveredmethods, methods);
@@ -232,7 +232,7 @@ abstract public class AbstractCloverMetrics {
         return owner;
     }
 
-    public void setOwner(AbstractBuild owner) {
+    public void setOwner(Run<?, ?> owner) {
         this.owner = owner;
     }
 

@@ -216,9 +216,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 coverageReportDir = findOneDirDeep(workspace, reportDir);
             }
 
-            // if the build has failed, then there's not
-            // much point in reporting an error
-            final boolean buildFailure = run.getResult().isWorseOrEqualTo(Result.FAILURE);
+            // if the build has failed, then there's not much point in reporting an error
+            //final boolean buildFailure = run.getResult().isWorseOrEqualTo(Result.FAILURE);
+            boolean buildFailure = false;
+            Result result = run.getResult();
+            if (result != null) {
+                buildFailure = result.isWorseOrEqualTo(Result.FAILURE);
+            }
             final boolean missingReport = !coverageReportDir.exists();
 
             if (buildFailure && missingReport) {
