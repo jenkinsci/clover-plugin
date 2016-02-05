@@ -48,7 +48,7 @@ abstract public class AbstractCloverMetrics {
 
     private int elements;
     private int coveredelements;
-    public AbstractBuild owner = null;
+    public Run<?, ?> owner = null;
 
     public Ratio getMethodCoverage() {
         return Ratio.create(coveredmethods, methods);
@@ -228,11 +228,11 @@ abstract public class AbstractCloverMetrics {
         this.name = name;
     }
 
-    public AbstractBuild getOwner() {
+    public Run<?, ?> getOwner() {
         return owner;
     }
 
-    public void setOwner(AbstractBuild owner) {
+    public void setOwner(Run<?, ?> owner) {
         this.owner = owner;
     }
 
@@ -260,7 +260,7 @@ abstract public class AbstractCloverMetrics {
     }
 
     public Graph getTrendGraph() {
-        AbstractBuild build = getOwner();
+        Run<?, ?> build = getOwner();
         Calendar t = build.getTimestamp();
         return new GraphImpl(this, t) {
             @Override

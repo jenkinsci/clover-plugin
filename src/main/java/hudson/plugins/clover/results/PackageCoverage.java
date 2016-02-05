@@ -1,6 +1,7 @@
 package hudson.plugins.clover.results;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
 
 import java.io.IOException;
@@ -68,7 +69,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         return action.findPackageCoverage(getName());
     }
 
-    public void setOwner(AbstractBuild owner) {
+    public void setOwner(Run<?, ?> owner) {
         super.setOwner(owner);    //To change body of overridden methods use File | Settings | File Templates.
         for (FileCoverage fileCoverage : fileCoverages) {
             fileCoverage.setOwner(owner);
