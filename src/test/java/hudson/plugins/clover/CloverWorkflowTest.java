@@ -24,7 +24,7 @@ public class CloverWorkflowTest {
 
         job.setDefinition(new CpsFlowDefinition(""
                         + "node {\n"
-                        + "  step([$class: 'CloverPublisher', cloverReportDir: 'target/site/clover', cloverReportFileName: 'clover.xml'])\n"
+                        + "  step([$class: 'CloverPublisher', cloverReportDir: 'target/site/clover', cloverReportFileName: 'clover.xml', healthyTarget: [methodCoverage: 80, conditionalCoverage: 80, statementCoverage: 80], unhealthyTarget: [methodCoverage: 60, conditionalCoverage: 60, statementCoverage: 60], failingTarget: [methodCoverage: 40, conditionalCoverage: 40, statementCoverage: 40]])\n"
                         + "}\n", true)
         );
         jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
