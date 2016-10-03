@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 /**
  * Holds the target coverage for a specific condition;
  *
@@ -28,6 +30,7 @@ public class CoverageTarget implements Serializable {
     public CoverageTarget() {
     }
 
+    @DataBoundConstructor
     public CoverageTarget(Integer methodCoverage, Integer conditionalCoverage, Integer statementCoverage) {
         this.methodCoverage = methodCoverage;
         this.conditionalCoverage = conditionalCoverage;

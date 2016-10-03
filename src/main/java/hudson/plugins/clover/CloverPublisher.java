@@ -51,15 +51,30 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * @param cloverReportDir
      * @param cloverReportFileName
-     * @stapler-constructor
      */
-    @DataBoundConstructor
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
+    }
+
+    /**
+     * @param cloverReportDir
+     * @param cloverReportFileName
+     * @param healthyTarget
+     * @param unhealthyTarget
+     * @param failingTarget
+     * @stapler-constructor
+     */
+    @DataBoundConstructor
+    public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
+        this.cloverReportDir = cloverReportDir;
+        this.cloverReportFileName = cloverReportFileName;
+        this.healthyTarget = healthyTarget;
+        this.unhealthyTarget = unhealthyTarget;
+        this.failingTarget = failingTarget;
     }
 
     public String getCloverReportDir() {
