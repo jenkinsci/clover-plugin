@@ -24,4 +24,8 @@
         ${%description.license}
         <f:textarea name="clover.licenseCert" value="${instance.licenseCert}" />
     </f:entry>
+
+    <f:entry title="${%Pass arguments' values to Ant in double quotes}" help="/plugin/clover/help-quotes.html">
+        <f:checkbox name="clover.putValuesInQuotes" checked="${instance.putValuesInQuotes}"/>
+    </f:entry>
 </j:jelly>

@@ -1,7 +1,13 @@
 package hudson.plugins.clover;
 
+import com.atlassian.clover.api.ci.CIOptions;
 import com.atlassian.clover.ci.AntIntegrationListener;
 import com.atlassian.clover.util.ClassPathUtil;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Proc;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
@@ -11,33 +17,27 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Project;
 import hudson.model.Run;
+import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.Launcher;
-import hudson.Proc;
-import hudson.FilePath;
-import hudson.Extension;
-import hudson.Util;
 import hudson.tasks.Publisher;
 import hudson.util.DescribableList;
-import hudson.remoting.Channel;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Arrays;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
-
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.DataBoundConstructor;
-import net.sf.json.JSONObject;
-import com.atlassian.clover.api.ci.CIOptions;
-
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A BuildWrapper that decorates the command line just before a build starts with targets and properties that will automatically
@@ -50,13 +50,15 @@ public class CloverBuildWrapper extends BuildWrapper {
     public boolean json = true;
     public String licenseCert;
     public String clover;
+    public boolean putValuesInQuotes;
 
     @DataBoundConstructor
-    public CloverBuildWrapper(boolean historical, boolean json, String licenseCert, String clover) {
+    public CloverBuildWrapper(boolean historical, boolean json, String licenseCert, String clover, boolean putValuesInQuotes) {
         this.historical = historical;
         this.json = json;
         this.licenseCert = licenseCert;
         this.clover = clover;
+        this.putValuesInQuotes = putValuesInQuotes;
     }
 
     @Override
@@ -109,10 +111,11 @@ public class CloverBuildWrapper extends BuildWrapper {
         final DescriptorImpl descriptor = Hudson.getInstance().getDescriptorByType(DescriptorImpl.class);
 
         final String license = Util.nullify(licenseCert) == null ? descriptor.licenseCert : licenseCert;
-        final CIOptions.Builder options = new CIOptions.Builder().
-                json(this.json).
-                historical(this.historical).
-                fullClean(true);
+        final CIOptions.Builder options = new CIOptions.Builder()
+                .json(this.json)
+                .historical(this.historical)
+                .fullClean(true)
+                .putValuesInQuotes(this.putValuesInQuotes);
 
         final Launcher outer = launcher;
 
@@ -212,10 +215,10 @@ public class CloverBuildWrapper extends BuildWrapper {
             // on windows - the cmds are wrapped of the form:
             // "cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\""
             // this hacky code is used to parse out just the user specified args. ie clean test.run
-            
+
             final int numPreSystemCmds = 2; // hack hack hack - there are 2 commands prepended on windows...
             final String sysArgSplitter = "&&";
-            
+
             if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant"))
             {
                 preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
@@ -240,11 +243,11 @@ public class CloverBuildWrapper extends BuildWrapper {
                     userArgs.add(arg);
                 }
             }
-            else 
+            else
             {
                 if (cmds.size() > 0)
                 {
-                    preSystemArgs.add(cmds.get(0));                    
+                    preSystemArgs.add(cmds.get(0));
                 }
                 if (cmds.size() > 1)
                 {
@@ -300,11 +303,11 @@ public class CloverBuildWrapper extends BuildWrapper {
                         return;
                     }
                     licenseFile.write(license, "UTF-8");
-                    userArgs.add("-Dclover.license.path=\"" + licenseFile.getRemote() + "\"");
+                    userArgs.add("-Dclover.license.path=" + addQuotesIfNecessary(licenseFile.getRemote()));
                 } catch (InterruptedException e) {
                     listener.getLogger().print("Could not create license file at: " + licenseFile + ". Setting as a system property.");
                     listener.getLogger().print(e.getMessage());
-                    userArgs.add("-Dclover.license.cert=\"" + license + "\"");
+                    userArgs.add("-Dclover.license.cert=" + addQuotesIfNecessary(license));
                 }
 
                 // re-assemble all commands
@@ -313,7 +316,7 @@ public class CloverBuildWrapper extends BuildWrapper {
                 allCommands.addAll(userArgs);
                 allCommands.addAll(postSystemArgs);
                 starter.cmds(allCommands);
-                
+
                 // masks.length must equal cmds.length
                 boolean[] masks = new boolean[starter.cmds().size()];
                 for (int i = 0; i < starter.masks().length; i++) {
@@ -333,6 +336,35 @@ public class CloverBuildWrapper extends BuildWrapper {
             outer.kill(modelEnvVars);
         }
 
+        /**
+         * Copied from {@link com.atlassian.clover.ci.AntIntegrator#addQuotesIfNecessary(String)}
+         *
+         * Don't add quotes on Windows, because it causes problems when passing such -Dname=value args to JVM via exec.
+         * Don't add quotes for new versions of Ant either (by default the isPutValuesInQuotes is false)
+         * as since Ant 1.9.7 problem of passing args to JVM has been fixed.
+         *
+         * See CLOV-1956, BAM-10740 and BDEV-11740 for more details.
+         */
+        private String addQuotesIfNecessary(String input) {
+            return !wrapper.putValuesInQuotes || isWindows() ? input : '"' + input + '"';
+        }
+
+        /**
+         * Copied from {@link com.atlassian.clover.ci.AntIntegrator#isWindows()}
+         */
+        private static boolean isWindows() {
+            final String osName = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                @Override
+                public String run() {
+                    try {
+                        return System.getProperty("os.name");
+                    } catch (SecurityException ex) {
+                        return null;
+                    }
+                }
+            });
+            return osName != null && osName.toLowerCase().indexOf("windows") == 0;
+        }
     }
 
 }
