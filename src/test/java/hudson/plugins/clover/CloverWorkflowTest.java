@@ -3,9 +3,12 @@ package hudson.plugins.clover;
 import hudson.FilePath;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import static org.junit.Assert.assertNotNull;
 
 public class CloverWorkflowTest {
 
@@ -24,9 +27,10 @@ public class CloverWorkflowTest {
 
         job.setDefinition(new CpsFlowDefinition(""
                         + "node {\n"
-                        + "  step([$class: 'CloverPublisher', cloverReportDir: 'target/site/clover', cloverReportFileName: 'clover.xml', healthyTarget: [methodCoverage: 80, conditionalCoverage: 80, statementCoverage: 80], unhealthyTarget: [methodCoverage: 60, conditionalCoverage: 60, statementCoverage: 60], failingTarget: [methodCoverage: 40, conditionalCoverage: 40, statementCoverage: 40]])\n"
+                        + "  step([$class: 'CloverPublisher', cloverReportDir: 'target/site', cloverReportFileName: 'clover.xml', healthyTarget: [methodCoverage: 10, conditionalCoverage: 50, statementCoverage: 10], unhealthyTarget: [methodCoverage: 5, conditionalCoverage: 25, statementCoverage: 5], failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]])\n"
                         + "}\n", true)
         );
-        jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
+        WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
+        assertNotNull("Build's CloverBuildAction should be not Null", build.getAction(CloverBuildAction.class));
     }
 }
