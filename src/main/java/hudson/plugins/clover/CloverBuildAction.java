@@ -50,6 +50,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
             }
         });
 
+    static void invalidateReportCache() { reports.invalidateAll(); }
+
     public HealthReport getBuildHealth() {
         if (healthyTarget == null || unhealthyTarget == null)
         {
