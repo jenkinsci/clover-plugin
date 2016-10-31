@@ -50,6 +50,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
             }
         });
 
+    static void invalidateReportCache() { reports.invalidateAll(); }
+
     public HealthReport getBuildHealth() {
         if (healthyTarget == null || unhealthyTarget == null)
         {
@@ -146,6 +148,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     @Override public void onAttached(Run<?,?> build) {
+        owner = build;
         ProjectCoverage c = reports.getIfPresent(this);
         if (c != null) {
             c.setOwner(build);
@@ -153,7 +156,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     @Override public void onLoad(Run<?,?> r) {
-        owner = (AbstractBuild) r;
+        owner = r;
     }
     
     /** Obtains the detailed {@link CoverageReport} instance. */
