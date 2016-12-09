@@ -24,6 +24,7 @@ import hudson.tasks.Recorder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -64,7 +65,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * @param healthyTarget target values for healthy build
      * @param unhealthyTarget target values for unhealthy build
      * @param failingTarget target values for failing build
-     * @stapler-constructor
      */
     @DataBoundConstructor
     public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
@@ -236,7 +236,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 build.setResult(Result.FAILURE);
             }
             build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
-            Set<CoverageMetric> failingMetrics = failingTarget.getFailingMetrics(result);
+
+            final Set<CoverageMetric> failingMetrics = failingTarget != null
+                    ? failingTarget.getFailingMetrics(result)
+                    : Collections.<CoverageMetric>emptySet();
             if (!failingMetrics.isEmpty()) {
                 listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
                 for (CoverageMetric metric : failingMetrics) {
@@ -368,10 +371,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
          */
         @Override
         public CloverPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            CloverPublisher instance = req.bindParameters(CloverPublisher.class, "clover.");
-            req.bindParameters(instance.failingTarget, "cloverFailingTarget.");
-            req.bindParameters(instance.healthyTarget, "cloverHealthyTarget.");
-            req.bindParameters(instance.unhealthyTarget, "cloverUnhealthyTarget.");
+            final CloverPublisher instance = new CloverPublisher(
+                    req.getParameter("clover.cloverReportDir"),
+                    req.getParameter("clover.cloverReportFileName"),
+                    fromRequest(req, "cloverHealthyTarget."),
+                    fromRequest(req, "cloverUnhealthyTarget."),
+                    fromRequest(req, "cloverFailingTarget.")
+            );
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
                 instance.healthyTarget = new CoverageTarget(70, 80, 80);
@@ -383,6 +389,22 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
+        }
+
+        private CoverageTarget fromRequest(StaplerRequest req, String namePrefix) {
+            return new CoverageTarget(
+                    getIntParameter(req, namePrefix + ".methodCoverage"),
+                    getIntParameter(req, namePrefix + ".conditionalCoverage"),
+                    getIntParameter(req, namePrefix + ".statementCoverage")
+            );
+        }
+
+        private Integer getIntParameter(StaplerRequest req, String name) {
+            try {
+                return Integer.valueOf(req.getParameter(name));
+            } catch (NumberFormatException ex) {
+                return null;
+            }
         }
     }
 }
