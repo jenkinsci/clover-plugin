@@ -6,8 +6,6 @@ import java.util.Locale;
 
 /**
  * Represents <tt>x/y</tt> where x={@link #numerator} and y={@link #denominator}.
- *
- * @author Kohsuke Kawaguchi
  */
 final public class Ratio implements Serializable, CoverageBarProvider {
     
@@ -26,6 +24,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets "x/y" representation.
+     * @return String in "x/y" format
      */
     public String toString() {
         return print(numerator)+"/"+print(denominator);
@@ -41,6 +40,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in integer.
+     * @return String percentage
      */
     public String getPercentage1d() {
         return PC_WIDTH_FORMAT.format(getPercentageFloat());
@@ -76,6 +76,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in integer.
+     * @return int percentage
      */
     public int getPercentage() {
         return Math.round(getPercentageFloat());
@@ -83,6 +84,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in float.
+     * @return float percentage
      */
     public float getPercentageFloat() {
         if (Float.compare(numerator, denominator) >= 0)
@@ -118,9 +120,6 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 //
     private static final Ratio[] COMMON_INSTANCES = new Ratio[256];
 
-    /**
-     * Creates a new instance of {@link Ratio}.
-     */
     public static Ratio create(float x, float y) {
         int xx= (int) x;
         int yy= (int) y;

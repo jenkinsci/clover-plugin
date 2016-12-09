@@ -130,8 +130,6 @@ public class CloverBuildWrapper extends BuildWrapper {
     /**
      * Descriptor for {@link CloverPublisher}. Used as a singleton. The class is marked as public so that it can be
      * accessed from views.
-     * <p/>
-     * <p/>
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */

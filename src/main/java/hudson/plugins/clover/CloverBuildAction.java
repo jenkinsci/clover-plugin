@@ -30,10 +30,6 @@ import org.jvnet.localizer.Localizable;
 
 /**
  * A health reporter for the individual build page.
- *
- *
- * @author connollys
- * @since 03-Jul-2007 08:43:08
  */
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2 {
     public transient Run<?, ?> owner;
@@ -156,7 +152,10 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         owner = (AbstractBuild) r;
     }
     
-    /** Obtains the detailed {@link CoverageReport} instance. */
+    /**
+     * Obtains the detailed {@link ProjectCoverage} instance.
+     * @return ProjectCoverage
+     */
     public synchronized ProjectCoverage getResult() {
         try {
             return reports.get(this);

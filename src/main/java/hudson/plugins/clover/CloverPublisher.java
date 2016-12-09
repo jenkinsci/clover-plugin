@@ -34,6 +34,8 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
+
 /**
  * Clover {@link Publisher}.
  *
@@ -48,10 +50,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private CoverageTarget unhealthyTarget;
     private CoverageTarget failingTarget;
 
-    /**
-     * @param cloverReportDir
-     * @param cloverReportFileName
-     */
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
@@ -61,11 +59,11 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     /**
-     * @param cloverReportDir
-     * @param cloverReportFileName
-     * @param healthyTarget
-     * @param unhealthyTarget
-     * @param failingTarget
+     * @param cloverReportDir report directory
+     * @param cloverReportFileName file name
+     * @param healthyTarget target values for healthy build
+     * @param unhealthyTarget target values for unhealthy build
+     * @param failingTarget target values for failing build
      * @stapler-constructor
      */
     @DataBoundConstructor
@@ -146,14 +144,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return new File(build.getRootDir(), "clover.xml");
     }
 
-    /**
-     * @param build
-     * @param launcher
-     * @param listener
-     * @return boolean
-     * @throws InterruptedException
-     * @throws IOException
-     */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
@@ -161,9 +151,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws
-            InterruptedException, IOException {
-
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher,
+                        @Nonnull TaskListener listener) throws InterruptedException, IOException {
         performImpl(run, workspace, listener);
     }
 
@@ -262,15 +251,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    /**
-     * @param coverageReport
-     * @param buildTarget
-     * @param listener
-     * @param fileName
-     * @return boolean
-     * @throws IOException
-     * @throws InterruptedException
-     */
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener, String fileName)
             throws IOException, InterruptedException {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
@@ -289,14 +269,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    /**
-     * @param coverageReport
-     * @param buildTarget
-     * @param listener
-     * @return boolean
-     * @throws IOException
-     * @throws InterruptedException
-     */
     private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener)
             throws IOException, InterruptedException {
         // Copy the HTML coverage report
@@ -317,8 +289,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * @param startDir the dir to start searching in
      * @param filename the filename to search for
      * @return the path of filename
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException on error
+     * @throws InterruptedException on error
      */
     private FilePath findOneDirDeep(final FilePath startDir, final String filename)
             throws IOException, InterruptedException {
@@ -339,10 +311,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return dirContainingFile.child(filename);
     }
 
-    /**
-     * @param listener
-     * @param build
-     */
     private void flagMissingCloverXml(TaskListener listener, Run<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
                 + "'.  Did you generate the XML report for Clover?");
@@ -372,8 +340,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * Descriptor for {@link CloverPublisher}. Used as a singleton. The class is marked as public so that it can be
      * accessed from views.
-     * <p/>
-     * <p/>
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */
