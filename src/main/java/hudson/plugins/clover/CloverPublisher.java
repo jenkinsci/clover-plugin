@@ -393,9 +393,9 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
         private CoverageTarget fromRequest(StaplerRequest req, String namePrefix) {
             return new CoverageTarget(
-                    getIntParameter(req, namePrefix + ".methodCoverage"),
-                    getIntParameter(req, namePrefix + ".conditionalCoverage"),
-                    getIntParameter(req, namePrefix + ".statementCoverage")
+                    getIntParameter(req, namePrefix + "methodCoverage"),
+                    getIntParameter(req, namePrefix + "conditionalCoverage"),
+                    getIntParameter(req, namePrefix + "statementCoverage")
             );
         }
 
