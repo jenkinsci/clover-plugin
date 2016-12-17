@@ -69,8 +69,7 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     /**
      * Add CloverPublisher to the project. Used in case of automatic Clover integration. Do not add if there is
-     * another CloverPublisher defined already (i.e. was added manually by user) having the default value of the
-     * report directory.
+     * another CloverPublisher defined already (e.g. was added manually by user).
      * @param build
      * @param listener
      * @throws IOException
@@ -80,13 +79,10 @@ public class CloverBuildWrapper extends BuildWrapper {
         final DescribableList<Publisher,Descriptor<Publisher>> publishers = build.getProject().getPublishersList();
         boolean isAlreadyDefined = false;
 
-        // search for existing CloverPublisher with the same report directory
+        // search for existing CloverPublisher
         for (Publisher publisher : publishers) {
             if (publisher instanceof CloverPublisher) {
-                if ( DEFAULT_REPORT_DIR.equals(((CloverPublisher)publisher).getCloverReportDir()) ) {
-                    isAlreadyDefined = true;
-                    break;
-                }
+                isAlreadyDefined = true;
             }
         }
 
