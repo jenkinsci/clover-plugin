@@ -79,7 +79,8 @@ final public class Ratio implements Serializable, CoverageBarProvider {
      * @return int percentage
      */
     public int getPercentage() {
-        return Math.round(getPercentageFloat());
+        /* intentional truncation to simulate floor() */
+        return (int)getPercentageFloat();
     }
 
     /**

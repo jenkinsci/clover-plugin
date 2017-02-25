@@ -54,4 +54,26 @@ public class RatioTest extends TestCase {
         assertEquals("10/5 => 100", 100.0f, Ratio.create(10,5).getPercentageFloat(), 0.005f);
     }
 
+    /**
+     * Tests that {@link Ratio#getPercentage()} correctly handles values near
+     * whole integers.  In particular that 99.99% becomes 99% and not 100%
+     *
+     */
+    public void testGetPercentage() {
+        // truncate to zero
+        assertEquals("0/1000    =>   0",   0, Ratio.create(   0,1000).getPercentage());
+        assertEquals("9/1000    =>   0",   0, Ratio.create(   9,1000).getPercentage());
+
+        // truncate to 90
+        assertEquals("900/1000  =>  90",  90, Ratio.create( 900,1000).getPercentage());
+        assertEquals("909/1000  =>  90",  90, Ratio.create( 909,1000).getPercentage());
+
+        // truncate to 99
+        assertEquals("990/1000  =>  99",  99, Ratio.create( 990,1000).getPercentage());
+        assertEquals("999/1000  =>  99",  99, Ratio.create( 999,1000).getPercentage());
+
+        // still show 100
+        assertEquals("1000/1000 => 100", 100, Ratio.create(1000,1000).getPercentage());
+    }
+
 }
