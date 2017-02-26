@@ -76,4 +76,48 @@ public class RatioTest extends TestCase {
         assertEquals("1000/1000 => 100", 100, Ratio.create(1000,1000).getPercentage());
     }
 
+    /**
+     * Tests that {@link Ratio#getPcCovered()} correctly handles values near
+     * whole integers.  This is to make sure that it will match that of
+     * getPercentage()
+     */
+    public void testGetPcCovered() {
+        // Make sure zero is zero
+        assertEquals("0/10000     =>    0",    "0%", Ratio.create(    0, 10000).getPcCovered());
+        assertEquals("9/10000     =>    0",    "0%", Ratio.create(    9, 10000).getPcCovered());
+
+        assertEquals("99/10000    =>  0.9",  "0.9%", Ratio.create(   99, 10000).getPcCovered());
+
+        assertEquals("9009/10000  =>   90",   "90%", Ratio.create( 9009, 10000).getPcCovered());
+        assertEquals("9099/10000  => 90.9", "90.9%", Ratio.create( 9099, 10000).getPcCovered());
+
+        assertEquals("9909/10000  =>   99",   "99%", Ratio.create( 9909, 10000).getPcCovered());
+        assertEquals("9999/10000  => 99.9", "99.9%", Ratio.create( 9999, 10000).getPcCovered());
+
+        // still show 100
+        assertEquals("10000/10000 =>  100",  "100%", Ratio.create(10000, 10000).getPcCovered());
+    }
+
+    /**
+     * Tests that {@link Ratio#getPcUncovered()} correctly handles values near
+     * whole integers.  
+     * This needs to correctly contrast with getPcCovered()
+     */
+    public void testGetPcUncovered() {
+        // Nothing should be 100%
+        assertEquals("0/10000     =>  100",  "100%", Ratio.create(    0, 10000).getPcUncovered());
+        assertEquals("9/10000     =>  100",  "100%", Ratio.create(    9, 10000).getPcUncovered());
+
+        assertEquals("9/10000     => 99.1", "99.1%", Ratio.create(   99, 10000).getPcUncovered());
+
+        assertEquals("9009/10000  =>   10",   "10%", Ratio.create( 9009, 10000).getPcUncovered());
+        assertEquals("9099/10000  =>  9.1",  "9.1%", Ratio.create( 9099, 10000).getPcUncovered());
+
+        assertEquals("9909/10000  =>    1",    "1%", Ratio.create( 9909, 10000).getPcUncovered());
+        assertEquals("9999/10000  =>  0.1",  "0.1%", Ratio.create( 9999, 10000).getPcUncovered());
+
+        // still show 0
+        assertEquals("10000/10000 =>    0",    "0%", Ratio.create(10000, 10000).getPcUncovered());
+    }
+
 }

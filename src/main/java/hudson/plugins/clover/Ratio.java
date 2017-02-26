@@ -1,6 +1,7 @@
 package hudson.plugins.clover;
 
 import java.io.Serializable;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -15,6 +16,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
     public static final NumberFormat PC_WIDTH_FORMAT = NumberFormat.getInstance(Locale.US);
     static {
         PC_WIDTH_FORMAT.setMaximumFractionDigits(1);
+        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.DOWN);
     }
 
     private Ratio(float numerator, float denominator) {
@@ -62,7 +64,16 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     public String getPcUncovered() {
         float pcUncovered = 100.0f - getPercentageFloat();
-        return pcFormat(pcUncovered);
+
+        /* Since this is the negative of getPcCovered() we need to invert the
+         * rounding mode to ensure it most closely complements getPcCovered() */
+        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.UP);
+        String uncovered = pcFormat(pcUncovered);
+
+        /* Restore the rounding mode for other calls */
+        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.DOWN);
+        return uncovered;
+
     }
 
     public String getPcCovered() {
