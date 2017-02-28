@@ -104,20 +104,29 @@ public class RatioTest extends TestCase {
      * This needs to correctly contrast with getPcCovered()
      */
     public void testGetPcUncovered() {
-        // Nothing should be 100%
-        assertEquals("0/10000     =>  100",  "100%", Ratio.create(    0, 10000).getPcUncovered());
-        assertEquals("9/10000     =>  100",  "100%", Ratio.create(    9, 10000).getPcUncovered());
+        // No coverage should be 100% uncovered
+        assertEquals("0/10000     = 0% covered     = 100% uncovered   = 100% rounded up", "100%",
+                     Ratio.create(    0, 10000).getPcUncovered());
 
-        assertEquals("9/10000     => 99.1", "99.1%", Ratio.create(   99, 10000).getPcUncovered());
+        assertEquals("9/10000     = 0.09% covered  = 99.91% uncovered = 100% rounded up", "100%",
+                     Ratio.create(    9, 10000).getPcUncovered());
 
-        assertEquals("9009/10000  =>   10",   "10%", Ratio.create( 9009, 10000).getPcUncovered());
-        assertEquals("9099/10000  =>  9.1",  "9.1%", Ratio.create( 9099, 10000).getPcUncovered());
+        assertEquals("99/10000    = 0.99% covered  = 99.01% uncovered = 99.1% rounded up", "99.1%",
+                     Ratio.create(   99, 10000).getPcUncovered());
 
-        assertEquals("9909/10000  =>    1",    "1%", Ratio.create( 9909, 10000).getPcUncovered());
-        assertEquals("9999/10000  =>  0.1",  "0.1%", Ratio.create( 9999, 10000).getPcUncovered());
+        assertEquals("9009/10000  = 90.09% covered = 9.91% uncovered  = 10% rounded up", "10%",
+                     Ratio.create( 9009, 10000).getPcUncovered());
+        assertEquals("9099/10000  = 90.99% covered = 9.01% uncovered  = 9.1% rounded up", "9.1%",
+                     Ratio.create( 9099, 10000).getPcUncovered());
 
-        // still show 0
-        assertEquals("10000/10000 =>    0",    "0%", Ratio.create(10000, 10000).getPcUncovered());
+        assertEquals("9909/10000  = 99.09% covered = 0.91% uncovered  = 1% rounded up", "1%",
+                     Ratio.create( 9909, 10000).getPcUncovered());
+        assertEquals("9999/10000  = 99.99% covered = 0.01% uncovered  = 0.1% rounded up", "0.1%",
+                     Ratio.create( 9999, 10000).getPcUncovered());
+
+        // still show 0 when 100% covered
+        assertEquals("10000/10000 = 100% covered   = 0% uncovered     = 0% rounded up", "0%", 
+                     Ratio.create(10000, 10000).getPcUncovered());
     }
 
 }

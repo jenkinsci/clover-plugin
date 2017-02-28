@@ -13,10 +13,14 @@ final public class Ratio implements Serializable, CoverageBarProvider {
     public final float numerator;
     public final float denominator;
 
-    public static final NumberFormat PC_WIDTH_FORMAT = NumberFormat.getInstance(Locale.US);
+    public static final NumberFormat PC_ROUND_DOWN_FORMAT = NumberFormat.getInstance(Locale.US);
+    public static final NumberFormat PC_ROUND_UP_FORMAT = NumberFormat.getInstance(Locale.US);
     static {
-        PC_WIDTH_FORMAT.setMaximumFractionDigits(1);
-        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.DOWN);
+        PC_ROUND_DOWN_FORMAT.setMaximumFractionDigits(1);
+        PC_ROUND_DOWN_FORMAT.setRoundingMode(RoundingMode.DOWN);
+
+        PC_ROUND_UP_FORMAT.setMaximumFractionDigits(1);
+        PC_ROUND_UP_FORMAT.setRoundingMode(RoundingMode.UP);
     }
 
     private Ratio(float numerator, float denominator) {
@@ -45,16 +49,16 @@ final public class Ratio implements Serializable, CoverageBarProvider {
      * @return String percentage
      */
     public String getPercentage1d() {
-        return PC_WIDTH_FORMAT.format(getPercentageFloat());
+        return PC_ROUND_DOWN_FORMAT.format(getPercentageFloat());
     }
 
     public String getPercentageStr() {
-        return denominator > 0 ? PC_WIDTH_FORMAT.format(getPercentageFloat()) + "%" : "-";
+        return denominator > 0 ? PC_ROUND_DOWN_FORMAT.format(getPercentageFloat()) + "%" : "-";
     }
 
 
     private String pcFormat(float pc) {
-        return Ratio.PC_WIDTH_FORMAT.format(pc) + "%";
+        return PC_ROUND_DOWN_FORMAT.format(pc) + "%";
     }
 
     public String getPcWidth() {
@@ -65,14 +69,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
     public String getPcUncovered() {
         float pcUncovered = 100.0f - getPercentageFloat();
 
-        /* Since this is the negative of getPcCovered() we need to invert the
-         * rounding mode to ensure it most closely complements getPcCovered() */
-        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.UP);
-        String uncovered = pcFormat(pcUncovered);
-
-        /* Restore the rounding mode for other calls */
-        PC_WIDTH_FORMAT.setRoundingMode(RoundingMode.DOWN);
-        return uncovered;
+        return PC_ROUND_UP_FORMAT.format(pcUncovered) + "%";
 
     }
 
