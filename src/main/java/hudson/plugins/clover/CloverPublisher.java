@@ -24,6 +24,7 @@ import hudson.tasks.Recorder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -33,6 +34,8 @@ import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.annotation.Nonnull;
 
 /**
  * Clover {@link Publisher}.
@@ -48,18 +51,28 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private CoverageTarget unhealthyTarget;
     private CoverageTarget failingTarget;
 
-    /**
-     * @param cloverReportDir directory
-     * @param cloverReportFileName filename
-     * @stapler-constructor
-     */
-    @DataBoundConstructor
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
+    }
+
+    /**
+     * @param cloverReportDir report directory
+     * @param cloverReportFileName file name
+     * @param healthyTarget target values for healthy build
+     * @param unhealthyTarget target values for unhealthy build
+     * @param failingTarget target values for failing build
+     */
+    @DataBoundConstructor
+    public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
+        this.cloverReportDir = cloverReportDir;
+        this.cloverReportFileName = cloverReportFileName;
+        this.healthyTarget = healthyTarget;
+        this.unhealthyTarget = unhealthyTarget;
+        this.failingTarget = failingTarget;
     }
 
     public String getCloverReportDir() {
@@ -138,9 +151,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws
-            InterruptedException, IOException {
-
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher,
+                        @Nonnull TaskListener listener) throws InterruptedException, IOException {
         performImpl(run, workspace, listener);
     }
 
@@ -224,7 +236,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 build.setResult(Result.FAILURE);
             }
             build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
-            Set<CoverageMetric> failingMetrics = failingTarget.getFailingMetrics(result);
+
+            final Set<CoverageMetric> failingMetrics = failingTarget != null
+                    ? failingTarget.getFailingMetrics(result)
+                    : Collections.<CoverageMetric>emptySet();
             if (!failingMetrics.isEmpty()) {
                 listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
                 for (CoverageMetric metric : failingMetrics) {
@@ -239,15 +254,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    /**
-     * @param coverageReport
-     * @param buildTarget
-     * @param listener
-     * @param fileName
-     * @return boolean
-     * @throws IOException
-     * @throws InterruptedException
-     */
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener, String fileName)
             throws IOException, InterruptedException {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
@@ -266,14 +272,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    /**
-     * @param coverageReport
-     * @param buildTarget
-     * @param listener
-     * @return boolean
-     * @throws IOException
-     * @throws InterruptedException
-     */
     private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener)
             throws IOException, InterruptedException {
         // Copy the HTML coverage report
@@ -294,8 +292,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * @param startDir the dir to start searching in
      * @param filename the filename to search for
      * @return the path of filename
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException on error
+     * @throws InterruptedException on error
      */
     private FilePath findOneDirDeep(final FilePath startDir, final String filename)
             throws IOException, InterruptedException {
@@ -316,10 +314,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return dirContainingFile.child(filename);
     }
 
-    /**
-     * @param listener
-     * @param build
-     */
     private void flagMissingCloverXml(TaskListener listener, Run<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
                 + "'.  Did you generate the XML report for Clover?");
@@ -377,10 +371,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
          */
         @Override
         public CloverPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            CloverPublisher instance = req.bindParameters(CloverPublisher.class, "clover.");
-            req.bindParameters(instance.failingTarget, "cloverFailingTarget.");
-            req.bindParameters(instance.healthyTarget, "cloverHealthyTarget.");
-            req.bindParameters(instance.unhealthyTarget, "cloverUnhealthyTarget.");
+            final CloverPublisher instance = new CloverPublisher(
+                    req.getParameter("clover.cloverReportDir"),
+                    req.getParameter("clover.cloverReportFileName"),
+                    fromRequest(req, "cloverHealthyTarget."),
+                    fromRequest(req, "cloverUnhealthyTarget."),
+                    fromRequest(req, "cloverFailingTarget.")
+            );
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
                 instance.healthyTarget = new CoverageTarget(70, 80, 80);
@@ -392,6 +389,22 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
+        }
+
+        private CoverageTarget fromRequest(StaplerRequest req, String namePrefix) {
+            return new CoverageTarget(
+                    getIntParameter(req, namePrefix + "methodCoverage"),
+                    getIntParameter(req, namePrefix + "conditionalCoverage"),
+                    getIntParameter(req, namePrefix + "statementCoverage")
+            );
+        }
+
+        private Integer getIntParameter(StaplerRequest req, String name) {
+            try {
+                return Integer.valueOf(req.getParameter(name));
+            } catch (NumberFormatException ex) {
+                return null;
+            }
         }
     }
 }

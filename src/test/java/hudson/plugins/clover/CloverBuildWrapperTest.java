@@ -22,12 +22,12 @@ import com.atlassian.clover.api.ci.CIOptions;
 public class CloverBuildWrapperTest extends TestCase
 {
 
-    public void testDecoratinLauncher() throws IOException
+    public void testDecoratingLauncher() throws IOException
     {
         TaskListener listener = new LogTaskListener(Logger.getLogger(getName()), Level.ALL);
         Launcher outer = new Launcher.LocalLauncher(listener);
         CIOptions.Builder options = new CIOptions.Builder();
-        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, "FOO", null);
+        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, "FOO", null, false);
         CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options, "MYLICENSESTRING");
 
         Launcher.ProcStarter starter = new Launcher(cloverLauncher) {

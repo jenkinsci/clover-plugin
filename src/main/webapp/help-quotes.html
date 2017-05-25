@@ -1,0 +1,6 @@
+<div>
+    In Ant versions older than 1.9.7 there is a problem with passing arguments to JVM in case when they contain
+    whitespace characters. For example: <pre>-Da=b c<br/>-Dx=z</pre> will be interpreted as <pre>-Da=b<br/>c<br/>-Dx=z</pre>
+    In case you encounter this problem, enable this toggle to pass arguments' values in double quotes, for instance:
+    <pre>-Da="b c"<br/>-Dx=z</pre>
+</div>

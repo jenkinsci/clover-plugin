@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.7.0-SNAPSHOT</version>
+    <version>4.8.0-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
@@ -15,6 +15,11 @@
             <id>marek-parfianowicz</id>
             <name>Marek Parfianowicz</name>
             <email>marek.parfianowicz@gmail.com</email>
+        </developer>
+        <developer>
+            <id>glewandowski</id>
+            <name>Grzegorz Lewandowski</name>
+            <email>glewandowski@atlassian.com</email>
         </developer>
     </developers>
     <scm>
@@ -63,6 +68,13 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -98,11 +110,12 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>2.10.4</version>
                         <configuration>
-                            <sourceFileExcludes>
-                                <sourceFileExclude>**/Messages.java</sourceFileExclude>
-                            </sourceFileExcludes>
+                            <!-- do not spam the console -->
                             <quiet>true</quiet>
+                            <!-- omit javadoc generation from target/generated-sources -->
+                            <sourcepath>${basedir}/src/main/java</sourcepath>
                             <tags>
+                                <!-- for @stapler-constructor annotation -->
                                 <tag>
                                     <name>stapler</name>
                                     <placement>X</placement>
@@ -145,4 +158,15 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
+    <distributionManagement>
+        <repository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>maven.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
