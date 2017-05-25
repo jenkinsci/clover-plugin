@@ -7,37 +7,30 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.6.1-SNAPSHOT</version>
+    <version>4.7.0-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
         <developer>
-            <id>npellow</id>
-            <name>Nick Pellow</name>
-        </developer>
-        <developer>
-            <id>olamy</id>
-            <name>Olivier Lamy</name>
-        </developer>
-        <developer>
-            <id>mparfianowicz</id>
+            <id>marek-parfianowicz</id>
             <name>Marek Parfianowicz</name>
+            <email>marek.parfianowicz@gmail.com</email>
         </developer>
     </developers>
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/clover-plugin</url>
-        <tag>clover-4.5.0</tag>
+        <tag>clover-4.7.0</tag>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.atlassian.clover</groupId>
+            <groupId>org.openclover</groupId>
             <artifactId>clover</artifactId>
-            <version>4.1.1</version>
+            <version>4.2.0</version>
         </dependency>
         <!--Build breaks without these:-->
         <dependency>
@@ -81,14 +74,69 @@
             </plugins>
         </pluginManagement>
     </build>
+    <profiles>
+        <profile>
+            <id>release-profile</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.4</version>
+                        <configuration>
+                            <sourceFileExcludes>
+                                <sourceFileExclude>**/Messages.java</sourceFileExclude>
+                            </sourceFileExcludes>
+                            <quiet>true</quiet>
+                            <tags>
+                                <tag>
+                                    <name>stapler</name>
+                                    <placement>X</placement>
+                                </tag>
+                            </tags>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
             <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-        <repository>
-            <id>atlassian</id>
-            <url>https://maven.atlassian.com/repository/public</url>
         </repository>
     </repositories>
     <pluginRepositories>

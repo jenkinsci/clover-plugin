@@ -26,6 +26,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets "x/y" representation.
+     * @return String
      */
     public String toString() {
         return print(numerator)+"/"+print(denominator);
@@ -41,6 +42,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in integer.
+     * @return String
      */
     public String getPercentage1d() {
         return PC_WIDTH_FORMAT.format(getPercentageFloat());
@@ -76,6 +78,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in integer.
+     * @return int
      */
     public int getPercentage() {
         return Math.round(getPercentageFloat());
@@ -83,6 +86,7 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Gets the percentage in float.
+     * @return float
      */
     public float getPercentageFloat() {
         if (Float.compare(numerator, denominator) >= 0)
@@ -120,6 +124,9 @@ final public class Ratio implements Serializable, CoverageBarProvider {
 
     /**
      * Creates a new instance of {@link Ratio}.
+     * @param x nominator
+     * @param y denominator
+     * @return Ratio
      */
     public static Ratio create(float x, float y) {
         int xx= (int) x;

@@ -49,8 +49,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private CoverageTarget failingTarget;
 
     /**
-     * @param cloverReportDir
-     * @param cloverReportFileName
+     * @param cloverReportDir directory
+     * @param cloverReportFileName filename
      * @stapler-constructor
      */
     @DataBoundConstructor
@@ -131,14 +131,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return new File(build.getRootDir(), "clover.xml");
     }
 
-    /**
-     * @param build
-     * @param launcher
-     * @param listener
-     * @return boolean
-     * @throws InterruptedException
-     * @throws IOException
-     */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
@@ -357,8 +349,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * Descriptor for {@link CloverPublisher}. Used as a singleton. The class is marked as public so that it can be
      * accessed from views.
-     * <p/>
-     * <p/>
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */

@@ -69,8 +69,8 @@ public class CloverBuildWrapper extends BuildWrapper {
      * Add CloverPublisher to the project. Used in case of automatic Clover integration. Do not add if there is
      * another CloverPublisher defined already (i.e. was added manually by user) having the default value of the
      * report directory.
-     * @param build
-     * @param listener
+     * @param build build
+     * @param listener listener
      * @throws IOException
      */
     private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
@@ -127,8 +127,6 @@ public class CloverBuildWrapper extends BuildWrapper {
     /**
      * Descriptor for {@link CloverPublisher}. Used as a singleton. The class is marked as public so that it can be
      * accessed from views.
-     * <p/>
-     * <p/>
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */
