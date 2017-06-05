@@ -19,11 +19,6 @@
     <f:entry title="${%Generate a json report}" help="/plugin/clover/help-json.html">
         <f:checkbox name="clover.json" checked="${instance.json}"/>
     </f:entry>
-    
-    <f:entry title="${%Clover License String}" help="/plugin/clover/help-license.html">
-        ${%description.license}
-        <f:textarea name="clover.licenseCert" value="${instance.licenseCert}" />
-    </f:entry>
 
     <f:entry title="${%Pass arguments' values to Ant in double quotes}" help="/plugin/clover/help-quotes.html">
         <f:checkbox name="clover.putValuesInQuotes" checked="${instance.putValuesInQuotes}"/>

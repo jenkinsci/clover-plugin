@@ -27,8 +27,8 @@ public class CloverBuildWrapperTest extends TestCase
         TaskListener listener = new LogTaskListener(Logger.getLogger(getName()), Level.ALL);
         Launcher outer = new Launcher.LocalLauncher(listener);
         CIOptions.Builder options = new CIOptions.Builder();
-        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, "FOO", null, false);
-        CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options, "MYLICENSESTRING");
+        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, null, false);
+        CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options);
 
         Launcher.ProcStarter starter = new Launcher(cloverLauncher) {
             public Proc launch(ProcStarter starter) throws IOException {

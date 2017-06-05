@@ -48,15 +48,13 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     public boolean historical = true;
     public boolean json = true;
-    public String licenseCert;
     public String clover;
     public boolean putValuesInQuotes;
 
     @DataBoundConstructor
-    public CloverBuildWrapper(boolean historical, boolean json, String licenseCert, String clover, boolean putValuesInQuotes) {
+    public CloverBuildWrapper(boolean historical, boolean json, String clover, boolean putValuesInQuotes) {
         this.historical = historical;
         this.json = json;
-        this.licenseCert = licenseCert;
         this.clover = clover;
         this.putValuesInQuotes = putValuesInQuotes;
     }
@@ -64,19 +62,21 @@ public class CloverBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         addCloverPublisher(build, listener);
-        return new Environment() {};
+        return new Environment() {
+        };
     }
 
     /**
      * Add CloverPublisher to the project. Used in case of automatic Clover integration. Do not add if there is
      * another CloverPublisher defined already (e.g. was added manually by user).
-     * @param build build
+     *
+     * @param build    build
      * @param listener listener
      * @throws IOException
      */
     private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
         final String DEFAULT_REPORT_DIR = "clover";
-        final DescribableList<Publisher,Descriptor<Publisher>> publishers = build.getProject().getPublishersList();
+        final DescribableList<Publisher, Descriptor<Publisher>> publishers = build.getProject().getPublishersList();
         boolean isAlreadyDefined = false;
 
         // search for existing CloverPublisher
@@ -106,7 +106,6 @@ public class CloverBuildWrapper extends BuildWrapper {
 
         final DescriptorImpl descriptor = Hudson.getInstance().getDescriptorByType(DescriptorImpl.class);
 
-        final String license = Util.nullify(licenseCert) == null ? descriptor.licenseCert : licenseCert;
         final CIOptions.Builder options = new CIOptions.Builder()
                 .json(this.json)
                 .historical(this.historical)
@@ -120,7 +119,7 @@ public class CloverBuildWrapper extends BuildWrapper {
             installation = installation.forNode(build.getBuiltOn(), outer.getListener());
         }
 
-        return new CloverDecoratingLauncher(this, installation, outer, options, license);
+        return new CloverDecoratingLauncher(this, installation, outer, options);
     }
 
     /**
@@ -131,8 +130,6 @@ public class CloverBuildWrapper extends BuildWrapper {
      */
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-
-        public String licenseCert;
 
         public DescriptorImpl() {
             super(CloverBuildWrapper.class);
@@ -160,34 +157,30 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         public boolean isApplicable(AbstractProject item) {
-            // TODO: is there a better way to detect Ant builds?
-            // should only be enabled for Ant projects.
-            return (item instanceof FreeStyleProject);
-
+            // OpenClover automatic integration should be enabled only for Ant project,
+            // which is usually configured as a Freestyle Project
+            return item instanceof FreeStyleProject;
         }
     }
 
     public static class CloverDecoratingLauncher extends Launcher {
         private final Launcher outer;
         private final CIOptions.Builder options;
-        private final String license;
         private final CloverBuildWrapper wrapper;
         private final CloverInstallation clover;
 
-        public CloverDecoratingLauncher(CloverBuildWrapper cloverBuildWrapper, CloverInstallation clover, Launcher outer, CIOptions.Builder options, String license) {
+        public CloverDecoratingLauncher(CloverBuildWrapper cloverBuildWrapper, CloverInstallation clover, Launcher outer, CIOptions.Builder options) {
             super(outer);
             this.wrapper = cloverBuildWrapper;
             this.clover = clover;
             this.outer = outer;
             this.options = options;
-            this.license = license;
         }
 
         @Override
         public boolean isUnix() {
             return outer.isUnix();
         }
-
 
 
         @Override
@@ -203,7 +196,7 @@ public class CloverBuildWrapper extends BuildWrapper {
             List<String> preSystemArgs = new LinkedList<String>();
             List<String> postSystemArgs = new LinkedList<String>();
 
-            final List<String>  cmds = new ArrayList<String>();
+            final List<String> cmds = new ArrayList<String>();
             cmds.addAll(starter.cmds());
 
             // on windows - the cmds are wrapped of the form:
@@ -213,8 +206,7 @@ public class CloverBuildWrapper extends BuildWrapper {
             final int numPreSystemCmds = 2; // hack hack hack - there are 2 commands prepended on windows...
             final String sysArgSplitter = "&&";
 
-            if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant"))
-            {
+            if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant")) {
                 preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
 
                 // get the index of the "ant.bat 
@@ -225,32 +217,27 @@ public class CloverBuildWrapper extends BuildWrapper {
                 String[] tokens = argString.split(" ");
                 preSystemArgs.add(tokens[0]);
 
-                for (int i = 1; i < tokens.length; i++)
-                {   // chop the ant.bat
+                for (int i = 1; i < tokens.length; i++) {   // chop the ant.bat
                     String arg = tokens[i];
-                    if (sysArgSplitter.equals(arg))
-                    {
+                    if (sysArgSplitter.equals(arg)) {
                         // anything after the &&, break.
                         postSystemArgs.addAll(Arrays.asList(tokens).subList(i, tokens.length));
                         break;
                     }
                     userArgs.add(arg);
                 }
-            }
-            else
-            {
-                if (cmds.size() > 0)
-                {
+            } else {
+                if (cmds.size() > 0) {
                     preSystemArgs.add(cmds.get(0));
                 }
-                if (cmds.size() > 1)
-                {
+                if (cmds.size() > 1) {
                     userArgs.addAll(cmds.subList(1, cmds.size()));
                 }
             }
 
-            if (!userArgs.isEmpty())
-            {
+            // we add OpenClover only if any targets are specified (if there are no targets defined, then Ant calls the
+            // default one; adding OpenClover targets in such case would cause that the default target will not be called)
+            if (!userArgs.isEmpty()) {
                 // We can't use clover AntDecorator as this one isn't serializable on jenkins remoting
                 // and expect to be loaded from clover.jar, not remoting classloader
 
@@ -258,11 +245,11 @@ public class CloverBuildWrapper extends BuildWrapper {
                 userArgs.add(0, "clover.fullclean");
 
                 // As decompiled from com.atlassian.clover.ci.AntIntegrator;
-                if(!wrapper.json) {
+                if (!wrapper.json) {
                     userArgs.add("-Dclover.skip.json=true");
                 }
 
-                if(!wrapper.historical) {
+                if (!wrapper.historical) {
                     userArgs.add("-Dclover.skip.report=true");
                 } else {
                     userArgs.add("-Dclover.skip.current=true");
@@ -277,7 +264,7 @@ public class CloverBuildWrapper extends BuildWrapper {
                     userArgs.add("\"" + clover.getHome() + "\"");
                 } else {
                     // Fall back to the embedded clover.jar
-                    FilePath path = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.jar");
+                    FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
                     try {
                         String cloverJarLocation = ClassPathUtil.getCloverJarPath();
                         path.copyFrom(new FilePath(new File(cloverJarLocation)));
@@ -287,21 +274,6 @@ public class CloverBuildWrapper extends BuildWrapper {
                         listener.getLogger().print("Could not create clover library file at: " + path + ".  Please supply '-lib /path/to/clover.jar'.");
                         listener.getLogger().print(e.getMessage());
                     }
-                }
-
-
-                FilePath licenseFile = new FilePath( new FilePath(starter.pwd(), ".clover"), "clover.license");
-                try {
-                    if (license == null) {
-                        listener.getLogger().println("No Clover license configured. Please download a free 30 day license from http://my.atlassian.com.");
-                        return;
-                    }
-                    licenseFile.write(license, "UTF-8");
-                    userArgs.add("-Dclover.license.path=" + addQuotesIfNecessary(licenseFile.getRemote()));
-                } catch (InterruptedException e) {
-                    listener.getLogger().print("Could not create license file at: " + licenseFile + ". Setting as a system property.");
-                    listener.getLogger().print(e.getMessage());
-                    userArgs.add("-Dclover.license.cert=" + addQuotesIfNecessary(license));
                 }
 
                 // re-assemble all commands
@@ -321,22 +293,20 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         @Override
-            public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
+        public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
             return outer.launchChannel(cmd, out, workDir, envVars);
         }
 
         @Override
-            public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
+        public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
             outer.kill(modelEnvVars);
         }
 
         /**
          * Copied from {@link com.atlassian.clover.ci.AntIntegrator#addQuotesIfNecessary(String)}
-         *
          * Don't add quotes on Windows, because it causes problems when passing such -Dname=value args to JVM via exec.
          * Don't add quotes for new versions of Ant either (by default the isPutValuesInQuotes is false)
          * as since Ant 1.9.7 problem of passing args to JVM has been fixed.
-         *
          * See CLOV-1956, BAM-10740 and BDEV-11740 for more details.
          */
         private String addQuotesIfNecessary(String input) {

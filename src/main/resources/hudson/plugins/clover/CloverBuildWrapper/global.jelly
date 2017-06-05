@@ -1,9 +1,5 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:section title="${%Manage Clover}">
-        <f:entry title="${%Clover License String}" help="/plugin/clover/help-license.html">
-            <img src="${rootURL}/plugin/clover/clover_48x48.png" style="float:left"/>
-            ${%description}
-            <f:textarea name="clover.licenseCert" value="${descriptor.licenseCert}"/>
-        </f:entry>
+
     </f:section>
 </j:jelly>
