@@ -1,3 +1,4 @@
 <div>
-  This plugin integrates <a href="http://openclover.org/">OpenClover code coverage reports</a> to Jenkins.
+  This plugin integrates <a href="http://openclover.org/">OpenClover</a> code coverage reports to Jenkins.
+  OpenClover is free and open source tool based on sources of Atlassian Clover (R).
 </div>
