@@ -134,6 +134,15 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
+    private List<CloverProjectAction> getActions()
+    {
+        if( this.projectActions == null )
+        {
+            this.projectActions = new ArrayList<CloverProjectAction>();  
+        }
+        return this.projectActions;
+    }
+            
     CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
@@ -156,20 +165,13 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         if (c != null) {
             c.setOwner(build);
         }
-        if( this.projectActions == null )
-        {
-            this.projectActions = new ArrayList<CloverProjectAction>();  
-        }
-        this.projectActions.add(new CloverProjectAction(build.getParent()));  
+
+        getActions().add(new CloverProjectAction(build.getParent()));  
     }
 
     @Override public void onLoad(Run<?,?> r) {
         owner = r;
-        if( this.projectActions == null )
-        {
-            this.projectActions = new ArrayList<CloverProjectAction>();  
-        }
-        this.projectActions.add(new CloverProjectAction(r.getParent()));  
+        getActions().add(new CloverProjectAction(r.getParent()));  
     }
     
     /**
@@ -296,7 +298,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     
     @Override  
     public Collection<? extends Action> getProjectActions() {  
-        return this.projectActions;  
+        return getActions();  
     }  
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
