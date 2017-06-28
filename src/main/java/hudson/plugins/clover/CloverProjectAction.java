@@ -1,9 +1,9 @@
 package hudson.plugins.clover;
 
 import hudson.FilePath;
-import hudson.model.Project;
+import hudson.model.Job;
 import hudson.model.ProminentProjectAction;
-import hudson.model.Build;
+import hudson.model.Run;
 import hudson.model.Result;
 import hudson.model.DirectoryBrowserSupport;
 import hudson.model.Actionable;
@@ -26,9 +26,9 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
 
     static final String ICON = "/plugin/clover/clover_48x48.png";
     
-    private final Project<?, ?> project;
+    private transient final Job<?, ?> project;
 
-    public CloverProjectAction(Project project) {
+    public CloverProjectAction(Job<?,?> project) {
         this.project = project;
     }
 
@@ -77,7 +77,7 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
      * @return the last successful build result
      */
     public CloverBuildAction getLastSuccessfulResult() {
-        for (Build<?, ?> b = project.getLastBuild(); b != null; b = b.getPreviousBuild()) {
+        for (Run<?, ?> b = project.getLastBuild(); b != null; b = b.getPreviousBuild()) {
             if (b.getResult() == Result.FAILURE)
                 continue;
             CloverBuildAction r = b.getAction(CloverBuildAction.class);

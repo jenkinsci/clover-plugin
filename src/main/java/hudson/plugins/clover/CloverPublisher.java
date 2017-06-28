@@ -5,11 +5,8 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.BuildListener;
-import hudson.model.Project;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -142,12 +139,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      */
     static File getCloverXmlReport(Run<?, ?> build) {
         return new File(build.getRootDir(), "clover.xml");
-    }
-
-    @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws InterruptedException, IOException {
-        return performImpl(build, build.getWorkspace(), listener);
     }
 
     @Override
@@ -317,11 +308,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private void flagMissingCloverXml(TaskListener listener, Run<?, ?> build) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
                 + "'.  Did you generate the XML report for Clover?");
-    }
-
-    @Override
-    public Action getProjectAction(AbstractProject<?,?> project) {
-        return project instanceof Project ? new CloverProjectAction((Project)project) : null;
     }
 
     @Override

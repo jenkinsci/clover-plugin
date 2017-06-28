@@ -63,6 +63,9 @@ public class CloverBuildActionTest {
         CloverBuildAction cloverBuildAction = build.getAction(CloverBuildAction.class);
         assertNotNull("CloverBuildAction should be not Null", cloverBuildAction);
 
+        CloverProjectAction cloverProjectAction = project.getAction(CloverProjectAction.class);
+        assertNotNull("CloverProjectAction should be not Null", cloverProjectAction);
+
         //Access clover reports
         JenkinsRule.WebClient wc = j.createWebClient();
         wc.getPage(project); // project page

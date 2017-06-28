@@ -3,7 +3,7 @@ package hudson.plugins.clover;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import hudson.model.AbstractBuild;
+import hudson.model.Action;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
 import hudson.model.Result;
@@ -19,23 +19,28 @@ import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.RunAction2;
+import jenkins.tasks.SimpleBuildStep;
 import org.jvnet.localizer.Localizable;
 
 
 /**
  * A health reporter for the individual build page.
  */
-public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2 {
+public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
     public transient Run<?, ?> owner;
     private String buildBaseDir;
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
+    private transient List<CloverProjectAction> projectActions;
 
     private static final LoadingCache<CloverBuildAction,ProjectCoverage> reports = CacheBuilder.newBuilder().
         weakKeys().
@@ -129,10 +134,21 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
+    private List<CloverProjectAction> getActions()
+    {
+        if( this.projectActions == null )
+        {
+            this.projectActions = new ArrayList<CloverProjectAction>();  
+        }
+        return this.projectActions;
+    }
+            
     CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
         }
+        this.projectActions = new ArrayList<CloverProjectAction>();  
+        
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {
             this.buildBaseDir = File.separator;
@@ -149,10 +165,13 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         if (c != null) {
             c.setOwner(build);
         }
+
+        getActions().add(new CloverProjectAction(build.getParent()));  
     }
 
     @Override public void onLoad(Run<?,?> r) {
         owner = r;
+        getActions().add(new CloverProjectAction(r.getParent()));  
     }
     
     /**
@@ -276,6 +295,11 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     @Override public int getElements() {
         return getResult().getElements();
     }
+    
+    @Override  
+    public Collection<? extends Action> getProjectActions() {  
+        return getActions();  
+    }  
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
