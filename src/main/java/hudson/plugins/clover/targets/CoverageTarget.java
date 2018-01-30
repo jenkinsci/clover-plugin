@@ -1,15 +1,13 @@
 package hudson.plugins.clover.targets;
 
-import hudson.plugins.clover.Ratio;
 import hudson.plugins.clover.results.AbstractCloverMetrics;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.HashMap;
-
-import org.kohsuke.stapler.DataBoundConstructor;
+import java.util.Set;
 
 /**
  * Holds the target coverage for a specific condition;
@@ -53,7 +51,7 @@ public class CoverageTarget implements Serializable {
     }
 
     public Set<CoverageMetric> getFailingMetrics(AbstractCloverMetrics coverage) {
-        Set<CoverageMetric> result = new HashSet<CoverageMetric>();
+        final Set<CoverageMetric> result = new HashSet<CoverageMetric>();
 
         if (methodCoverage != null && coverage.getMethodCoverage().getPercentage() < methodCoverage) {
             result.add(CoverageMetric.METHOD);
@@ -75,25 +73,20 @@ public class CoverageTarget implements Serializable {
     }
 
     public Map<CoverageMetric, Integer> getRangeScores(CoverageTarget min, AbstractCloverMetrics coverage) {
-        Integer j;
-        Map<CoverageMetric, Integer> result = new HashMap<CoverageMetric, Integer>();
+        final Map<CoverageMetric, Integer> result = new HashMap<CoverageMetric, Integer>();
 
-        j = calcRangeScore(methodCoverage, min.methodCoverage, coverage.getMethodCoverage().getPercentage());
-        if (j != null) {
-            result.put(CoverageMetric.METHOD, Integer.valueOf(j));
-        }
-        j = calcRangeScore(conditionalCoverage, min.conditionalCoverage, coverage.getConditionalCoverage().getPercentage());
-        if (j != null) {
-            result.put(CoverageMetric.CONDITIONAL, Integer.valueOf(j));
-        }
-        j = calcRangeScore(statementCoverage, min.statementCoverage, coverage.getStatementCoverage().getPercentage());
-        if (j != null) {
-            result.put(CoverageMetric.STATEMENT, Integer.valueOf(j));
-        }
-        j = calcRangeScore(elementCoverage, min.elementCoverage, coverage.getElementCoverage().getPercentage());
-        if (j != null) {
-            result.put(CoverageMetric.ELEMENT, Integer.valueOf(j));
-        }
+        result.put(CoverageMetric.METHOD,
+                calcRangeScore(methodCoverage, min.methodCoverage, coverage.getMethodCoverage().getPercentage()));
+
+        result.put(CoverageMetric.CONDITIONAL,
+                calcRangeScore(conditionalCoverage, min.conditionalCoverage, coverage.getConditionalCoverage().getPercentage()));
+
+        result.put(CoverageMetric.STATEMENT,
+                calcRangeScore(statementCoverage, min.statementCoverage, coverage.getStatementCoverage().getPercentage()));
+
+        result.put(CoverageMetric.ELEMENT,
+                calcRangeScore(elementCoverage, min.elementCoverage, coverage.getElementCoverage().getPercentage()));
+
         return result;
     }
 

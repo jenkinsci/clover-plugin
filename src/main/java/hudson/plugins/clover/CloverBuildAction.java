@@ -15,6 +15,7 @@ import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.plugins.clover.targets.CoverageTarget;
+import org.jetbrains.annotations.NotNull;
 import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
 import org.jvnet.localizer.Localizable;
@@ -36,26 +38,31 @@ import org.jvnet.localizer.Localizable;
  * A health reporter for the individual build page.
  */
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
-    public transient Run<?, ?> owner;
+    private transient Run<?, ?> owner;
     private String buildBaseDir;
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
     private transient List<CloverProjectAction> projectActions;
 
-    private static final LoadingCache<CloverBuildAction,ProjectCoverage> reports = CacheBuilder.newBuilder().
-        weakKeys().
-        expireAfterAccess(60, TimeUnit.MINUTES).
-        build(new CacheLoader<CloverBuildAction,ProjectCoverage>() {
-            @Override public ProjectCoverage load(CloverBuildAction k) throws IOException {
-                return k.computeResult();
-            }
-        });
+    private static final CacheLoader<CloverBuildAction, ProjectCoverage> coverageCacheLoader =
+            new CacheLoader<CloverBuildAction, ProjectCoverage>() {
+                @Override
+                public ProjectCoverage load(@NotNull CloverBuildAction k) throws IOException {
+                    return k.computeResult();
+                }
+            };
 
-    static void invalidateReportCache() { reports.invalidateAll(); }
+    private static final LoadingCache<CloverBuildAction, ProjectCoverage> reports = CacheBuilder.newBuilder().
+            weakKeys().
+            expireAfterAccess(60, TimeUnit.MINUTES).
+            build(coverageCacheLoader);
+
+    static void invalidateReportCache() {
+        reports.invalidateAll();
+    }
 
     public HealthReport getBuildHealth() {
-        if (healthyTarget == null || unhealthyTarget == null)
-        {
+        if (healthyTarget == null || unhealthyTarget == null) {
             return null;
         }
         ProjectCoverage projectCoverage = getResult();
@@ -70,7 +77,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
         if (minKey == null) return null;
 
-        Localizable description = null;
+        final Localizable description;
         switch (minKey) {
             case METHOD:
                 description = Messages._CloverBuildAction_MethodCoverage(
@@ -118,9 +125,10 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         return getPreviousResult(owner);
     }
 
-    /** Gets the previous {@link CloverBuildAction} of the given build. */
-    /*package*/
-    static CloverBuildAction getPreviousResult(Run<?, ?> start) {
+    /**
+     * Gets the previous {@link CloverBuildAction} of the given build.
+     */
+    private CloverBuildAction getPreviousResult(Run<?, ?> start) {
         Run<?, ?> b = start;
         while (true) {
             b = b.getPreviousBuild();
@@ -134,21 +142,19 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         }
     }
 
-    private List<CloverProjectAction> getActions()
-    {
-        if( this.projectActions == null )
-        {
-            this.projectActions = new ArrayList<CloverProjectAction>();  
+    private List<CloverProjectAction> getActions() {
+        if (this.projectActions == null) {
+            this.projectActions = new ArrayList<CloverProjectAction>();
         }
         return this.projectActions;
     }
-            
+
     CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
         }
-        this.projectActions = new ArrayList<CloverProjectAction>();  
-        
+        this.projectActions = new ArrayList<CloverProjectAction>();
+
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {
             this.buildBaseDir = File.separator;
@@ -159,23 +165,26 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         this.unhealthyTarget = unhealthyTarget;
     }
 
-    @Override public void onAttached(Run<?,?> build) {
+    @Override
+    public void onAttached(Run<?, ?> build) {
         owner = build;
         ProjectCoverage c = reports.getIfPresent(this);
         if (c != null) {
             c.setOwner(build);
         }
 
-        getActions().add(new CloverProjectAction(build.getParent()));  
+        getActions().add(new CloverProjectAction(build.getParent()));
     }
 
-    @Override public void onLoad(Run<?,?> r) {
+    @Override
+    public void onLoad(Run<?, ?> r) {
         owner = r;
-        getActions().add(new CloverProjectAction(r.getParent()));  
+        getActions().add(new CloverProjectAction(r.getParent()));
     }
-    
+
     /**
      * Obtains the detailed {@link ProjectCoverage} instance.
+     *
      * @return ProjectCoverage
      */
     public synchronized ProjectCoverage getResult() {
@@ -196,110 +205,166 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     // the following is ugly but I might need it
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public PackageCoverage findPackageCoverage(String name) {
         return getResult().findPackageCoverage(name);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public FileCoverage findFileCoverage(String name) {
         return getResult().findFileCoverage(name);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public ClassCoverage findClassCoverage(String name) {
         return getResult().findClassCoverage(name);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public int getPackages() {
         return getResult().getPackages();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getFiles() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getFiles() {
         return getResult().getFiles();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getClasses() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getClasses() {
         return getResult().getClasses();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getLoc() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getLoc() {
         return getResult().getLoc();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getNcloc() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNcloc() {
         return getResult().getNcloc();
     }
 
-    /** {@inheritDoc} */
-    @Override public Ratio getMethodCoverage() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Ratio getMethodCoverage() {
         return getResult().getMethodCoverage();
     }
 
-    /** {@inheritDoc} */
-    @Override public Ratio getStatementCoverage() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Ratio getStatementCoverage() {
         return getResult().getStatementCoverage();
     }
 
-    /** {@inheritDoc} */
-    @Override public Ratio getConditionalCoverage() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Ratio getConditionalCoverage() {
         return getResult().getConditionalCoverage();
     }
 
-    /** {@inheritDoc} */
-    @Override public Ratio getElementCoverage() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Ratio getElementCoverage() {
         return getResult().getElementCoverage();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getConditionals() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getConditionals() {
         return getResult().getConditionals();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getMethods() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getMethods() {
         return getResult().getMethods();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getCoveredstatements() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCoveredstatements() {
         return getResult().getCoveredstatements();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getCoveredmethods() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCoveredmethods() {
         return getResult().getCoveredmethods();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getCoveredconditionals() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCoveredconditionals() {
         return getResult().getCoveredconditionals();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getStatements() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getStatements() {
         return getResult().getStatements();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getCoveredelements() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCoveredelements() {
         return getResult().getCoveredelements();
     }
 
-    /** {@inheritDoc} */
-    @Override public int getElements() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getElements() {
         return getResult().getElements();
     }
-    
-    @Override  
-    public Collection<? extends Action> getProjectActions() {  
-        return getActions();  
-    }  
+
+    @Override
+    public Collection<? extends Action> getProjectActions() {
+        return getActions();
+    }
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 

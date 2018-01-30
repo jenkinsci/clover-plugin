@@ -6,7 +6,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
-import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -18,21 +17,18 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.SlaveToMasterFileCallable;
+import jenkins.tasks.SimpleBuildStep;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import jenkins.SlaveToMasterFileCallable;
-import jenkins.tasks.SimpleBuildStep;
-import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
-import javax.annotation.Nonnull;
 
 /**
  * Clover {@link Publisher}.
@@ -77,7 +73,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     public String getCloverReportFileName() {
-        return cloverReportFileName == null || cloverReportFileName.trim().length() == 0 ? "clover.xml" : cloverReportFileName;
+        return cloverReportFileName == null
+                || cloverReportFileName.trim().length() == 0 ? "clover.xml" : cloverReportFileName;
     }
 
     /**
@@ -147,7 +144,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         performImpl(run, workspace, listener);
     }
 
-    protected boolean performImpl(Run<?, ?> run, FilePath workspace, TaskListener listener)
+    private void performImpl(Run<?, ?> run, FilePath workspace, TaskListener listener)
             throws IOException, InterruptedException {
         final EnvVars env = run.getEnvironment(listener);
         final File buildRootDir = run.getRootDir(); // should this top level?
@@ -169,7 +166,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             if (buildFailure && missingReport) {
                 listener.getLogger().println("No Clover report will be published due to a "
                         + (buildFailure ? "Build Failure" : "missing report"));
-                return true;
+                return;
             }
 
             final boolean htmlExists = copyHtmlReport(coverageReportDir, buildTarget, listener);
@@ -186,8 +183,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReportDir + " to " + buildTarget));
             run.setResult(Result.FAILURE);
         }
-
-        return true;
     }
 
     /**
@@ -196,24 +191,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
 
-        String workspacePath = "";
-        try {
-            workspacePath = workspace.act(new SlaveToMasterFileCallable<String>() {
-                public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
-                    try {
-                        return file.getCanonicalPath();
-                    } catch (IOException e) {
-                        return file.getAbsolutePath();
-                    }
-                }
-            });
-        } catch (IOException e) {
-            listener.getLogger().println("IOException when checking workspace path:" + e.getMessage());
-        }
-
-        if (!workspacePath.endsWith(File.separator)) {
-            workspacePath += File.separator;
-        }
+        final String workspacePath = withTrailingSeparator(getWorkspacePath(listener, workspace));
 
         final File cloverXmlReport = getCloverXmlReport(build);
         if (cloverXmlReport.exists()) {
@@ -228,21 +206,53 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             }
             build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
 
-            final Set<CoverageMetric> failingMetrics = failingTarget != null
-                    ? failingTarget.getFailingMetrics(result)
-                    : Collections.<CoverageMetric>emptySet();
+            final Set<CoverageMetric> failingMetrics = getFailingMetrics(result);
             if (!failingMetrics.isEmpty()) {
-                listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
-                for (CoverageMetric metric : failingMetrics) {
-                    listener.getLogger().println("    " + metric);
-                }
-                listener.getLogger().println("Setting Build to unstable.");
+                logFailingMetrics(listener, failingMetrics);
                 build.setResult(Result.UNSTABLE);
             }
 
         } else {
             flagMissingCloverXml(listener, build);
         }
+    }
+
+    @Nonnull
+    private String getWorkspacePath(TaskListener listener, FilePath workspace) throws InterruptedException {
+        try {
+            return workspace.act(new SlaveToMasterFileCallable<String>() {
+                public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
+                    try {
+                        return file.getCanonicalPath();
+                    } catch (IOException e) {
+                        return file.getAbsolutePath();
+                    }
+                }
+            });
+        } catch (IOException e) {
+            listener.getLogger().println("IOException when checking workspace path:" + e.getMessage());
+            return "";
+        }
+    }
+
+    @Nonnull
+    private String withTrailingSeparator(@Nonnull String path) {
+        return path.endsWith(File.separator) ? path : (path + File.separator);
+    }
+
+    @Nonnull
+    private Set<CoverageMetric> getFailingMetrics(ProjectCoverage result) {
+        return failingTarget != null
+                ? failingTarget.getFailingMetrics(result)
+                : Collections.<CoverageMetric>emptySet();
+    }
+
+    private void logFailingMetrics(TaskListener listener, Set<CoverageMetric> failingMetrics) {
+        listener.getLogger().println("Code coverage enforcement failed for the following metrics:");
+        for (CoverageMetric metric : failingMetrics) {
+            listener.getLogger().println("    " + metric);
+        }
+        listener.getLogger().println("Setting Build to unstable.");
     }
 
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener, String fileName)
