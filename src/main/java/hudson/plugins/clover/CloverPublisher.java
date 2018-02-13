@@ -189,7 +189,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      */
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
-        listener.getLogger().print("Processing Clover XML report ...");
+        listener.getLogger().println("Processing Clover XML report ...");
 
         final String workspacePath = withTrailingSeparator(getWorkspacePath(listener, workspace));
 
