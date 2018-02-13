@@ -10,14 +10,13 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.clover.results.ProjectCoverage;
+import hudson.plugins.clover.slave.GetPathFileCallable;
 import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.plugins.clover.targets.CoverageTarget;
-import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import jenkins.SlaveToMasterFileCallable;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -190,12 +189,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      */
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
+        listener.getLogger().print("Processing Clover XML report ...");
 
         final String workspacePath = withTrailingSeparator(getWorkspacePath(listener, workspace));
 
         final File cloverXmlReport = getCloverXmlReport(build);
         if (cloverXmlReport.exists()) {
-            listener.getLogger().println("Publishing Clover coverage results...");
             ProjectCoverage result = null;
             try {
                 result = CloverCoverageParser.parse(cloverXmlReport, workspacePath);
@@ -204,6 +203,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + buildTarget));
                 build.setResult(Result.FAILURE);
             }
+
+            listener.getLogger().println("Publishing Clover coverage results...");
             build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
 
             final Set<CoverageMetric> failingMetrics = getFailingMetrics(result);
@@ -220,15 +221,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     @Nonnull
     private String getWorkspacePath(TaskListener listener, FilePath workspace) throws InterruptedException {
         try {
-            return workspace.act(new SlaveToMasterFileCallable<String>() {
-                public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
-                    try {
-                        return file.getCanonicalPath();
-                    } catch (IOException e) {
-                        return file.getAbsolutePath();
-                    }
-                }
-            });
+            return workspace.act(new GetPathFileCallable());
         } catch (IOException e) {
             listener.getLogger().println("IOException when checking workspace path:" + e.getMessage());
             return "";
@@ -260,15 +253,14 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
-        final FilePath toFile = buildTarget.child("clover.xml");
         if (cloverXmlPath.exists()) {
             listener.getLogger().println("Publishing Clover XML report...");
+            final FilePath toFile = buildTarget.child("clover.xml");
             cloverXmlPath.copyTo(toFile);
             return true;
         } else {
-            listener.getLogger().println("Clover xml file does not exist in: " + coverageReport +
-                    " called: " + fileName +
-                    " and will not be copied to: " + toFile);
+            listener.getLogger().println(String.format(
+                    "Clover XML file '%s' does not exist in '%s' and was not be copied!", fileName, coverageReport));
             return false;
         }
     }
@@ -283,6 +275,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             htmlDirPath.copyRecursiveTo("**/*", buildTarget);
             return true;
         } else {
+            listener.getLogger().println(String.format(
+                    "Clover HTML report '%s' does not exist and was not copied!", coverageReport));
             return false;
         }
     }
