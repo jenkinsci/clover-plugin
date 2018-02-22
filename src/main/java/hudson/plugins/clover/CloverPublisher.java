@@ -260,7 +260,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             return true;
         } else {
             listener.getLogger().println(String.format(
-                    "Clover XML file '%s' does not exist in '%s' and was not be copied!", fileName, coverageReport));
+                    "Clover XML file '%s' does not exist in '%s' and was not copied!", fileName, coverageReport));
             return false;
         }
     }
