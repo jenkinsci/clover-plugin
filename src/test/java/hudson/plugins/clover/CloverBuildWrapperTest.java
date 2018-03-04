@@ -1,5 +1,6 @@
 package hudson.plugins.clover;
 
+import com.atlassian.clover.ci.AntIntegrationListener;
 import junit.framework.TestCase;
 import hudson.util.LogTaskListener;
 import hudson.Launcher;
@@ -8,6 +9,8 @@ import hudson.FilePath;
 import hudson.remoting.Channel;
 import hudson.model.TaskListener;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -17,44 +20,166 @@ import java.io.OutputStream;
 
 import com.atlassian.clover.api.ci.CIOptions;
 
-/**
- */
-public class CloverBuildWrapperTest extends TestCase
-{
+import static hudson.plugins.clover.CloverBuildWrapper.CloverDecoratingLauncher.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
-    public void testDecoratingLauncher() throws IOException
-    {
+public class CloverBuildWrapperTest extends TestCase {
+
+    public void testTrimDoubleQuotes() {
+        assertThat(trimDoubleQuotes.apply(null), nullValue());
+        assertThat(trimDoubleQuotes.apply(""), equalTo(""));
+        assertThat(trimDoubleQuotes.apply("\"abc"), equalTo("abc"));
+        assertThat(trimDoubleQuotes.apply("abc\""), equalTo("abc"));
+        assertThat(trimDoubleQuotes.apply("abc"), equalTo("abc"));
+        assertThat(trimDoubleQuotes.apply("\"abc\"def\""), equalTo("abc\"def"));
+    }
+
+    public void testIsCmdExe() {
+        assertThat(isCmdExe(Arrays.asList("c:\\windows\\cmd.exe", "echo")), is(false));
+        assertThat(isCmdExe(Arrays.asList("c:\\windows\\cmd.exe", "/c")), is(false));
+        assertThat(isCmdExe(Arrays.asList("c:\\windows\\cmd.exe", "/C")), is(true));
+        assertThat(isCmdExe(Arrays.asList("c:\\windows\\cmd.exe", "/C", "echo")), is(true));
+        assertThat(isCmdExe(Arrays.asList("cmd.exe", "/C", "echo")), is(true));
+    }
+
+    public void testIsAntBat() {
+        assertThat(isAntBat(Arrays.asList("c:\\ant\\ant.bat", "echo")), is(true));
+        assertThat(isAntBat(Arrays.asList("ant.bat", "echo")), is(true));
+        assertThat(isAntBat(Arrays.asList("/usr/bin/ant", "echo")), is(false));
+        assertThat(isAntBat(Arrays.asList("ant", "echo")), is(false));
+    }
+
+    public void testIsAnt() {
+        assertThat(isAnt(Arrays.asList("c:\\ant\\ant.bat", "echo")), is(false));
+        assertThat(isAnt(Arrays.asList("ant.bat", "echo")), is(false));
+        assertThat(isAnt(Arrays.asList("/usr/bin/ant", "echo")), is(true));
+        assertThat(isAnt(Arrays.asList("ant", "echo")), is(true));
+    }
+
+    public void testSplitArgumentsIntoPreUserPost() {
+        List<String> pre = new ArrayList<String>();
+        List<String> user = new ArrayList<String>();
+        List<String> post = new ArrayList<String>();
+
+        splitArgumentsIntoPreUserPost(Arrays.asList("ant", "clean", "test", "&&", "exit", "1"),
+                pre, user, post, true);
+        
+        assertThat(pre, contains("ant"));
+        assertThat(user, contains("clean", "test"));
+        assertThat(post, contains("&&", "exit", "1"));
+    }
+
+    public void testDecoratingLauncherOnWindowsOldJenkins() throws IOException {
         TaskListener listener = new LogTaskListener(Logger.getLogger(getName()), Level.ALL);
         Launcher outer = new Launcher.LocalLauncher(listener);
         CIOptions.Builder options = new CIOptions.Builder();
         CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, null, false);
         CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options);
 
-        Launcher.ProcStarter starter = new Launcher(cloverLauncher) {
-            public Proc launch(ProcStarter starter) throws IOException {
-                return null;
-            }
+        Launcher.ProcStarter starter = new DummyLauncher(cloverLauncher).launch();
 
-            public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
-                return null;
-            }
-
-
-            public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException { }
-        }.launch();
-        
-        starter.cmds("cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\"");
+        starter.cmds("cmd.exe", "/C", "\"ant.bat clean test  && exit %%ERRORLEVEL%%\"");
         starter.pwd("target");
         List<String> cmds = starter.cmds();
         starter.masks(new boolean[cmds.size()]);
         cloverLauncher.decorateArgs(starter);
 
         cmds = starter.cmds();
-        int i = 0;
-        assertEquals("cmd.exe", cmds.get(i++));
-        assertEquals("/C", cmds.get(i++));
-        assertEquals("ant.bat", cmds.get(i++));
-        assertEquals("clover.fullclean", cmds.get(i++));
+
+        assertThat(cmds.get(0), equalTo("cmd.exe"));
+        assertThat(cmds.get(1), equalTo("/C"));
+        assertThat(cmds.get(2), equalTo("ant.bat"));
+        assertThat(cmds.get(3), equalTo("clover.fullclean"));
+        assertThat(cmds.get(4), equalTo("clean"));
+        assertThat(cmds.get(5), equalTo("test"));
+
+        assertThat(cmds.get(8), equalTo("-listener"));
+        assertThat(cmds.get(9), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(10), equalTo("-lib"));
+        assertThat(cmds.get(11), containsString("clover.jar"));
+
+        assertThat(cmds.get(12), equalTo("&&"));
+        assertThat(cmds.get(13), equalTo("exit"));
+        assertThat(cmds.get(14), equalTo("%%ERRORLEVEL%%"));
     }
 
+    public void testDecoratingLauncherOnWindowsNewJenkins() throws IOException {
+        TaskListener listener = new LogTaskListener(Logger.getLogger(getName()), Level.ALL);
+        Launcher outer = new Launcher.LocalLauncher(listener);
+        CIOptions.Builder options = new CIOptions.Builder();
+        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, null, false);
+        CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options);
+
+        Launcher.ProcStarter starter = new DummyLauncher(cloverLauncher).launch();
+
+        starter.cmds("cmd.exe", "/C", "\"ant.bat", "clean", "test", "&&", "exit", "%%ERRORLEVEL%%\"");
+        starter.pwd("target");
+        List<String> cmds = starter.cmds();
+        starter.masks(new boolean[cmds.size()]);
+        cloverLauncher.decorateArgs(starter);
+
+        cmds = starter.cmds();
+
+        assertThat(cmds.get(0), equalTo("cmd.exe"));
+        assertThat(cmds.get(1), equalTo("/C"));
+        assertThat(cmds.get(2), equalTo("ant.bat"));
+        assertThat(cmds.get(3), equalTo("clover.fullclean"));
+        assertThat(cmds.get(4), equalTo("clean"));
+        assertThat(cmds.get(5), equalTo("test"));
+
+        assertThat(cmds.get(7), equalTo("-listener"));
+        assertThat(cmds.get(8), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(9), equalTo("-lib"));
+        assertThat(cmds.get(10), containsString("clover.jar"));
+
+        assertThat(cmds.get(11), equalTo("&&"));
+        assertThat(cmds.get(12), equalTo("exit"));
+        assertThat(cmds.get(13), equalTo("%%ERRORLEVEL%%"));
+    }
+
+    public void testDecoratingLauncherOnLinux() throws IOException {
+        TaskListener listener = new LogTaskListener(Logger.getLogger(getName()), Level.ALL);
+        Launcher outer = new Launcher.LocalLauncher(listener);
+        CIOptions.Builder options = new CIOptions.Builder();
+        CloverBuildWrapper wrapper = new CloverBuildWrapper(true, true, null, false);
+        CloverBuildWrapper.CloverDecoratingLauncher cloverLauncher = new CloverBuildWrapper.CloverDecoratingLauncher(wrapper, null, outer, options);
+
+        Launcher.ProcStarter starter = new DummyLauncher(cloverLauncher).launch();
+
+        starter.cmds("/usr/bin/ant", "clean", "test");
+        starter.pwd("target");
+        List<String> cmds = starter.cmds();
+        starter.masks(new boolean[cmds.size()]);
+        cloverLauncher.decorateArgs(starter);
+
+        cmds = starter.cmds();
+
+        assertThat(cmds.get(0), equalTo("/usr/bin/ant"));
+        assertThat(cmds.get(1), equalTo("clover.fullclean"));
+        assertThat(cmds.get(2), equalTo("clean"));
+        assertThat(cmds.get(3), equalTo("test"));
+
+        assertThat(cmds.get(5), equalTo("-listener"));
+        assertThat(cmds.get(6), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(7), equalTo("-lib"));
+        assertThat(cmds.get(8), containsString("clover.jar"));
+    }
+
+    private static class DummyLauncher extends Launcher {
+        DummyLauncher(Launcher launcher) {
+            super(launcher);
+        }
+
+        public Proc launch(Launcher.ProcStarter starter) throws IOException {
+            return null;
+        }
+
+        public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
+            return null;
+        }
+
+        public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
+        }
+    }
 }

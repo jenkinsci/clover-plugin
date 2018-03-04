@@ -3,11 +3,12 @@ package hudson.plugins.clover;
 import com.atlassian.clover.api.ci.CIOptions;
 import com.atlassian.clover.ci.AntIntegrationListener;
 import com.atlassian.clover.util.ClassPathUtil;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
@@ -17,15 +18,18 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Project;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.Channel;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.DescribableList;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,7 +48,6 @@ import java.util.Map;
  * integrate Clover into the Ant build.
  */
 public class CloverBuildWrapper extends BuildWrapper {
-
 
     public boolean historical = true;
     public boolean json = true;
@@ -190,49 +193,50 @@ public class CloverBuildWrapper extends BuildWrapper {
             return outer.launch(starter);
         }
 
+        private enum ParseState {
+            PRE, USER, POST
+        }
+
         public void decorateArgs(ProcStarter starter) throws IOException {
 
             final List<String> userArgs = new LinkedList<String>();
             List<String> preSystemArgs = new LinkedList<String>();
             List<String> postSystemArgs = new LinkedList<String>();
 
-            final List<String> cmds = new ArrayList<String>();
+            List<String> cmds = new ArrayList<String>();
             cmds.addAll(starter.cmds());
 
             // on windows - the cmds are wrapped of the form:
             // "cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\""
-            // this hacky code is used to parse out just the user specified args. ie clean test.run
+            // or:
+            // "cmd.exe", "/C", "\"ant.bat" "clean" "test.run" "&&" "exit" "%%ERRORLEVEL%%\""
 
-            final int numPreSystemCmds = 2; // hack hack hack - there are 2 commands prepended on windows...
-            final String sysArgSplitter = "&&";
-
-            if (!cmds.isEmpty() && cmds.size() >= numPreSystemCmds && !cmds.get(0).endsWith("ant")) {
+            // remove "cmd.exe /C" prefix
+            if (isCmdExe(cmds)) {
+                final int numPreSystemCmds = 2; // "cmd.exe" "/C"
                 preSystemArgs.addAll(cmds.subList(0, numPreSystemCmds));
+                cmds = cmds.subList(numPreSystemCmds, cmds.size());
+            }
 
-                // get the index of the "ant.bat 
-                String argString = cmds.get(numPreSystemCmds);
-                // trim leading and trailing " if they exist...
-                argString = argString.replaceAll("\"", "");
+            if (cmds.size() == 1 && cmds.get(0).startsWith("\"")) {
+                // probably we have "ant.bat all targets as one string"
+                // so split one command argument into separate ones
+                cmds = Arrays.asList(cmds.get(0).split(" "));
+            }
 
-                String[] tokens = argString.split(" ");
-                preSystemArgs.add(tokens[0]);
-
-                for (int i = 1; i < tokens.length; i++) {   // chop the ant.bat
-                    String arg = tokens[i];
-                    if (sysArgSplitter.equals(arg)) {
-                        // anything after the &&, break.
-                        postSystemArgs.addAll(Arrays.asList(tokens).subList(i, tokens.length));
-                        break;
-                    }
-                    userArgs.add(arg);
-                }
+            // wrap only ant commands, skip all other batch tasks called
+            if (isAntBat(cmds)) {
+                // windows 'ant.bat'
+                // remove leading and trailing " as they may interfere with Clover's ones
+                cmds = Lists.transform(cmds, trimDoubleQuotes);
+                // and split the list into three to find arguments for ant
+                splitArgumentsIntoPreUserPost(cmds, preSystemArgs, userArgs, postSystemArgs, true);
+            } else if (isAnt(cmds)) {
+                // linux 'ant', we don't look for '&&'
+                splitArgumentsIntoPreUserPost(cmds, preSystemArgs, userArgs, postSystemArgs, false);
             } else {
-                if (cmds.size() > 0) {
-                    preSystemArgs.add(cmds.get(0));
-                }
-                if (cmds.size() > 1) {
-                    userArgs.addAll(cmds.subList(1, cmds.size()));
-                }
+                listener.getLogger().println(String.format("Clover did not found Ant command in '%s' - not integrating.",
+                        StringUtils.join(cmds, " ")));
             }
 
             // we add OpenClover only if any targets are specified (if there are no targets defined, then Ant calls the
@@ -244,36 +248,13 @@ public class CloverBuildWrapper extends BuildWrapper {
                 // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
                 userArgs.add(0, "clover.fullclean");
 
-                // As decompiled from com.atlassian.clover.ci.AntIntegrator;
-                if (!wrapper.json) {
-                    userArgs.add("-Dclover.skip.json=true");
-                }
-
-                if (!wrapper.historical) {
-                    userArgs.add("-Dclover.skip.report=true");
-                } else {
-                    userArgs.add("-Dclover.skip.current=true");
-                }
-
-                userArgs.add("-listener");
-                userArgs.add(AntIntegrationListener.class.getName());
-
-
+                addReportSkipping(userArgs);
+                addAntIntegrationListener(userArgs);
                 if (clover != null) {
-                    userArgs.add("-lib");
-                    userArgs.add("\"" + clover.getHome() + "\"");
+                    addLibCloverFromHome(userArgs);
                 } else {
                     // Fall back to the embedded clover.jar
-                    FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
-                    try {
-                        String cloverJarLocation = ClassPathUtil.getCloverJarPath();
-                        path.copyFrom(new FilePath(new File(cloverJarLocation)));
-                        userArgs.add("-lib");
-                        userArgs.add("\"" + path.getRemote() + "\"");
-                    } catch (InterruptedException e) {
-                        listener.getLogger().print("Could not create clover library file at: " + path + ".  Please supply '-lib /path/to/clover.jar'.");
-                        listener.getLogger().print(e.getMessage());
-                    }
+                    addLibCloverFromBundledJar(userArgs, starter, listener);
                 }
 
                 // re-assemble all commands
@@ -285,10 +266,90 @@ public class CloverBuildWrapper extends BuildWrapper {
 
                 // masks.length must equal cmds.length
                 boolean[] masks = new boolean[starter.cmds().size()];
-                for (int i = 0; i < starter.masks().length; i++) {
-                    masks[i] = starter.masks()[i];
-                }
+                System.arraycopy(starter.masks(), 0, masks, 0, starter.masks().length);
                 starter.masks(masks);
+            }
+        }
+
+        static Function<String, String> trimDoubleQuotes = new Function<String, String>() {
+            @Override
+            public String apply(@Nullable String s) {
+                return StringUtils.removeStart(StringUtils.removeEnd(s, "\""), "\"");
+            }
+        };
+
+        static boolean isCmdExe(List<String> args) {
+            return args.size() >= 2 && args.get(0).endsWith("cmd.exe") && args.get(1).equals("/C");
+        }
+
+        static boolean isAntBat(List<String> cmds) {
+            return cmds.size() > 1 && (cmds.get(0).endsWith("ant.bat"));
+        }
+
+        static boolean isAnt(List<String> cmds) {
+            return cmds.size() > 1 && (cmds.get(0).endsWith("ant"));
+        }
+
+        static void splitArgumentsIntoPreUserPost(List<String> cmds,
+                                                   List<String> preSystemArgs,
+                                                   List<String> userArgs,
+                                                   List<String> postSystemArgs,
+                                                   boolean lookForPostSystemArgs) {
+            ParseState state = ParseState.PRE;
+            for (String arg : cmds) {
+                switch (state) {
+                    case PRE:
+                        // copy only first argument which we assume is "ant.bat" or "ant"
+                        preSystemArgs.add(arg);
+                        state = ParseState.USER;
+                        break;
+                    case USER:
+                        // on Windows we may have "&& exit %%ERRORLEVEL%%" which are not Ant options
+                        if (lookForPostSystemArgs && "&&".equals(arg)) {
+                            state = ParseState.POST;
+                            postSystemArgs.add(arg);
+                        } else {
+                            userArgs.add(arg);
+                        }
+                        break;
+                    case POST:
+                        postSystemArgs.add(arg);
+                        break;
+                }
+            }
+        }
+
+        private void addReportSkipping(List<String> userArgs) {
+            if (!wrapper.json) {
+                userArgs.add("-Dclover.skip.json=true");
+            }
+            if (!wrapper.historical) {
+                userArgs.add("-Dclover.skip.report=true");
+            } else {
+                userArgs.add("-Dclover.skip.current=true");
+            }
+        }
+
+        private void addAntIntegrationListener(List<String> userArgs) {
+            userArgs.add("-listener");
+            userArgs.add(AntIntegrationListener.class.getName());
+        }
+
+        private void addLibCloverFromHome(List<String> userArgs) {
+            userArgs.add("-lib");
+            userArgs.add("\"" + clover.getHome() + "\"");
+        }
+
+        private void addLibCloverFromBundledJar(List<String> userArgs, ProcStarter starter, TaskListener listener) throws IOException {
+            FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
+            try {
+                String cloverJarLocation = ClassPathUtil.getCloverJarPath();
+                path.copyFrom(new FilePath(new File(cloverJarLocation)));
+                userArgs.add("-lib");
+                userArgs.add("\"" + path.getRemote() + "\"");
+            } catch (InterruptedException e) {
+                listener.getLogger().print("Could not create clover library file at: " + path + ".  Please supply '-lib /path/to/clover.jar'.");
+                listener.getLogger().print(e.getMessage());
             }
         }
 
