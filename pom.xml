@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.8.1-SNAPSHOT</version>
+    <version>4.9.0-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
@@ -30,6 +30,9 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- from org.jenkins-ci.plugins:plugin 3.x -->
+        <!--<java.level>8</java.level>-->
+        <!--<java.level.test>8</java.level.test>-->
     </properties>
     <dependencies>
         <dependency>
