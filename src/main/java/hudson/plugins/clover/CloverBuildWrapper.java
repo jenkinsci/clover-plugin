@@ -1,8 +1,8 @@
 package hudson.plugins.clover;
 
 import com.atlassian.clover.api.ci.CIOptions;
-import com.atlassian.clover.ci.AntIntegrationListener;
-import com.atlassian.clover.util.ClassPathUtil;
+import org.openclover.ci.AntIntegrationListener;
+import org.openclover.util.ClassPathUtil;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import hudson.Extension;

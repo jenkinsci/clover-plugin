@@ -1,6 +1,6 @@
 package hudson.plugins.clover;
 
-import com.atlassian.clover.ci.AntIntegrationListener;
+import org.openclover.ci.AntIntegrationListener;
 import junit.framework.TestCase;
 import hudson.util.LogTaskListener;
 import hudson.Launcher;
