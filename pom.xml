@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.9.1-SNAPSHOT</version>
+    <version>4.10.0-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>org.openclover</groupId>
             <artifactId>clover</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
         <!--Build breaks without these:-->
         <dependency>
