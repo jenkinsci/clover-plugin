@@ -38,7 +38,7 @@
         <dependency>
             <groupId>org.openclover</groupId>
             <artifactId>clover</artifactId>
-            <version>4.3.0</version>
+            <version>4.3.1</version>
         </dependency>
         <!--Build breaks without these:-->
         <dependency>
