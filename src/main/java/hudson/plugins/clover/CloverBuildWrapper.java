@@ -245,9 +245,6 @@ public class CloverBuildWrapper extends BuildWrapper {
                 // We can't use clover AntDecorator as this one isn't serializable on jenkins remoting
                 // and expect to be loaded from clover.jar, not remoting classloader
 
-                // TODO: full clean needs to be an option. see http://jira.atlassian.com/browse/CLOV-736
-                userArgs.add(0, "clover.fullclean");
-
                 addReportSkipping(userArgs);
                 addAntIntegrationListener(userArgs);
                 if (clover != null) {
