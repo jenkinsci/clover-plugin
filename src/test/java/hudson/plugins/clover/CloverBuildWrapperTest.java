@@ -90,18 +90,17 @@ public class CloverBuildWrapperTest extends TestCase {
         assertThat(cmds.get(0), equalTo("cmd.exe"));
         assertThat(cmds.get(1), equalTo("/C"));
         assertThat(cmds.get(2), equalTo("ant.bat"));
-        assertThat(cmds.get(3), equalTo("clover.fullclean"));
-        assertThat(cmds.get(4), equalTo("clean"));
-        assertThat(cmds.get(5), equalTo("test"));
+        assertThat(cmds.get(3), equalTo("clean"));
+        assertThat(cmds.get(4), equalTo("test"));
 
-        assertThat(cmds.get(8), equalTo("-listener"));
-        assertThat(cmds.get(9), equalTo(AntIntegrationListener.class.getName()));
-        assertThat(cmds.get(10), equalTo("-lib"));
-        assertThat(cmds.get(11), containsString("clover.jar"));
+        assertThat(cmds.get(7), equalTo("-listener"));
+        assertThat(cmds.get(8), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(9), equalTo("-lib"));
+        assertThat(cmds.get(10), containsString("clover.jar"));
 
-        assertThat(cmds.get(12), equalTo("&&"));
-        assertThat(cmds.get(13), equalTo("exit"));
-        assertThat(cmds.get(14), equalTo("%%ERRORLEVEL%%"));
+        assertThat(cmds.get(11), equalTo("&&"));
+        assertThat(cmds.get(12), equalTo("exit"));
+        assertThat(cmds.get(13), equalTo("%%ERRORLEVEL%%"));
     }
 
     public void testDecoratingLauncherOnWindowsNewJenkins() throws IOException {
@@ -124,18 +123,17 @@ public class CloverBuildWrapperTest extends TestCase {
         assertThat(cmds.get(0), equalTo("cmd.exe"));
         assertThat(cmds.get(1), equalTo("/C"));
         assertThat(cmds.get(2), equalTo("ant.bat"));
-        assertThat(cmds.get(3), equalTo("clover.fullclean"));
-        assertThat(cmds.get(4), equalTo("clean"));
-        assertThat(cmds.get(5), equalTo("test"));
+        assertThat(cmds.get(3), equalTo("clean"));
+        assertThat(cmds.get(4), equalTo("test"));
 
-        assertThat(cmds.get(7), equalTo("-listener"));
-        assertThat(cmds.get(8), equalTo(AntIntegrationListener.class.getName()));
-        assertThat(cmds.get(9), equalTo("-lib"));
-        assertThat(cmds.get(10), containsString("clover.jar"));
+        assertThat(cmds.get(6), equalTo("-listener"));
+        assertThat(cmds.get(7), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(8), equalTo("-lib"));
+        assertThat(cmds.get(9), containsString("clover.jar"));
 
-        assertThat(cmds.get(11), equalTo("&&"));
-        assertThat(cmds.get(12), equalTo("exit"));
-        assertThat(cmds.get(13), equalTo("%%ERRORLEVEL%%"));
+        assertThat(cmds.get(10), equalTo("&&"));
+        assertThat(cmds.get(11), equalTo("exit"));
+        assertThat(cmds.get(12), equalTo("%%ERRORLEVEL%%"));
     }
 
     public void testDecoratingLauncherOnLinux() throws IOException {
@@ -156,14 +154,13 @@ public class CloverBuildWrapperTest extends TestCase {
         cmds = starter.cmds();
 
         assertThat(cmds.get(0), equalTo("/usr/bin/ant"));
-        assertThat(cmds.get(1), equalTo("clover.fullclean"));
-        assertThat(cmds.get(2), equalTo("clean"));
-        assertThat(cmds.get(3), equalTo("test"));
+        assertThat(cmds.get(1), equalTo("clean"));
+        assertThat(cmds.get(2), equalTo("test"));
 
-        assertThat(cmds.get(5), equalTo("-listener"));
-        assertThat(cmds.get(6), equalTo(AntIntegrationListener.class.getName()));
-        assertThat(cmds.get(7), equalTo("-lib"));
-        assertThat(cmds.get(8), containsString("clover.jar"));
+        assertThat(cmds.get(4), equalTo("-listener"));
+        assertThat(cmds.get(5), equalTo(AntIntegrationListener.class.getName()));
+        assertThat(cmds.get(6), equalTo("-lib"));
+        assertThat(cmds.get(7), containsString("clover.jar"));
     }
 
     private static class DummyLauncher extends Launcher {
