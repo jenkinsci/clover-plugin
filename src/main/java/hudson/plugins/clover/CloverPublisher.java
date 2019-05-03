@@ -6,7 +6,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
-import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -177,7 +176,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
             if (htmlExists) {
                 // only add the HTML run action, if the HTML report is available
-                run.addAction(new CloverHtmlBuildAction(buildTarget));
+                run.addAction(new CloverHtmlBuildAction());
             }
             processCloverXml(run, workspace, listener, coverageReportDir, buildTarget);
 
