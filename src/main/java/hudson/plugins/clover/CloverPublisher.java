@@ -253,15 +253,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
-        if (cloverXmlPath.exists()) {
-            listener.getLogger().println("Publishing Clover XML report...");
-            final FilePath toFile = buildTarget.child("clover.xml");
-            cloverXmlPath.copyTo(toFile);
-            return true;
-        } else {
+        if (!cloverXmlPath.exists()) {
             listener.getLogger().println(String.format(
                     "Clover XML file '%s' does not exist in '%s' and was not copied!", fileName, coverageReport));
             return false;
+        }
+        listener.getLogger().println("Publishing Clover XML report...");
+        final FilePath toFile = buildTarget.child("clover.xml");
+        cloverXmlPath.copyTo(toFile);
+        return true;
         }
     }
 
@@ -269,16 +269,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException {
         // Copy the HTML coverage report
         final FilePath htmlIndexHtmlPath = findOneDirDeep(coverageReport, "index.html");
-        if (htmlIndexHtmlPath.exists()) {
-            final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
-            listener.getLogger().println("Publishing Clover HTML report...");
-            htmlDirPath.copyRecursiveTo("**/*", buildTarget);
-            return true;
-        } else {
+        if (!htmlIndexHtmlPath.exists()) {
             listener.getLogger().println(String.format(
                     "Clover HTML report '%s' does not exist and was not copied!", coverageReport));
             return false;
         }
+        final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
+        listener.getLogger().println("Publishing Clover HTML report...");
+        htmlDirPath.copyRecursiveTo("**/*", buildTarget);
+        return true;
     }
 
     /**
