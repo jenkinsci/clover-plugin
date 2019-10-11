@@ -262,7 +262,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         final FilePath toFile = buildTarget.child("clover.xml");
         cloverXmlPath.copyTo(toFile);
         return true;
-        }
     }
 
     private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener)
