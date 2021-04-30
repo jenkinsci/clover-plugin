@@ -13,6 +13,7 @@ import java.io.InputStream;
 import org.apache.commons.digester.Digester;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 
 
 /**
@@ -63,30 +64,47 @@ public class CloverCoverageParser {
         }
     }
 
+    private static Digester createDigester(boolean secure) throws SAXException {
+        Digester digester = new Digester();
+        if (secure) {
+            digester.setXIncludeAware(false);
+            try {
+                digester.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                digester.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                digester.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                digester.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            } catch (ParserConfigurationException ex) {
+                throw new SAXException("Failed to securely configure xml digester parser", ex);
+            }
+        }
+        return digester;
+    }
+
     public static ProjectCoverage parse(InputStream in) throws IOException {
         if (in == null) throw new NullPointerException();
-        Digester digester = new Digester();
-        digester.setClassLoader(CloverCoverageParser.class.getClassLoader());
-        digester.addObjectCreate("coverage/project", ProjectCoverage.class);
-        digester.addSetProperties("coverage/project");
-        digester.addSetProperties("coverage/project/metrics");
-
-        digester.addObjectCreate("coverage/project/package", PackageCoverage.class);
-        digester.addSetProperties("coverage/project/package");
-        digester.addSetProperties("coverage/project/package/metrics");
-        digester.addSetNext("coverage/project/package", "addPackageCoverage", PackageCoverage.class.getName());
-
-        digester.addObjectCreate("coverage/project/package/file", FileCoverage.class);
-        digester.addSetProperties("coverage/project/package/file");
-        digester.addSetProperties("coverage/project/package/file/metrics");
-        digester.addSetNext("coverage/project/package/file", "addFileCoverage", FileCoverage.class.getName());
-
-        digester.addObjectCreate("coverage/project/package/file/class", ClassCoverage.class);
-        digester.addSetProperties("coverage/project/package/file/class");
-        digester.addSetProperties("coverage/project/package/file/class/metrics");
-        digester.addSetNext("coverage/project/package/file/class", "addClassCoverage", ClassCoverage.class.getName());
-
         try {
+            boolean secure = (!Boolean.getBoolean(CloverCoverageParser.class.getName() + ".UNSAFE"));
+            Digester digester = createDigester(secure);
+            digester.setClassLoader(CloverCoverageParser.class.getClassLoader());
+            digester.addObjectCreate("coverage/project", ProjectCoverage.class);
+            digester.addSetProperties("coverage/project");
+            digester.addSetProperties("coverage/project/metrics");
+
+            digester.addObjectCreate("coverage/project/package", PackageCoverage.class);
+            digester.addSetProperties("coverage/project/package");
+            digester.addSetProperties("coverage/project/package/metrics");
+            digester.addSetNext("coverage/project/package", "addPackageCoverage", PackageCoverage.class.getName());
+
+            digester.addObjectCreate("coverage/project/package/file", FileCoverage.class);
+            digester.addSetProperties("coverage/project/package/file");
+            digester.addSetProperties("coverage/project/package/file/metrics");
+            digester.addSetNext("coverage/project/package/file", "addFileCoverage", FileCoverage.class.getName());
+
+            digester.addObjectCreate("coverage/project/package/file/class", ClassCoverage.class);
+            digester.addSetProperties("coverage/project/package/file/class");
+            digester.addSetProperties("coverage/project/package/file/class/metrics");
+            digester.addSetNext("coverage/project/package/file/class", "addClassCoverage", ClassCoverage.class.getName());
+
             return (ProjectCoverage) digester.parse(in);
         } catch (SAXException e) {
             throw new IOException2("Cannot parse coverage results", e);
