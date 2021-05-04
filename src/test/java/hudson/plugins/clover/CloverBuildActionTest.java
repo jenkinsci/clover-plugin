@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 public class CloverBuildActionTest {
 
     @Rule
-    public JenkinsRule j = new JenkinsRule();
+    public final JenkinsRule j = new JenkinsRule();
 
     @Test
     public void testExpireAfterAccessFreeStyleProject() throws Exception {

@@ -1,6 +1,7 @@
 package hudson.plugins.clover;
 
 import com.atlassian.clover.api.ci.CIOptions;
+import jenkins.model.Jenkins;
 import org.openclover.ci.AntIntegrationListener;
 import org.openclover.util.ClassPathUtil;
 import com.google.common.base.Function;
@@ -15,8 +16,6 @@ import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
-import hudson.model.Project;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.Channel;
@@ -51,8 +50,8 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     public boolean historical = true;
     public boolean json = true;
-    public String clover;
-    public boolean putValuesInQuotes;
+    public final String clover;
+    public final boolean putValuesInQuotes;
 
     @DataBoundConstructor
     public CloverBuildWrapper(boolean historical, boolean json, String clover, boolean putValuesInQuotes) {
@@ -63,7 +62,7 @@ public class CloverBuildWrapper extends BuildWrapper {
     }
 
     @Override
-    public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         addCloverPublisher(build, listener);
         return new Environment() {
         };
@@ -75,9 +74,8 @@ public class CloverBuildWrapper extends BuildWrapper {
      *
      * @param build    build
      * @param listener listener
-     * @throws IOException
      */
-    private void addCloverPublisher(AbstractBuild build, BuildListener listener) throws IOException {
+    private void addCloverPublisher(AbstractBuild build, BuildListener listener) {
         final String DEFAULT_REPORT_DIR = "clover";
         final DescribableList<Publisher, Descriptor<Publisher>> publishers = build.getProject().getPublishersList();
         boolean isAlreadyDefined = false;
@@ -86,6 +84,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         for (Publisher publisher : publishers) {
             if (publisher instanceof CloverPublisher) {
                 isAlreadyDefined = true;
+                break;
             }
         }
 
@@ -99,7 +98,7 @@ public class CloverBuildWrapper extends BuildWrapper {
     public Collection<? extends Action> getProjectActions(AbstractProject job) {
         // ensure only one project action exists on the project
         if (job.getAction(CloverProjectAction.class) == null) {
-            return Collections.singletonList(new CloverProjectAction((Project) job));
+            return Collections.singletonList(new CloverProjectAction(job));
         }
         return super.getProjectActions(job);
     }
@@ -107,7 +106,7 @@ public class CloverBuildWrapper extends BuildWrapper {
     @Override
     public Launcher decorateLauncher(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
 
-        final DescriptorImpl descriptor = Hudson.getInstance().getDescriptorByType(DescriptorImpl.class);
+        final DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
 
         final CIOptions.Builder options = new CIOptions.Builder()
                 .json(this.json)
@@ -115,14 +114,12 @@ public class CloverBuildWrapper extends BuildWrapper {
                 .fullClean(true)
                 .putValuesInQuotes(this.putValuesInQuotes);
 
-        final Launcher outer = launcher;
-
         CloverInstallation installation = CloverInstallation.forName(clover);
         if (installation != null) {
-            installation = installation.forNode(build.getBuiltOn(), outer.getListener());
+            installation = installation.forNode(build.getBuiltOn(), launcher.getListener());
         }
 
-        return new CloverDecoratingLauncher(this, installation, outer, options);
+        return new CloverDecoratingLauncher(this, installation, launcher, options);
     }
 
     /**
@@ -153,7 +150,7 @@ public class CloverBuildWrapper extends BuildWrapper {
 
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+        public boolean configure(StaplerRequest req, JSONObject json) {
             req.bindParameters(this, "clover.");
             save();
             return true;
@@ -168,7 +165,6 @@ public class CloverBuildWrapper extends BuildWrapper {
 
     public static class CloverDecoratingLauncher extends Launcher {
         private final Launcher outer;
-        private final CIOptions.Builder options;
         private final CloverBuildWrapper wrapper;
         private final CloverInstallation clover;
 
@@ -177,7 +173,6 @@ public class CloverBuildWrapper extends BuildWrapper {
             this.wrapper = cloverBuildWrapper;
             this.clover = clover;
             this.outer = outer;
-            this.options = options;
         }
 
         @Override
@@ -199,12 +194,11 @@ public class CloverBuildWrapper extends BuildWrapper {
 
         public void decorateArgs(ProcStarter starter) throws IOException {
 
-            final List<String> userArgs = new LinkedList<String>();
-            List<String> preSystemArgs = new LinkedList<String>();
-            List<String> postSystemArgs = new LinkedList<String>();
+            final List<String> userArgs = new LinkedList<>();
+            List<String> preSystemArgs = new LinkedList<>();
+            List<String> postSystemArgs = new LinkedList<>();
 
-            List<String> cmds = new ArrayList<String>();
-            cmds.addAll(starter.cmds());
+            List<String> cmds = new ArrayList<>(starter.cmds());
 
             // on windows - the cmds are wrapped of the form:
             // "cmd.exe", "/C", "\"ant.bat clean test.run    &&  exit %%ERRORLEVEL%%\""
@@ -235,8 +229,8 @@ public class CloverBuildWrapper extends BuildWrapper {
                 // linux 'ant', we don't look for '&&'
                 splitArgumentsIntoPreUserPost(cmds, preSystemArgs, userArgs, postSystemArgs, false);
             } else {
-                listener.getLogger().println(String.format("Clover did not found Ant command in '%s' - not integrating.",
-                        StringUtils.join(cmds, " ")));
+                listener.getLogger().printf("Clover did not found Ant command in '%s' - not integrating.%n",
+                        StringUtils.join(cmds, " "));
             }
 
             // we add OpenClover only if any targets are specified (if there are no targets defined, then Ant calls the
@@ -255,7 +249,7 @@ public class CloverBuildWrapper extends BuildWrapper {
                 }
 
                 // re-assemble all commands
-                List<String> allCommands = new ArrayList<String>();
+                List<String> allCommands = new ArrayList<>();
                 allCommands.addAll(preSystemArgs);
                 allCommands.addAll(userArgs);
                 allCommands.addAll(postSystemArgs);
@@ -268,7 +262,7 @@ public class CloverBuildWrapper extends BuildWrapper {
             }
         }
 
-        static Function<String, String> trimDoubleQuotes = new Function<String, String>() {
+        static final Function<String, String> trimDoubleQuotes = new Function<String, String>() {
             @Override
             public String apply(@Nullable String s) {
                 return StringUtils.removeStart(StringUtils.removeEnd(s, "\""), "\"");
@@ -361,7 +355,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         /**
-         * Copied from {@link com.atlassian.clover.ci.AntIntegrator#addQuotesIfNecessary(String)}
+         * Copied from {@link org.openclover.ci.AntIntegrator#addQuotesIfNecessary(String)}
          * Don't add quotes on Windows, because it causes problems when passing such -Dname=value args to JVM via exec.
          * Don't add quotes for new versions of Ant either (by default the isPutValuesInQuotes is false)
          * as since Ant 1.9.7 problem of passing args to JVM has been fixed.
@@ -372,7 +366,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         /**
-         * Copied from {@link com.atlassian.clover.ci.AntIntegrator#isWindows()}
+         * Copied from {@link org.openclover.ci.AntIntegrator#isWindows()}
          */
         private static boolean isWindows() {
             final String osName = AccessController.doPrivileged(new PrivilegedAction<String>() {

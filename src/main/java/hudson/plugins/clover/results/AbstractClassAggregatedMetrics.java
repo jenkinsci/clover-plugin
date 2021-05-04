@@ -2,7 +2,6 @@ package hudson.plugins.clover.results;
 
 /**
  * Clover Coverage results for multiple classes.
- * @author Stephen Connolly
  */
 abstract public class AbstractClassAggregatedMetrics extends AbstractCloverMetrics {
 

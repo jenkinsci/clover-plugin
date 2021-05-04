@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNotNull;
 public class CloverWorkflowTest {
 
     @Rule
-    public JenkinsRule jenkinsRule = new JenkinsRule();
+    public final JenkinsRule jenkinsRule = new JenkinsRule();
 
     /**
      * Run a workflow job using {@link CloverPublisher} and check for success.

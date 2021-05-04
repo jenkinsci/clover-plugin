@@ -40,8 +40,8 @@ import org.jvnet.localizer.Localizable;
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
     private transient Run<?, ?> owner;
     private String buildBaseDir;
-    private CoverageTarget healthyTarget;
-    private CoverageTarget unhealthyTarget;
+    private final CoverageTarget healthyTarget;
+    private final CoverageTarget unhealthyTarget;
     private transient List<CloverProjectAction> projectActions;
 
     private static final CacheLoader<CloverBuildAction, ProjectCoverage> coverageCacheLoader =
@@ -144,7 +144,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private List<CloverProjectAction> getActions() {
         if (this.projectActions == null) {
-            this.projectActions = new ArrayList<CloverProjectAction>();
+            this.projectActions = new ArrayList<>();
         }
         return this.projectActions;
     }
@@ -153,7 +153,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         if (r != null) {
             reports.put(this, r);
         }
-        this.projectActions = new ArrayList<CloverProjectAction>();
+        this.projectActions = new ArrayList<>();
 
         this.buildBaseDir = workspacePath;
         if (this.buildBaseDir == null) {

@@ -1,11 +1,5 @@
 package hudson.plugins.clover.results;
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author connollys
- * @since 03-Jul-2007 15:16:10
- */
 public abstract class AbstractPackageAggregatedMetrics extends AbstractFileAggregatedMetrics {
     private int packages;
 

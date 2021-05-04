@@ -7,19 +7,12 @@ import junit.framework.TestCase;
  */
 public class RatioTest extends TestCase {
 
-    final void assertRatio(Ratio r, float numerator, float denominator) {
-        assertEquals(numerator, r.numerator);
-        assertEquals(denominator, r.denominator);
-    }
-
     /**
-     * Tests that {@link Ratio#parseValue(String)} parses correctly float
-     * numbers with either dot or comma as decimal point.
-     *
-     * @throws Exception
+     * Tests {@link Ratio#create(float, float)}
      */
-    public void testParseValue() throws Exception {
-        assertRatio(Ratio.create(1,2), 1.0f, 2.0f);
+    public void testParseValue() {
+        assertEquals(Ratio.create(1,2).numerator, 1.0f);
+        assertEquals(Ratio.create(1,2).denominator, 2.0f);
     }
     
     /**
@@ -36,10 +29,8 @@ public class RatioTest extends TestCase {
      * 
      * 4 - Numerator is larger than the denominator
      * 5 - Either the numerator or the denominator is < 0
-     *
-     * @throws Exception
      */
-    public void testGetPercentageFloat() throws Exception {
+    public void testGetPercentageFloat() {
         // denominator is 0 - no data - always return 100%
         assertEquals("0/0   => 100", 100.0f, Ratio.create(  0,0).getPercentageFloat(), 0.005f);
         assertEquals("1/0   => 100", 100.0f, Ratio.create(  1,0).getPercentageFloat(), 0.005f);

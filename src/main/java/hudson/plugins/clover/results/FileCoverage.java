@@ -1,29 +1,25 @@
 package hudson.plugins.clover.results;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Clover Coverage results for a specific file.
- * @author Stephen Connolly
  */
 public class FileCoverage extends AbstractClassAggregatedMetrics {
 
-    private List<ClassCoverage> classCoverages = new ArrayList<ClassCoverage>();
+    private final List<ClassCoverage> classCoverages = new ArrayList<>();
 
     public List<ClassCoverage> getChildren() {
         return getClassCoverages();
     }
 
-    public ClassCoverage getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+    public ClassCoverage getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
         return findClassCoverage(token);
     }
 

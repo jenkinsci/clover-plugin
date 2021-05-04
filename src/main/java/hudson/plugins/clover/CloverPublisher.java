@@ -31,8 +31,6 @@ import java.util.Set;
 
 /**
  * Clover {@link Publisher}.
- *
- * @author Stephen Connolly
  */
 public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
@@ -162,14 +160,14 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             final boolean buildFailure = run.getResult() != null && run.getResult().isWorseOrEqualTo(Result.FAILURE);
             final boolean missingReport = !coverageReportDir.exists();
 
-            if (buildFailure && missingReport) {
+            if (buildFailure || missingReport) {
                 listener.getLogger().println("No Clover report will be published due to a "
-                        + (buildFailure ? "Build Failure" : "missing report"));
+                        + (buildFailure ? "build Failure" : "missing report"));
                 return;
             }
 
             final boolean htmlExists = copyHtmlReport(coverageReportDir, buildTarget, listener);
-            final boolean xmlExists = copyXmlReport(coverageReportDir, buildTarget, listener, env.expand(getCloverReportFileName()));
+            copyXmlReport(coverageReportDir, buildTarget, listener, env.expand(getCloverReportFileName()));
 
             if (htmlExists) {
                 // only add the HTML run action, if the HTML report is available
@@ -214,7 +212,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             }
 
         } else {
-            flagMissingCloverXml(listener, build);
+            flagMissingCloverXml(listener);
         }
     }
 
@@ -254,8 +252,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
         if (!cloverXmlPath.exists()) {
-            listener.getLogger().println(String.format(
-                    "Clover XML file '%s' does not exist in '%s' and was not copied!", fileName, coverageReport));
+            listener.getLogger().printf(
+                    "Clover XML file '%s' does not exist in '%s' and was not copied!%n", fileName, coverageReport);
             return false;
         }
         listener.getLogger().println("Publishing Clover XML report...");
@@ -269,8 +267,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         // Copy the HTML coverage report
         final FilePath htmlIndexHtmlPath = findOneDirDeep(coverageReport, "index.html");
         if (!htmlIndexHtmlPath.exists()) {
-            listener.getLogger().println(String.format(
-                    "Clover HTML report '%s' does not exist and was not copied!", coverageReport));
+            listener.getLogger().printf(
+                    "Clover HTML report '%s' does not exist and was not copied!%n", coverageReport);
             return false;
         }
         final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
@@ -307,7 +305,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return dirContainingFile.child(filename);
     }
 
-    private void flagMissingCloverXml(TaskListener listener, Run<?, ?> build) {
+    private void flagMissingCloverXml(TaskListener listener) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
                 + "'.  Did you generate the XML report for Clover?");
     }
@@ -342,6 +340,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Nonnull
         @Override
         public String getDisplayName() {
             return Messages.CloverPublisher_DisplayName();
@@ -358,7 +357,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
          * Creates a new instance of {@link CloverPublisher} from a submitted form.
          */
         @Override
-        public CloverPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public CloverPublisher newInstance(StaplerRequest req, @Nonnull JSONObject formData) {
             final CloverPublisher instance = new CloverPublisher(
                     req.getParameter("clover.cloverReportDir"),
                     req.getParameter("clover.cloverReportFileName"),

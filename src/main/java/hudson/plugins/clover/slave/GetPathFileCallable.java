@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class GetPathFileCallable extends SlaveToMasterFileCallable<String> {
-    public String invoke(File file, VirtualChannel virtualChannel) throws IOException {
+    public String invoke(File file, VirtualChannel virtualChannel) {
         try {
             return file.getCanonicalPath();
         } catch (IOException e) {

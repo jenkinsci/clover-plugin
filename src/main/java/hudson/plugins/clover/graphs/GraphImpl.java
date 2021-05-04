@@ -25,7 +25,7 @@ import java.util.Calendar;
 
 public abstract class GraphImpl extends Graph {
 
-    private AbstractCloverMetrics metrics;
+    private final AbstractCloverMetrics metrics;
 
     protected GraphImpl(AbstractCloverMetrics metrics, Calendar timestamp) {
         super(timestamp, 400, 200);

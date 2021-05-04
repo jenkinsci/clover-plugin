@@ -2,7 +2,6 @@ package hudson.plugins.clover.results;
 
 /**
  * Clover Coverage results for multiple files.
- * @author Stephen Connolly
  */
 abstract public class AbstractFileAggregatedMetrics extends AbstractClassAggregatedMetrics {
     private int files;

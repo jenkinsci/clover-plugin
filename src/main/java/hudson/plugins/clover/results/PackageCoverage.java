@@ -1,23 +1,19 @@
 package hudson.plugins.clover.results;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Clover Coverage results for a specific package.
- * @author Stephen Connolly
  */
 public class PackageCoverage extends AbstractFileAggregatedMetrics {
 
-    private List<FileCoverage> fileCoverages = new ArrayList<FileCoverage>();
+    private final List<FileCoverage> fileCoverages = new ArrayList<>();
 
     public List<FileCoverage> getChildren() {
         return getFileCoverages();
@@ -46,7 +42,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         return null;
     }
 
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
         boolean isPath = false;
         for (FileCoverage i : fileCoverages) {
             if (i.getName().equals(token)) return i;
@@ -83,7 +79,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
             this.pathSoFar = pathSoFar;
         }
 
-        public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) throws IOException {
+        public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
             final String testPath = pathSoFar + token;
             boolean isPath = false;
             for (FileCoverage i : fileCoverages) {

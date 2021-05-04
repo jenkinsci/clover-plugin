@@ -4,7 +4,6 @@ import hudson.plugins.clover.results.ClassCoverage;
 import hudson.plugins.clover.results.FileCoverage;
 import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
-import hudson.util.IOException2;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,12 +15,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author connollys
- * @since 03-Jul-2007 09:03:30
- */
 public class CloverCoverageParser {
 
     /** Do not instantiate CloverCoverageParser. */
@@ -46,21 +39,9 @@ public class CloverCoverageParser {
     }
 
     public static ProjectCoverage parse(File inFile, String pathPrefix) throws IOException {
-        FileInputStream fileInputStream = null;
-        BufferedInputStream bufferedInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(inFile);
-            bufferedInputStream = new BufferedInputStream(fileInputStream);
-            CloverCoverageParser parser = new CloverCoverageParser();
+        try (FileInputStream fileInputStream = new FileInputStream(inFile);
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
             return trimPaths(parse(bufferedInputStream), pathPrefix);
-        } finally {
-            try {
-                if (bufferedInputStream != null)
-                    bufferedInputStream.close();
-                if (fileInputStream != null)
-                    fileInputStream.close();
-            } catch (IOException e) {
-            }
         }
     }
 
@@ -107,7 +88,7 @@ public class CloverCoverageParser {
 
             return (ProjectCoverage) digester.parse(in);
         } catch (SAXException e) {
-            throw new IOException2("Cannot parse coverage results", e);
+            throw new IOException("Cannot parse coverage results", e);
         }
     }
 }

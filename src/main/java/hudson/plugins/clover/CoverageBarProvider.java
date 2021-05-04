@@ -7,12 +7,12 @@ package hudson.plugins.clover;
  */
 public interface CoverageBarProvider {
 
-    public String getPcWidth();
+    String getPcWidth();
     
-    public String getPcUncovered();
+    String getPcUncovered();
 
-    public String getPcCovered();
+    String getPcCovered();
 
-    public String getHasData();
+    String getHasData();
 
 }

@@ -1,18 +1,13 @@
 package hudson.plugins.clover;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.results.PackageCoverage;
-
-import java.io.File;
+import hudson.plugins.clover.results.ProjectCoverage;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * CloverCoverageParser Tester.
- *
- * @author Stephen Connolly
- * @version 1.0
  */
 public class CloverCoverageParserTest extends TestCase {
     public CloverCoverageParserTest(String name) {

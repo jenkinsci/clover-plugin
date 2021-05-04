@@ -11,9 +11,6 @@ import java.util.Set;
 
 /**
  * Holds the target coverage for a specific condition;
- *
- * @author Stephen Connolly
- * @since 1.1
  */
 public class CoverageTarget implements Serializable {
 
@@ -51,7 +48,7 @@ public class CoverageTarget implements Serializable {
     }
 
     public Set<CoverageMetric> getFailingMetrics(AbstractCloverMetrics coverage) {
-        final Set<CoverageMetric> result = new HashSet<CoverageMetric>();
+        final Set<CoverageMetric> result = new HashSet<>();
 
         if (methodCoverage != null && coverage.getMethodCoverage().getPercentage() < methodCoverage) {
             result.add(CoverageMetric.METHOD);
@@ -73,7 +70,7 @@ public class CoverageTarget implements Serializable {
     }
 
     public Map<CoverageMetric, Integer> getRangeScores(CoverageTarget min, AbstractCloverMetrics coverage) {
-        final Map<CoverageMetric, Integer> result = new HashMap<CoverageMetric, Integer>();
+        final Map<CoverageMetric, Integer> result = new HashMap<>();
 
         result.put(CoverageMetric.METHOD,
                 calcRangeScore(methodCoverage, min.methodCoverage, coverage.getMethodCoverage().getPercentage()));
@@ -96,8 +93,7 @@ public class CoverageTarget implements Serializable {
         if (min > max) min = max - 1;
         int result = (int)(100f * (value - min.floatValue()) / (max.floatValue() - min.floatValue()));
         if (result < 0) return 0;
-        if (result > 100) return 100;
-        return result;
+        return Math.min(result, 100);
     }
 
     /**

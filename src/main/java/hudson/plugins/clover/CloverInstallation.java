@@ -1,9 +1,6 @@
 package hudson.plugins.clover;
 
-import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.Descriptor;
-import hudson.model.EnvironmentSpecific;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.slaves.NodeSpecific;
@@ -18,9 +15,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
- */
 public class CloverInstallation extends ToolInstallation implements NodeSpecific<CloverInstallation> {
 
     @DataBoundConstructor
@@ -51,7 +45,7 @@ public class CloverInstallation extends ToolInstallation implements NodeSpecific
     public static final class DescriptorImpl extends ToolDescriptor<CloverInstallation> {
 
         public DescriptorImpl() {
-            super.setInstallations(new CloverInstallation[0]);
+            super.setInstallations();
             load();
         }
 

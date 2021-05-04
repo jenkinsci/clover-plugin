@@ -58,9 +58,9 @@ public class CloverBuildWrapperTest extends TestCase {
     }
 
     public void testSplitArgumentsIntoPreUserPost() {
-        List<String> pre = new ArrayList<String>();
-        List<String> user = new ArrayList<String>();
-        List<String> post = new ArrayList<String>();
+        List<String> pre = new ArrayList<>();
+        List<String> user = new ArrayList<>();
+        List<String> post = new ArrayList<>();
 
         splitArgumentsIntoPreUserPost(Arrays.asList("ant", "clean", "test", "&&", "exit", "1"),
                 pre, user, post, true);
@@ -168,15 +168,15 @@ public class CloverBuildWrapperTest extends TestCase {
             super(launcher);
         }
 
-        public Proc launch(Launcher.ProcStarter starter) throws IOException {
+        public Proc launch(Launcher.ProcStarter starter) {
             return null;
         }
 
-        public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) throws IOException, InterruptedException {
+        public Channel launchChannel(String[] cmd, OutputStream out, FilePath workDir, Map<String, String> envVars) {
             return null;
         }
 
-        public void kill(Map<String, String> modelEnvVars) throws IOException, InterruptedException {
+        public void kill(Map<String, String> modelEnvVars) {
         }
     }
 }

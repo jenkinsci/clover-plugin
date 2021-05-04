@@ -6,7 +6,7 @@ public enum CoverageMetric {
     STATEMENT("Statements"),
     ELEMENT("Elements");
 
-    private String name;
+    private final String name;
 
     CoverageMetric(String name) {
         this.name = name;

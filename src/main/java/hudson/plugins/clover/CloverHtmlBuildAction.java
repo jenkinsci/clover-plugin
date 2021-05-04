@@ -4,16 +4,11 @@ package hudson.plugins.clover;
 import hudson.FilePath;
 import hudson.model.DirectoryBrowserSupport;
 import hudson.model.Run;
+import jenkins.model.RunAction2;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
-import jenkins.model.RunAction2;
 
-
-/**
- */
 public class CloverHtmlBuildAction implements RunAction2 {
 
     private transient Run<?, ?> build;
@@ -35,8 +30,7 @@ public class CloverHtmlBuildAction implements RunAction2 {
         return Messages.CloverHtmlBuildAction_DisplayName();
     }
 
-    public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,
-            InterruptedException {
+    public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) {
         return new DirectoryBrowserSupport(this, new FilePath(build.getRootDir()), "Clover Html Report", CloverProjectAction.ICON, false);
     }
 
