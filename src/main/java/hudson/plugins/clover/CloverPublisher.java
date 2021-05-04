@@ -173,7 +173,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
             if (htmlExists) {
                 // only add the HTML run action, if the HTML report is available
-                run.addAction(new CloverHtmlBuildAction(buildTarget));
+                run.addAction(new CloverHtmlBuildAction());
             }
             processCloverXml(run, workspace, listener, coverageReportDir, buildTarget);
 

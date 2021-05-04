@@ -1,24 +1,34 @@
 package hudson.plugins.clover;
 
 
-import hudson.model.DirectoryBrowserSupport;
-import hudson.model.Action;
 import hudson.FilePath;
+import hudson.model.DirectoryBrowserSupport;
+import hudson.model.Run;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import jenkins.model.RunAction2;
 
 
 /**
  */
-public class CloverHtmlBuildAction implements Action {
+public class CloverHtmlBuildAction implements RunAction2 {
 
-    final FilePath buildReportPath; // location of the clover html for each build
+    private transient Run<?, ?> build;
 
-    public CloverHtmlBuildAction(FilePath buildReportPath) {
-        this.buildReportPath = buildReportPath;
+    public CloverHtmlBuildAction() {
+    }
+
+    @Override
+    public void onAttached(Run<?, ?> r) {
+        build = r;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        build = r;
     }
 
     public String getDisplayName() {
@@ -27,7 +37,7 @@ public class CloverHtmlBuildAction implements Action {
 
     public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException,
             InterruptedException {
-        return new DirectoryBrowserSupport(this, buildReportPath, "Clover Html Report", CloverProjectAction.ICON, false);
+        return new DirectoryBrowserSupport(this, new FilePath(build.getRootDir()), "Clover Html Report", CloverProjectAction.ICON, false);
     }
 
     public String getIconFileName() {
