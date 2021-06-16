@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.12.1</version>
+    <version>4.12.2-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
     <developers>
@@ -26,7 +26,7 @@
         <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/clover-plugin</url>
-        <tag>clover-4.12.1</tag>
+        <tag>clover-4.7.0</tag>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
