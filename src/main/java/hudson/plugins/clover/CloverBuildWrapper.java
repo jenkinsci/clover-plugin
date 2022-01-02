@@ -255,7 +255,10 @@ public class CloverBuildWrapper extends BuildWrapper {
 
                 // masks.length must equal cmds.length
                 boolean[] masks = new boolean[starter.cmds().size()];
-                System.arraycopy(starter.masks(), 0, masks, 0, starter.masks().length);
+                boolean[] starterMasks = starter.masks();
+                if (starterMasks != null) {
+                    System.arraycopy(starterMasks, 0, masks, 0, starterMasks.length);
+                }
                 starter.masks(masks);
             }
         }
