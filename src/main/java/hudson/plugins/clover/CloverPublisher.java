@@ -157,7 +157,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             }
 
             // if the run has failed, then there's not much point in reporting an error
-            final boolean buildFailure = run.getResult() != null && run.getResult().isWorseOrEqualTo(Result.FAILURE);
+            Result result = run.getResult();
+            final boolean buildFailure = result != null && result.isWorseOrEqualTo(Result.FAILURE);
             final boolean missingReport = !coverageReportDir.exists();
 
             if (buildFailure || missingReport) {
