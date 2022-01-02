@@ -273,6 +273,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             return false;
         }
         final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
+        if (htmlDirPath == null) {
+            listener.getLogger().println("Parent directory of " + htmlIndexHtmlPath.getRemote() + " is null, not publishing Clover HTML report.");
+            return false;
+        }
         listener.getLogger().println("Publishing Clover HTML report...");
         htmlDirPath.copyRecursiveTo("**/*", buildTarget);
         return true;

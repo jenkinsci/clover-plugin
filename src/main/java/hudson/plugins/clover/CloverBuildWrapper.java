@@ -337,6 +337,10 @@ public class CloverBuildWrapper extends BuildWrapper {
             FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
             try {
                 String cloverJarLocation = ClassPathUtil.getCloverJarPath();
+                if (cloverJarLocation == null) {
+                    listener.getLogger().print("Could not get clover jar path at: " + path + ".  Please supply '-lib /path/to/clover.jar'.");
+                    return;
+                }
                 path.copyFrom(new FilePath(new File(cloverJarLocation)));
                 userArgs.add("-lib");
                 userArgs.add("\"" + path.getRemote() + "\"");
