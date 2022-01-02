@@ -334,7 +334,12 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         private void addLibCloverFromBundledJar(List<String> userArgs, @NonNull ProcStarter starter, TaskListener listener) throws IOException {
-            FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
+            FilePath starterPwd = starter.pwd();
+            if (starterPwd == null) {
+                listener.getLogger().print("Could not get clover jar path from " + starter);
+                return;
+            }
+            FilePath path = new FilePath(new FilePath(starterPwd, ".clover"), "clover.jar");
             try {
                 String cloverJarLocation = ClassPathUtil.getCloverJarPath();
                 if (cloverJarLocation == null) {
