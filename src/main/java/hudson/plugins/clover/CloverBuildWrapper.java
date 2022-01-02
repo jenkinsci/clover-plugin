@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
@@ -332,7 +333,7 @@ public class CloverBuildWrapper extends BuildWrapper {
             userArgs.add("\"" + clover.getHome() + "\"");
         }
 
-        private void addLibCloverFromBundledJar(List<String> userArgs, ProcStarter starter, TaskListener listener) throws IOException {
+        private void addLibCloverFromBundledJar(List<String> userArgs, @NonNull ProcStarter starter, TaskListener listener) throws IOException {
             FilePath path = new FilePath(new FilePath(starter.pwd(), ".clover"), "clover.jar");
             try {
                 String cloverJarLocation = ClassPathUtil.getCloverJarPath();
