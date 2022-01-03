@@ -23,7 +23,7 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
+        <connection>scm:git:https://github.com/jenkinsci/clover-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/clover-plugin</url>
         <tag>clover-4.7.0</tag>
