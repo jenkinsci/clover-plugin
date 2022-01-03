@@ -27,9 +27,10 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -104,8 +105,16 @@ public class CloverBuildWrapper extends BuildWrapper {
         return super.getProjectActions(job);
     }
 
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+                       justification = "")
+    private CloverInstallation getInstallationForBuild(@NonNull AbstractBuild build, @NonNull Launcher launcher)
+        throws IOException, InterruptedException {
+        CloverInstallation installation = CloverInstallation.forName(clover);
+        return installation == null ? null : installation.forNode(build.getBuiltOn(), launcher.getListener());
+    }
+
     @Override
-    public Launcher decorateLauncher(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
+    public Launcher decorateLauncher(@NonNull AbstractBuild build, @NonNull Launcher launcher, @NonNull BuildListener listener) throws IOException, InterruptedException, Run.RunnerAbortedException {
 
         final CIOptions.Builder options = new CIOptions.Builder()
                 .json(this.json)
@@ -113,12 +122,7 @@ public class CloverBuildWrapper extends BuildWrapper {
                 .fullClean(true)
                 .putValuesInQuotes(this.putValuesInQuotes);
 
-        CloverInstallation installation = CloverInstallation.forName(clover);
-        if (installation != null) {
-            installation = installation.forNode(build.getBuiltOn(), launcher.getListener());
-        }
-
-        return new CloverDecoratingLauncher(this, installation, launcher, options);
+        return new CloverDecoratingLauncher(this, getInstallationForBuild(build, launcher), launcher, options);
     }
 
     /**
