@@ -22,7 +22,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -136,8 +136,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher,
-                        @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
+                        @NonNull TaskListener listener) throws InterruptedException, IOException {
         performImpl(run, workspace, listener);
     }
 
@@ -157,7 +157,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             }
 
             // if the run has failed, then there's not much point in reporting an error
-            final boolean buildFailure = run.getResult() != null && run.getResult().isWorseOrEqualTo(Result.FAILURE);
+            final Result result = run.getResult();
+            final boolean buildFailure = result != null && result.isWorseOrEqualTo(Result.FAILURE);
             final boolean missingReport = !coverageReportDir.exists();
 
             if (buildFailure || missingReport) {
@@ -216,7 +217,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    @Nonnull
+    @NonNull
     private String getWorkspacePath(TaskListener listener, FilePath workspace) throws InterruptedException {
         try {
             return workspace.act(new GetPathFileCallable());
@@ -226,12 +227,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
     }
 
-    @Nonnull
-    private String withTrailingSeparator(@Nonnull String path) {
+    @NonNull
+    private String withTrailingSeparator(@NonNull String path) {
         return path.endsWith(File.separator) ? path : (path + File.separator);
     }
 
-    @Nonnull
+    @NonNull
     private Set<CoverageMetric> getFailingMetrics(ProjectCoverage result) {
         return failingTarget != null
                 ? failingTarget.getFailingMetrics(result)
@@ -272,6 +273,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             return false;
         }
         final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
+        if (htmlDirPath == null) {
+            listener.getLogger().println("Parent directory of " + htmlIndexHtmlPath.getRemote() + " is null, not publishing Clover HTML report.");
+            return false;
+        }
         listener.getLogger().println("Publishing Clover HTML report...");
         htmlDirPath.copyRecursiveTo("**/*", buildTarget);
         return true;
@@ -340,7 +345,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.CloverPublisher_DisplayName();
@@ -357,7 +362,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
          * Creates a new instance of {@link CloverPublisher} from a submitted form.
          */
         @Override
-        public CloverPublisher newInstance(StaplerRequest req, @Nonnull JSONObject formData) {
+        public CloverPublisher newInstance(@NonNull StaplerRequest req, @NonNull JSONObject formData) {
             final CloverPublisher instance = new CloverPublisher(
                     req.getParameter("clover.cloverReportDir"),
                     req.getParameter("clover.cloverReportFileName"),
