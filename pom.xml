@@ -9,7 +9,7 @@
     <packaging>hpi</packaging>
     <version>4.12.2-SNAPSHOT</version>
     <name>Jenkins Clover plugin</name>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin</url>
+    <url>https://wiki.jenkins.io/display/JENKINS/Clover+Plugin</url>
     <developers>
         <developer>
             <id>marek-parfianowicz</id>
@@ -23,9 +23,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/clover-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/clover-plugin.git</developerConnection>
-        <url>http://github.com/jenkinsci/clover-plugin</url>
+        <connection>scm:git:https://github.com/jenkinsci/clover-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/clover-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/clover-plugin</url>
         <tag>clover-4.7.0</tag>
     </scm>
     <properties>
