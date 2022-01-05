@@ -12,6 +12,10 @@ import static org.junit.Assert.assertNotNull;
 
 public class CloverWorkflowTest {
 
+    // BuildWatcher echoes job output to stderr as it arrives
+    @org.junit.ClassRule
+    public static org.jvnet.hudson.test.BuildWatcher buildWatcher = new org.jvnet.hudson.test.BuildWatcher();
+
     @Rule
     public final JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -43,5 +47,29 @@ public class CloverWorkflowTest {
         );
         WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
         assertNotNull("Build's CloverBuildAction should be not Null", build.getAction(CloverBuildAction.class));
+    }
+
+    /**
+     * Run a scripted Pipeline using {@link CloverPublisher} and the clover keyword.
+     */
+    @Test
+    public void cloverPublisherKeywordCloverStep() throws Exception {
+        WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "cloverPublisherKeywordCloverStep");
+        FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
+        FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
+        mavenSettings.copyFrom(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+
+        job.setDefinition(new CpsFlowDefinition(
+                        "node {\n" +
+                        "    stage('Clover report') {\n" +
+                        "        clover(cloverReportDir: 'target/site', cloverReportFileName: 'clover.xml',\n" +
+                        "            healthyTarget:   [methodCoverage: 21, conditionalCoverage: 27, statementCoverage: 23],\n" +
+                        "            unhealthyTarget: [methodCoverage: 11, conditionalCoverage: 17, statementCoverage: 13],\n" +
+                        "            failingTarget:   [methodCoverage:  1, conditionalCoverage:  7, statementCoverage:  3])\n" +
+                        "    }\n" +
+                        "}\n", true)
+        );
+        WorkflowRun build = jenkinsRule.buildAndAssertSuccess(job);
+        assertNotNull("Build's CloverBuildAction should be not null", build.getAction(CloverBuildAction.class));
     }
 }
