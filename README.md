@@ -71,7 +71,7 @@ As of version 4.6.0 (and later) of the plugin:
 ``` groovy
 node {
   stage('Clover Coverage') {
-    git 'https://github.com/recena/maven-helloworld'
+    git 'https://github.com/jenkinsci/platformlabeler-plugin.git'
     sh 'mvn clean clover:setup test clover:aggregate clover:clover'
     step([
       $class: 'CloverPublisher',
