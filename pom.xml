@@ -3,13 +3,13 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.32</version>
+        <version>4.33</version>
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
     <version>${revision}${changelist}</version>
     <name>Jenkins Clover plugin</name>
-    <url>https://wiki.jenkins.io/display/JENKINS/Clover+Plugin</url>
+    <url>https://github.com/jenkinsci/clover-plugin</url>
     <developers>
         <developer>
             <id>marek-parfianowicz</id>
@@ -42,7 +42,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-2.289.x</artifactId>
-                <version>1083.vb6e5d3561904</version>
+                <version>1090.v0a_33df40457a_</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
