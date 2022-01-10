@@ -1,0 +1,18 @@
+<coverage generated="1183450300322" clover="1.3.13">
+   <project timestamp="1183450141125" name="Maven Cloverreport">
+      <metrics classes="5" methods="10" conditionals="2" files="4" packages="1" coveredstatements="2" loc="137" ncloc="70" coveredmethods="1" coveredconditionals="1" statements="18" coveredelements="4" elements="30"/>
+      <package name="hudson.plugins.clover">
+         <metrics conditionals="2" methods="10" classes="5" files="4" ncloc="70" coveredstatements="2" coveredmethods="1" coveredconditionals="1" statements="18" loc="137" coveredelements="4" elements="30"/>
+         <file name="CloverPublisher.java">
+            <class name="CloverPublisher">
+               <metrics conditionals="0" methods="4" coveredstatements="0" coveredmethods="0" coveredconditionals="0" statements="5" coveredelements="0" elements="9"/>
+            </class>
+            <class name="CloverPublisher.DescriptorImpl">
+               <metrics conditionals="0" methods="4" coveredstatements="0" coveredmethods="0" coveredconditionals="0" statements="6" coveredelements="0" elements="10"/>
+            </class>
+            <metrics conditionals="0" methods="8" classes="2" ncloc="42" coveredstatements="0" coveredmethods="0" coveredconditionals="0" statements="11" loc="79" coveredelements="0" elements="19"/>
+            <line num="27" count="0" type="method"/>
+         </file>
+      </package>
+   </project>
+</coverage>

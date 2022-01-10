@@ -9,6 +9,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.net.URL;
+import java.util.Scanner;
+
 public class DeclarativePipelineTest {
     // BuildWatcher echoes job output to stderr as it arrives
     @ClassRule
@@ -17,8 +20,18 @@ public class DeclarativePipelineTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
+    private String resourceAsString(String resourcePath) throws Exception {
+        String results = "";
+        URL cloverXML = getClass().getResource(resourcePath);
+        try (Scanner scanner = new Scanner(cloverXML.openStream(), "UTF-8")) {
+            scanner.useDelimiter("\\A");
+            results = scanner.hasNext() ? scanner.next() : "";
+        }
+        return results;
+    }
+
     @Test
-    public void smokes() throws Exception {
+    public void declarativePipeline() throws Exception {
         final WorkflowRun run = runPipeline(m(
                 "pipeline {",
                 "  agent any",
@@ -26,27 +39,11 @@ public class DeclarativePipelineTest {
                 "    stage('Hello World') {",
                 "      steps {",
                 "        echo('hello' + ' from' + ' echo')",
-                "        writeFile file: 'clover.xml', text: '''",
-                "<coverage generated=\"1183450300322\" clover=\"1.3.13\">",
-                "   <project timestamp=\"1183450141125\" name=\"Maven Cloverreport\">",
-                "      <metrics classes=\"5\" methods=\"10\" conditionals=\"2\" files=\"4\" packages=\"1\" coveredstatements=\"2\" loc=\"137\" ncloc=\"70\" coveredmethods=\"1\" coveredconditionals=\"1\" statements=\"18\" coveredelements=\"4\" elements=\"30\"/>",
-                "      <package name=\"hudson.plugins.clover\">",
-                "         <metrics conditionals=\"2\" methods=\"10\" classes=\"5\" files=\"4\" ncloc=\"70\" coveredstatements=\"2\" coveredmethods=\"1\" coveredconditionals=\"1\" statements=\"18\" loc=\"137\" coveredelements=\"4\" elements=\"30\"/>",
-                "         <file name=\"CloverPublisher.java\">",
-                "            <class name=\"CloverPublisher\">",
-                "               <metrics conditionals=\"0\" methods=\"4\" coveredstatements=\"0\" coveredmethods=\"0\" coveredconditionals=\"0\" statements=\"5\" coveredelements=\"0\" elements=\"9\"/>",
-                "            </class>",
-                "            <class name=\"CloverPublisher.DescriptorImpl\">",
-                "               <metrics conditionals=\"0\" methods=\"4\" coveredstatements=\"0\" coveredmethods=\"0\" coveredconditionals=\"0\" statements=\"6\" coveredelements=\"0\" elements=\"10\"/>",
-                "            </class>",
-                "            <metrics conditionals=\"0\" methods=\"8\" classes=\"2\" ncloc=\"42\" coveredstatements=\"0\" coveredmethods=\"0\" coveredconditionals=\"0\" statements=\"11\" loc=\"79\" coveredelements=\"0\" elements=\"19\"/>",
-                "            <line num=\"27\" count=\"0\" type=\"method\"/>",
-                "         </file>",
-                "      </package>",
-                "   </project>",
-                "</coverage>",
+                "        writeFile file: 'clover.xml', ",
+                "                  text: '''",
+                resourceAsString("/hudson/plugins/clover/clover-declarative.xml"),
                 "'''",
-                "        clover(cloverReportDir: '.', cloverReportFileName: 'clover.xml',\n" +
+                "        clover(cloverReportDir: '.', cloverReportFileName: 'clover.xml',\n\n" +
                 "            healthyTarget: [methodCoverage: 20 + 1, conditionalCoverage: 20 + 7, statementCoverage: 20 + 3],\n" +
                 "            unhealthyTarget: [methodCoverage: 10 + 1, conditionalCoverage: 10 + 7, statementCoverage: 10 + 3],\n" +
                 "            failingTarget: [methodCoverage: 1, conditionalCoverage: 7, statementCoverage: 3])\n" +
