@@ -3,13 +3,13 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.32</version>
+        <version>4.33</version>
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>4.12.2-SNAPSHOT</version>
+    <version>${revision}${changelist}</version>
     <name>Jenkins Clover plugin</name>
-    <url>https://wiki.jenkins.io/display/JENKINS/Clover+Plugin</url>
+    <url>https://github.com/jenkinsci/clover-plugin</url>
     <developers>
         <developer>
             <id>marek-parfianowicz</id>
@@ -23,12 +23,15 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:https://github.com/jenkinsci/clover-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/clover-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/clover-plugin</url>
-        <tag>clover-4.7.0</tag>
+        <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/${gitHubRepo}.git</developerConnection>
+        <url>https://github.com/${gitHubRepo}</url>
+        <tag>${scmTag}</tag>
     </scm>
     <properties>
+        <revision>4.12.2</revision>
+        <changelist>-SNAPSHOT</changelist>
+        <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.level>8</java.level>
         <jenkins.version>2.289.1</jenkins.version>
@@ -39,7 +42,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-2.289.x</artifactId>
-                <version>1083.vb6e5d3561904</version>
+                <version>1090.v0a_33df40457a_</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -73,6 +76,15 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
     <profiles>
         <profile>
