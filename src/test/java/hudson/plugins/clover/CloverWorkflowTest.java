@@ -4,8 +4,10 @@ import hudson.FilePath;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.assertNotNull;
@@ -13,8 +15,8 @@ import static org.junit.Assert.assertNotNull;
 public class CloverWorkflowTest {
 
     // BuildWatcher echoes job output to stderr as it arrives
-    @org.junit.ClassRule
-    public static org.jvnet.hudson.test.BuildWatcher buildWatcher = new org.jvnet.hudson.test.BuildWatcher();
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Rule
     public final JenkinsRule jenkinsRule = new JenkinsRule();
