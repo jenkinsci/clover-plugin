@@ -66,24 +66,59 @@ In case of trouble, you may have a look at the [Atlassian Community](https://com
 
 ## Configuring with Jenkins Pipeline jobs
 
-As of version 4.6.0 (and later) of the plugin:
+A declarative Pipeline syntax example:
 
 ``` groovy
-node {
-  stage('Clover Coverage') {
-    git 'https://github.com/jenkinsci/platformlabeler-plugin.git'
+pipeline {
+  agent {
+    label '!windows' // sh not generally available on Windows
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/jenkinsci/platformlabeler-plugin.git'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'mvn clean clover:setup test clover:aggregate clover:clover'
+      }
+    }
+    stage('Report') {
+      steps {
+        clover(cloverReportDir: 'target/site', cloverReportFileName: 'clover.xml',
+          // optional, default is: method=70, conditional=80, statement=80
+          healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+          // optional, default is none
+          unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
+          // optional, default is none
+          failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+        )
+      }
+    }
+  }
+}
+```
+
+A scripted Pipeline syntax example:
+
+``` groovy
+node('!windows') { // sh not available on Windows, use bat or powershell instead
+  stage('Checkout') {
+    git 'https://github.com/MarkEWaite/platformlabeler-plugin.git'
+  }
+  stage('Test') {
     sh 'mvn clean clover:setup test clover:aggregate clover:clover'
-    step([
-      $class: 'CloverPublisher',
-      cloverReportDir: 'target/site',
-      cloverReportFileName: 'clover.xml',
+  }
+  stage('Report') {
+    clover(cloverReportDir: 'target/site', cloverReportFileName: 'clover.xml',
       // optional, default is: method=70, conditional=80, statement=80
       healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
       // optional, default is none
       unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
       // optional, default is none
       failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
-    ])
+    )
   }
 }
 ```

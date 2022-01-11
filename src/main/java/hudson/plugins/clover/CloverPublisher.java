@@ -19,6 +19,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -337,6 +338,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * See <tt>views/hudson/plugins/clover/CloverPublisher/*.jelly</tt> for the actual HTML fragment for the
      * configuration screen.
      */
+    @Symbol("clover")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         DescriptorImpl() {
             super(CloverPublisher.class);
