@@ -15,7 +15,7 @@ import org.jvnet.hudson.test.TouchBuilder;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.gargoylesoftware.htmlunit.WebAssert.assertTextPresent;
+import static org.htmlunit.WebAssert.assertTextPresent;
 import static org.junit.Assert.assertNotNull;
 
 public class CloverBuildActionTest {
