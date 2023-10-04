@@ -1,9 +1,6 @@
 name: B Release Jenkins Clover Plugin
 on:
   workflow_dispatch:
-  check_run:
-    types:
-      - completed
 
 permissions:
   checks: read
