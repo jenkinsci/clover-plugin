@@ -6,7 +6,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
- * Represents <tt>x/y</tt> where x={@link #numerator} and y={@link #denominator}.
+ * Represents x/y where x={@link #numerator} and y={@link #denominator}.
  */
 final public class Ratio implements Serializable, CoverageBarProvider {
     

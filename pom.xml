@@ -29,6 +29,7 @@
         <tag>${scmTag}</tag>
     </scm>
     <properties>
+        <gpg.skip>true</gpg.skip> <!-- sign only when releasing -->
         <revision>4.14.0</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
@@ -94,7 +95,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -108,7 +109,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.10.4</version>
+                        <version>3.3.1</version>
                         <configuration>
                             <!-- do not spam the console -->
                             <quiet>true</quiet>
