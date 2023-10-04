@@ -1,10 +1,25 @@
 # Version history
 
-## Version 4.12.0 (October 4, 2023)
+## Version 4.14.0 (October 4, 2023)
 
 - Upgrade to OpenClover 4.5.0 feature release. This version brings support for annotations on java types
   and experimental support for Java 10-17. See the [OpenClover 4.5.0 release notes](http://openclover.org/doc/openclover-4.5.0-release-notes.html)
   for more details.
+
+## Version 4.13.0 (March 3, 2022)
+
+- Fixed NPEs in CloverPublisher and CloverBuildWrapper
+- Minimum Jenkins version is 2.289.1
+- Add 'clover' keyword to Pipeline DSL
+
+## Version 4.12.1 (April 16, 2021)
+
+- Fixed wrong class import in coverage parser
+
+## Version 4.12.0 (May 4, 2021)
+
+- Minimum Java version is 1.7 now
+- Drop support for 1.3-1.6 source levels
 
 ## Version 4.11.1 (October 11, 2019)
 
