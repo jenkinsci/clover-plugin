@@ -1,15 +1,21 @@
 # Version history
 
+## Version 4.12.0 (October 4, 2023)
+
+- Upgrade to OpenClover 4.5.0 feature release. This version brings support for annotations on java types
+  and experimental support for Java 10-17. See the [OpenClover 4.5.0 release notes](http://openclover.org/doc/openclover-4.5.0-release-notes.html)
+  for more details.
+
 ## Version 4.11.1 (October 11, 2019)
 
 -   Upgrade to OpenClover 4.4.1 bug-fix release, see the [OpenClover 4.4.1 release notes](http://openclover.org/doc/openclover-4.4.1-release-notes.html)
-    for more details
+    for more details.
 
 ## Version 4.11.0 (September 26, 2019)
 
 -   Upgrade to OpenClover 4.4.0, which primarily contains changes in
     Maven integration, see the [OpenClover 4.4.0 release notes](http://openclover.org/doc/openclover-4.4.0-release-notes.html)
-    for more details
+    for more details.
 
 ## Version 4.10.0 (September 22, 2018)
 
