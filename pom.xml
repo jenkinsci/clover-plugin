@@ -34,7 +34,6 @@
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.level>8</java.level>
         <jenkins.version>2.387.3</jenkins.version>
     </properties>
 
