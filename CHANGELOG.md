@@ -5,6 +5,9 @@
 - Upgrade to OpenClover 4.5.0 feature release. This version brings support for annotations on java types
   and experimental support for Java 10-17. See the [OpenClover 4.5.0 release notes](http://openclover.org/doc/openclover-4.5.0-release-notes.html)
   for more details.
+- Require Java 11 or Java 17.
+  Refer to the [blog post](https://www.jenkins.io/blog/2022/06/28/require-java-11/) for more details about Java 11 and Java 17 support.
+- Require Jenkins 2.387.3 or newer.
 
 ## Version 4.13.0 (March 3, 2022)
 
