@@ -1,0 +1,7 @@
+_extends: .github
+version-template: $MAJOR.$MINOR.$PATCH
+tag-template: clover-$NEXT_PATCH_VERSION
+
+replacers:
+  - search: '/\[*OC-(\d+)\]*\s*-*\s*/g'
+    replace: '[OC-$1](https://github.com/openclover/clover/issues/$1) - '

@@ -7,7 +7,7 @@
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
-    <version>${revision}${changelist}</version>
+    <version>${revision}.${changelist}</version>
     <name>Jenkins Clover plugin</name>
     <url>https://github.com/jenkinsci/clover-plugin</url>
     <developers>
@@ -31,7 +31,7 @@
     <properties>
         <gpg.skip>true</gpg.skip> <!-- sign only when releasing -->
         <revision>4.14.0</revision>
-        <changelist>-SNAPSHOT</changelist>
+        <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jenkins.version>2.387.3</jenkins.version>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.openclover</groupId>
             <artifactId>clover</artifactId>
-            <version>4.5.0</version>
+            <version>${clover.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
