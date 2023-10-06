@@ -35,15 +35,15 @@
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.level>8</java.level>
-        <jenkins.version>2.289.1</jenkins.version>
+        <jenkins.version>2.387.3</jenkins.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.289.x</artifactId>
-                <version>1090.v0a_33df40457a_</version>
+                <artifactId>bom-2.387.x</artifactId>
+                <version>2483.v3b_22f030990a_</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -67,26 +67,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <forkCount>1C</forkCount>
-                    <reuseForks>true</reuseForks>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
     <profiles>
         <profile>
             <id>release-profile</id>
