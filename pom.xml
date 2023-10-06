@@ -36,6 +36,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.level>8</java.level>
         <jenkins.version>2.289.3</jenkins.version>
+        <clover.version>4.5.0</clover.version>
     </properties>
 
     <dependencyManagement>
@@ -54,7 +55,7 @@
         <dependency>
             <groupId>org.openclover</groupId>
             <artifactId>clover</artifactId>
-            <version>4.5.0</version>
+            <version>${clover.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

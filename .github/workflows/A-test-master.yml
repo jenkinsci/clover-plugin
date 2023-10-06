@@ -1,4 +1,4 @@
-name: A Test master on JDK8
+name: A quick test on JDK8
 
 on:
   push:

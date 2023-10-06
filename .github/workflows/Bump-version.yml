@@ -1,0 +1,41 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      pluginVersion:
+        description: 'Jenkins Clover Plugin version'
+        required: true
+        type: string
+      opencloverVersion:
+        description: 'OpenClover version'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8.0
+          distribution: temurin
+
+      - name: Prepare release tag
+        run: |
+          git config user.name "Marek Parfianowicz (github-actions)"
+          git config user.email "marek.parfianowicz+github-actions@gmail.com"
+          echo "Updating pom.xml files to version ${{ inputs.pluginVersion }} and ${{ inputs.opencloverVersion }}"
+          mvn versions:set-property -Dproperty=revision "-DnewVersion=${{ inputs.pluginVersion }}" -DgenerateBackupPoms=false
+          mvn versions:set-property -Dproperty=clover.version "-DnewVersion=${{ inputs.opencloverVersion }}" -DgenerateBackupPoms=false
+          git add .
+          git commit -m "Prepare release tag clover-${{ inputs.releaseVersion }}"
+          git tag clover-${{ inputs.releaseVersion }}
+          echo "Pushing commits and tag clover-${{ inputs.releaseVersion }}"
+          git push origin
+          git push origin clover-${{ inputs.releaseVersion }}
