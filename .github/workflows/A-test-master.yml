@@ -21,4 +21,4 @@ jobs:
         cache: maven
 
     - name: Run basic tests
-      run: mvn clean verify
+      run: mvn --no-transfer-progress clean verify
