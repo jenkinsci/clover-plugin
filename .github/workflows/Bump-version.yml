@@ -31,8 +31,8 @@ jobs:
           git config user.name "Marek Parfianowicz (github-actions)"
           git config user.email "marek.parfianowicz+github-actions@gmail.com"
           echo "Updating pom.xml files to version ${{ inputs.pluginVersion }} and ${{ inputs.opencloverVersion }}"
-          mvn versions:set-property -Dproperty=revision "-DnewVersion=${{ inputs.pluginVersion }}" -DgenerateBackupPoms=false
-          mvn versions:set-property -Dproperty=clover.version "-DnewVersion=${{ inputs.opencloverVersion }}" -DgenerateBackupPoms=false
+          mvn --no-transfer-progress versions:set-property -Dproperty=revision "-DnewVersion=${{ inputs.pluginVersion }}" -DgenerateBackupPoms=false
+          mvn --no-transfer-progress versions:set-property -Dproperty=clover.version "-DnewVersion=${{ inputs.opencloverVersion }}" -DgenerateBackupPoms=false
           git add .
           git commit -m "Prepare release tag clover-${{ inputs.releaseVersion }}"
           git tag clover-${{ inputs.releaseVersion }}
