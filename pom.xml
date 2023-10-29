@@ -35,7 +35,7 @@
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jenkins.version>2.387.3</jenkins.version>
-        <clover.version>4.5.0</clover.version>
+        <clover.version>4.5.1</clover.version>
     </properties>
 
     <dependencyManagement>
