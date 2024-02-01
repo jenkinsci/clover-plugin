@@ -30,12 +30,12 @@
     </scm>
     <properties>
         <gpg.skip>true</gpg.skip> <!-- sign only when releasing -->
-        <revision>4.14.1</revision>
+        <revision>4.14.2</revision>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jenkins.version>2.401.3</jenkins.version>
-        <clover.version>4.5.1</clover.version>
+        <clover.version>4.5.2</clover.version>
     </properties>
 
     <dependencyManagement>
