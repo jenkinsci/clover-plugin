@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.74</version>
+        <version>4.76</version>
     </parent>
     <artifactId>clover</artifactId>
     <packaging>hpi</packaging>
@@ -34,7 +34,7 @@
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/clover-plugin</gitHubRepo>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jenkins.version>2.387.3</jenkins.version>
+        <jenkins.version>2.401.3</jenkins.version>
         <clover.version>4.5.2</clover.version>
     </properties>
 
@@ -42,8 +42,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.387.x</artifactId>
-                <version>2483.v3b_22f030990a_</version>
+                <artifactId>bom-2.401.x</artifactId>
+                <version>2675.v1515e14da_7a_6</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -100,7 +100,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.6.0</version>
+                        <version>3.6.3</version>
                         <configuration>
                             <!-- do not spam the console -->
                             <quiet>true</quiet>
