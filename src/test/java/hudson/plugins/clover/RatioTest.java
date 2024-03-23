@@ -1,35 +1,39 @@
 package hudson.plugins.clover;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * JUnit test for {@link Ratio}
  */
-public class RatioTest extends TestCase {
+public class RatioTest {
 
     /**
      * Tests {@link Ratio#create(float, float)}
      */
+    @Test
     public void testParseValue() {
-        assertEquals(Ratio.create(1,2).numerator, 1.0f);
-        assertEquals(Ratio.create(1,2).denominator, 2.0f);
+        assertEquals(Ratio.create(1,2).numerator, 1.0f, 1e-4);
+        assertEquals(Ratio.create(1,2).denominator, 2.0f, 1e-4);
     }
     
     /**
      * Tests that {@link Ratio#getPercentageFloat()} handles appropriate
      * values for numerator and denominator.  Specifically:
-     * 
+     * <br/>
      * 1 - Ratios where the denominator is 0 (no tests), return 100%.
-     * 2 - All other ratios return the numerator / denominiator.
-     * 
+     * 2 - All other ratios return the numerator / denominator.
+     * <br/>
      * There is a case here that is in the code, but is caused by invalid data:
      * 3 - The numerator is larger than the denominator.
-     * 
+     * <br/>
      * There are other invalid data points as well:
-     * 
+     * <br/>
      * 4 - Numerator is larger than the denominator
      * 5 - Either the numerator or the denominator is < 0
      */
+    @Test
     public void testGetPercentageFloat() {
         // denominator is 0 - no data - always return 100%
         assertEquals("0/0   => 100", 100.0f, Ratio.create(  0,0).getPercentageFloat(), 0.005f);
@@ -50,6 +54,7 @@ public class RatioTest extends TestCase {
      * whole integers.  In particular that 99.99% becomes 99% and not 100%
      *
      */
+    @Test
     public void testGetPercentage() {
         // truncate to zero
         assertEquals("0/1000    =>   0",   0, Ratio.create(   0,1000).getPercentage());
@@ -72,6 +77,7 @@ public class RatioTest extends TestCase {
      * whole integers.  This is to make sure that it will match that of
      * getPercentage()
      */
+    @Test
     public void testGetPcCovered() {
         // Make sure zero is zero
         assertEquals("0/10000     =>    0",    "0%", Ratio.create(    0, 10000).getPcCovered());
@@ -94,6 +100,7 @@ public class RatioTest extends TestCase {
      * whole integers.  
      * This needs to correctly contrast with getPcCovered()
      */
+    @Test
     public void testGetPcUncovered() {
         // No coverage should be 100% uncovered
         assertEquals("0/10000     = 0% covered     = 100% uncovered   = 100% rounded up", "100%",

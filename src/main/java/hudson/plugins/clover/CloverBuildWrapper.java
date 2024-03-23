@@ -1,11 +1,7 @@
 package hudson.plugins.clover;
 
-import com.atlassian.clover.api.ci.CIOptions;
-import jenkins.model.Jenkins;
-import org.openclover.ci.AntIntegrationListener;
-import org.openclover.util.ClassPathUtil;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -27,15 +23,13 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.openclover.ci.AntIntegrationListener;
+import org.openclover.ci.CIOptions;
+import org.openclover.core.util.ClassPathUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,6 +37,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * A BuildWrapper that decorates the command line just before a build starts with targets and properties that will automatically
@@ -140,7 +137,7 @@ public class CloverBuildWrapper extends BuildWrapper {
         }
 
         /**
-         * This human readable name is used in the configuration screen.
+         * This human-readable name is used in the configuration screen.
          */
         public String getDisplayName() {
             return Messages.CloverBuildWrapper_DisplayName();
@@ -225,7 +222,9 @@ public class CloverBuildWrapper extends BuildWrapper {
             if (isAntBat(cmds)) {
                 // windows 'ant.bat'
                 // remove leading and trailing " as they may interfere with Clover's ones
-                cmds = Lists.transform(cmds, trimDoubleQuotes);
+                cmds = cmds.stream()
+                        .map(trimDoubleQuotes)
+                        .collect(toList());
                 // and split the list into three to find arguments for ant
                 splitArgumentsIntoPreUserPost(cmds, preSystemArgs, userArgs, postSystemArgs, true);
             } else if (isAnt(cmds)) {
@@ -268,12 +267,8 @@ public class CloverBuildWrapper extends BuildWrapper {
             }
         }
 
-        static final Function<String, String> trimDoubleQuotes = new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String s) {
-                return StringUtils.removeStart(StringUtils.removeEnd(s, "\""), "\"");
-            }
-        };
+        static final Function<String, String> trimDoubleQuotes = s ->
+                StringUtils.removeStart(StringUtils.removeEnd(s, "\""), "\"");
 
         static boolean isCmdExe(List<String> args) {
             return args.size() >= 2 && args.get(0).endsWith("cmd.exe") && args.get(1).equals("/C");
@@ -384,17 +379,12 @@ public class CloverBuildWrapper extends BuildWrapper {
          * Copied from {@link org.openclover.ci.AntIntegrator#isWindows()}
          */
         private static boolean isWindows() {
-            final String osName = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                @Override
-                public String run() {
-                    try {
-                        return System.getProperty("os.name");
-                    } catch (SecurityException ex) {
-                        return null;
-                    }
-                }
-            });
-            return osName != null && osName.toLowerCase().indexOf("windows") == 0;
+            try {
+                final String osName = System.getProperty("os.name");
+                return osName != null && osName.toLowerCase().indexOf("windows") == 0;
+            } catch (SecurityException ex) {
+                return false;
+            }
         }
     }
 

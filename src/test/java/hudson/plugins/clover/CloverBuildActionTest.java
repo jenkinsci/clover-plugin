@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 import static org.htmlunit.WebAssert.assertTextPresent;
@@ -37,8 +38,12 @@ public class CloverBuildActionTest {
     public void testExpireAfterAccessWorkflow() throws Exception {
         WorkflowJob pipeline = j.jenkins.createProject(WorkflowJob.class, "TestCloverBuildActionWorkflow");
         FilePath workspace = j.jenkins.getWorkspaceFor(pipeline);
+        assertNotNull(workspace);
         FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
-        mavenSettings.copyFrom(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        InputStream cloverXmlStream = CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml");
+        assertNotNull(cloverXmlStream);
+        mavenSettings.copyFrom(cloverXmlStream);
+
         pipeline.setDefinition(new CpsFlowDefinition(
                 "node {\n" +
                         "step([$class: 'CloverPublisher', " +
@@ -67,16 +72,17 @@ public class CloverBuildActionTest {
         assertNotNull("CloverProjectAction should be not Null", cloverProjectAction);
 
         //Access clover reports
-        JenkinsRule.WebClient wc = j.createWebClient();
-        wc.getPage(project); // project page
-        wc.getPage(build); // build page
-        assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
+        try (JenkinsRule.WebClient wc = j.createWebClient()) {
+            wc.getPage(project); // project page
+            wc.getPage(build); // build page
+            assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
 
-        //simulate same as reports expire operation (expiredAfterAccess 60mins)
-        CloverBuildAction.invalidateReportCache();
+            //simulate same as reports expire operation (expiredAfterAccess 60mins)
+            CloverBuildAction.invalidateReportCache();
 
-        //Access again to trigger rebuilding clover report
-        assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
+            //Access again to trigger rebuilding clover report
+            assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
+        }
 
         //Restore to fresh
         CloverBuildAction.invalidateReportCache();

@@ -10,6 +10,7 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class DeclarativePipelineTest {
@@ -23,7 +24,7 @@ public class DeclarativePipelineTest {
     private String resourceAsString(String resourcePath) throws Exception {
         String results = "";
         URL cloverXML = getClass().getResource(resourcePath);
-        try (Scanner scanner = new Scanner(cloverXML.openStream(), "UTF-8")) {
+        try (Scanner scanner = new Scanner(cloverXML.openStream(), StandardCharsets.UTF_8)) {
             scanner.useDelimiter("\\A");
             results = scanner.hasNext() ? scanner.next() : "";
         }

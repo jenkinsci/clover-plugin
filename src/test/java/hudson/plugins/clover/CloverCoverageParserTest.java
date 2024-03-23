@@ -2,26 +2,18 @@ package hudson.plugins.clover;
 
 import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * CloverCoverageParser Tester.
  */
-public class CloverCoverageParserTest extends TestCase {
-    public CloverCoverageParserTest(String name) {
-        super(name);
-    }
+public class CloverCoverageParserTest {
 
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testFailureMode1() throws Exception {
         try {
             CloverCoverageParser.parse(null, "");
@@ -30,6 +22,7 @@ public class CloverCoverageParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParse() throws Exception {
         ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover.xml"));
         assertNotNull(result);
@@ -42,6 +35,7 @@ public class CloverCoverageParserTest extends TestCase {
         assertEquals(70, subResult.getNcloc());
     }
 
+    @Test
     public void testParseMultiPackage() throws Exception {
         ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover-two-packages.xml"));
         result = CloverCoverageParser.trimPaths(result, "C:\\local\\maven\\helpers\\hudson\\clover\\");
@@ -53,7 +47,4 @@ public class CloverCoverageParserTest extends TestCase {
         assertEquals(14, result.findClassCoverage("hudson.plugins.clover.results.AbstractCloverMetrics").getCoveredmethods());
     }
 
-    public static Test suite() {
-        return new TestSuite(CloverCoverageParserTest.class);
-    }
 }
