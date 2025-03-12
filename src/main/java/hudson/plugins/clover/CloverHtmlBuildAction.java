@@ -5,8 +5,8 @@ import hudson.FilePath;
 import hudson.model.DirectoryBrowserSupport;
 import hudson.model.Run;
 import jenkins.model.RunAction2;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 
 public class CloverHtmlBuildAction implements RunAction2 {
@@ -30,7 +30,7 @@ public class CloverHtmlBuildAction implements RunAction2 {
         return Messages.CloverHtmlBuildAction_DisplayName();
     }
 
-    public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) {
+    public DirectoryBrowserSupport doDynamic(StaplerRequest2 req, StaplerResponse2 rsp) {
         return new DirectoryBrowserSupport(this, new FilePath(build.getRootDir()), "Clover Html Report", CloverProjectAction.ICON, false);
     }
 

@@ -2,8 +2,8 @@ package hudson.plugins.clover.results;
 
 import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ public class ProjectCoverage extends AbstractPackageAggregatedMetrics {
         return null;
     }
 
-    public PackageCoverage getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+    public PackageCoverage getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         return findPackageCoverage(token);
     }
 
