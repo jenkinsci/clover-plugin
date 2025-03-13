@@ -8,8 +8,8 @@ import hudson.model.Result;
 import hudson.model.DirectoryBrowserSupport;
 import hudson.model.Actionable;
 import hudson.util.Graph;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 import java.io.File;
 
@@ -90,7 +90,7 @@ public class CloverProjectAction extends Actionable implements ProminentProjectA
         return null;
     }
 
-    public DirectoryBrowserSupport doDynamic(StaplerRequest req, StaplerResponse rsp) {
+    public DirectoryBrowserSupport doDynamic(StaplerRequest2 req, StaplerResponse2 rsp) {
 
         // there is a report if there was a build already, and there is a report
         if (project.getLastBuild() != null && getDisplayName() != null) {

@@ -2,8 +2,8 @@ package hudson.plugins.clover.results;
 
 import hudson.model.Run;
 import hudson.plugins.clover.CloverBuildAction;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
         return null;
     }
 
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         boolean isPath = false;
         for (FileCoverage i : fileCoverages) {
             if (i.getName().equals(token)) return i;
@@ -79,7 +79,7 @@ public class PackageCoverage extends AbstractFileAggregatedMetrics {
             this.pathSoFar = pathSoFar;
         }
 
-        public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+        public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
             final String testPath = pathSoFar + token;
             boolean isPath = false;
             for (FileCoverage i : fileCoverages) {

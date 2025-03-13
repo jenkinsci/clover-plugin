@@ -9,7 +9,7 @@ import hudson.tools.ToolInstallation;
 import hudson.tools.ToolProperty;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -61,7 +61,7 @@ public class CloverInstallation extends ToolInstallation implements NodeSpecific
         }
 
         @Override
-        public CloverInstallation newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public CloverInstallation newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return (CloverInstallation) super.newInstance(req, formData.getJSONObject("cloverInstallation"));
         }
     }
