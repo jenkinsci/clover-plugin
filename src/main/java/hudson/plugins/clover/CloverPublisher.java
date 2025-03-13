@@ -21,7 +21,7 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
@@ -354,7 +354,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
             req.bindParameters(this, "clover.");
             save();
             return super.configure(req, formData);
@@ -364,7 +364,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
          * Creates a new instance of {@link CloverPublisher} from a submitted form.
          */
         @Override
-        public CloverPublisher newInstance(@NonNull StaplerRequest req, @NonNull JSONObject formData) {
+        public CloverPublisher newInstance(@NonNull StaplerRequest2 req, @NonNull JSONObject formData) {
             final CloverPublisher instance = new CloverPublisher(
                     req.getParameter("clover.cloverReportDir"),
                     req.getParameter("clover.cloverReportFileName"),
@@ -385,7 +385,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             return true;
         }
 
-        private CoverageTarget fromRequest(StaplerRequest req, String namePrefix) {
+        private CoverageTarget fromRequest(StaplerRequest2 req, String namePrefix) {
             return new CoverageTarget(
                     getIntParameter(req, namePrefix + "methodCoverage"),
                     getIntParameter(req, namePrefix + "conditionalCoverage"),
@@ -393,7 +393,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             );
         }
 
-        private Integer getIntParameter(StaplerRequest req, String name) {
+        private Integer getIntParameter(StaplerRequest2 req, String name) {
             try {
                 return Integer.valueOf(req.getParameter(name));
             } catch (NumberFormatException ex) {
