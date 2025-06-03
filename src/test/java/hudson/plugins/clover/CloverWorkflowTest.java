@@ -4,28 +4,27 @@ import hudson.FilePath;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CloverWorkflowTest {
+@WithJenkins
+class CloverWorkflowTest {
 
-    // BuildWatcher echoes job output to stderr as it arrives
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+    private JenkinsRule jenkinsRule;
 
-    @Rule
-    public final JenkinsRule jenkinsRule = new JenkinsRule();
-
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        jenkinsRule = rule;
+    }
     /**
      * Run a workflow job using {@link CloverPublisher} and check for success.
      */
     @Test
-    public void cloverPublisherWorkflowStep() throws Exception {
+    void cloverPublisherWorkflowStep() throws Exception {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "cloverPublisherWorkflowStep");
         FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
         FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
@@ -48,14 +47,14 @@ public class CloverWorkflowTest {
                         + "}\n", true)
         );
         WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
-        assertNotNull("Build's CloverBuildAction should be not Null", build.getAction(CloverBuildAction.class));
+        assertNotNull(build.getAction(CloverBuildAction.class), "Build's CloverBuildAction should be not Null");
     }
 
     /**
      * Run a scripted Pipeline using {@link CloverPublisher} and the clover keyword.
      */
     @Test
-    public void cloverPublisherKeywordCloverStep() throws Exception {
+    void cloverPublisherKeywordCloverStep() throws Exception {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "cloverPublisherKeywordCloverStep");
         FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
         FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
@@ -72,6 +71,6 @@ public class CloverWorkflowTest {
                         "}\n", true)
         );
         WorkflowRun build = jenkinsRule.buildAndAssertSuccess(job);
-        assertNotNull("Build's CloverBuildAction should be not null", build.getAction(CloverBuildAction.class));
+        assertNotNull(build.getAction(CloverBuildAction.class), "Build's CloverBuildAction should be not null");
     }
 }

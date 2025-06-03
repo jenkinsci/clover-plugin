@@ -1,37 +1,37 @@
 package hudson.plugins.clover;
 
+import java.nio.charset.StandardCharsets;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.net.URL;
 import java.util.Scanner;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class DeclarativePipelineTest {
-    // BuildWatcher echoes job output to stderr as it arrives
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+@WithJenkins
+class DeclarativePipelineTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
+    }
 
     private String resourceAsString(String resourcePath) throws Exception {
-        String results = "";
         URL cloverXML = getClass().getResource(resourcePath);
-        try (Scanner scanner = new Scanner(cloverXML.openStream(), "UTF-8")) {
+        try (Scanner scanner = new Scanner(cloverXML.openStream(), StandardCharsets.UTF_8)) {
             scanner.useDelimiter("\\A");
-            results = scanner.hasNext() ? scanner.next() : "";
+            return scanner.hasNext() ? scanner.next() : "";
         }
-        return results;
     }
 
     @Test
-    public void declarativePipeline() throws Exception {
+    void declarativePipeline() throws Exception {
         final WorkflowRun run = runPipeline(m(
                 "pipeline {",
                 "  agent any",
