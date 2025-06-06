@@ -8,23 +8,29 @@ import hudson.model.Run;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 
 import java.util.concurrent.TimeUnit;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.htmlunit.WebAssert.assertTextPresent;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CloverBuildActionTest {
+@WithJenkins
+class CloverBuildActionTest {
 
-    @Rule
-    public final JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void testExpireAfterAccessFreeStyleProject() throws Exception {
+    void testExpireAfterAccessFreeStyleProject() throws Exception {
         FreeStyleProject project = j.createFreeStyleProject("TestCloverBuildAction");
         CloverPublisher cloverPublisher = new CloverPublisher(getClass().getResource("/hudson/plugins/clover/").getPath(), "clover.xml");
         project.getPublishersList().add(cloverPublisher);
@@ -34,7 +40,7 @@ public class CloverBuildActionTest {
     }
 
     @Test
-    public void testExpireAfterAccessWorkflow() throws Exception {
+    void testExpireAfterAccessWorkflow() throws Exception {
         WorkflowJob pipeline = j.jenkins.createProject(WorkflowJob.class, "TestCloverBuildActionWorkflow");
         FilePath workspace = j.jenkins.getWorkspaceFor(pipeline);
         FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
@@ -61,24 +67,25 @@ public class CloverBuildActionTest {
 
     private void checkCloverReports(Run<?, ?> build, Job<?, ?> project) throws Exception {
         CloverBuildAction cloverBuildAction = build.getAction(CloverBuildAction.class);
-        assertNotNull("CloverBuildAction should be not Null", cloverBuildAction);
+        assertNotNull(cloverBuildAction, "CloverBuildAction should be not Null");
 
         CloverProjectAction cloverProjectAction = project.getAction(CloverProjectAction.class);
-        assertNotNull("CloverProjectAction should be not Null", cloverProjectAction);
+        assertNotNull(cloverProjectAction, "CloverProjectAction should be not Null");
 
         //Access clover reports
-        JenkinsRule.WebClient wc = j.createWebClient();
-        wc.getPage(project); // project page
-        wc.getPage(build); // build page
-        assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
+        try (JenkinsRule.WebClient wc = j.createWebClient()) {
+            wc.getPage(project); // project page
+            wc.getPage(build); // build page
+            assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
 
-        //simulate same as reports expire operation (expiredAfterAccess 60mins)
-        CloverBuildAction.invalidateReportCache();
+            //simulate same as reports expire operation (expiredAfterAccess 60mins)
+            CloverBuildAction.invalidateReportCache();
 
-        //Access again to trigger rebuilding clover report
-        assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
+            //Access again to trigger rebuilding clover report
+            assertTextPresent(wc.getPage(build, "clover"), "Clover Coverage Report");
 
-        //Restore to fresh
-        CloverBuildAction.invalidateReportCache();
+            //Restore to fresh
+            CloverBuildAction.invalidateReportCache();
+        }
     }
 }

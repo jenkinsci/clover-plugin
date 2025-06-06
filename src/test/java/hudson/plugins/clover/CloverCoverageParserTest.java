@@ -1,36 +1,26 @@
 package hudson.plugins.clover;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * CloverCoverageParser Tester.
  */
-public class CloverCoverageParserTest extends TestCase {
-    public CloverCoverageParserTest(String name) {
-        super(name);
+class CloverCoverageParserTest {
+
+    @Test
+    void testFailureMode1() {
+        assertThrows(NullPointerException.class, () -> CloverCoverageParser.parse(null, ""));
     }
 
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public void testFailureMode1() throws Exception {
-        try {
-            CloverCoverageParser.parse(null, "");
-        } catch (NullPointerException e) {
-            assertTrue("Expected exception thrown", true);
-        }
-    }
-
-    public void testParse() throws Exception {
+    @Test
+    void testParse() throws Exception {
         ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover.xml"));
         assertNotNull(result);
         assertEquals(ProjectCoverage.class, result.getClass());
@@ -42,7 +32,8 @@ public class CloverCoverageParserTest extends TestCase {
         assertEquals(70, subResult.getNcloc());
     }
 
-    public void testParseMultiPackage() throws Exception {
+    @Test
+    void testParseMultiPackage() throws Exception {
         ProjectCoverage result = CloverCoverageParser.parse(getClass().getResourceAsStream("clover-two-packages.xml"));
         result = CloverCoverageParser.trimPaths(result, "C:\\local\\maven\\helpers\\hudson\\clover\\");
         assertNotNull(result);
@@ -51,9 +42,5 @@ public class CloverCoverageParserTest extends TestCase {
         assertEquals(40, result.getMethods());
         assertEquals(2, result.getPackageCoverages().size());
         assertEquals(14, result.findClassCoverage("hudson.plugins.clover.results.AbstractCloverMetrics").getCoveredmethods());
-    }
-
-    public static Test suite() {
-        return new TestSuite(CloverCoverageParserTest.class);
     }
 }
