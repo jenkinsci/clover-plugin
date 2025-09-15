@@ -21,6 +21,7 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -37,6 +38,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     private final String cloverReportDir;
     private final String cloverReportFileName;
+    private int reportId;
 
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -45,6 +47,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
+        this.reportId = 0;
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
@@ -61,6 +64,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
+        this.reportId = 0;
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
         this.failingTarget = failingTarget;
@@ -73,6 +77,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public String getCloverReportFileName() {
         return cloverReportFileName == null
                 || cloverReportFileName.trim().length() == 0 ? "clover.xml" : cloverReportFileName;
+    }
+
+    public int getReportId() {
+        return reportId;
+    }
+
+    @DataBoundSetter
+    public void setReportId(int reportId) {
+        this.reportId = reportId;
     }
 
     /**
@@ -136,10 +149,25 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return new File(build.getRootDir(), "clover.xml");
     }
 
+    /**
+     * Gets the directory where the Clover Report is stored for the given build with a specific reportId.
+     */
+    static File getCloverXmlReport(Run<?, ?> build, int reportId) {
+        String fileName = (reportId <= 0) 
+            ? "clover.xml" 
+            : "clover-" + reportId + ".xml";
+        return new File(build.getRootDir(), fileName);
+    }
+
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws InterruptedException, IOException {
-        performImpl(run, workspace, listener);
+        synchronized (run) {
+            if (reportId <= 0) {
+                reportId = generateUniqueReportId(run);
+            }
+            performImpl(run, workspace, listener);
+        }
     }
 
     private void performImpl(Run<?, ?> run, FilePath workspace, TaskListener listener)
@@ -189,11 +217,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      */
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
-        listener.getLogger().println("Processing Clover XML report ...");
+        if (reportId > 0) {
+            listener.getLogger().println(String.format("Processing Clover XML report for %d ...", reportId));
+        } else {
+            listener.getLogger().println("Processing Clover XML report ...");
+        }
 
         final String workspacePath = withTrailingSeparator(getWorkspacePath(listener, workspace));
 
-        final File cloverXmlReport = getCloverXmlReport(build);
+        final File cloverXmlReport = getCloverXmlReport(build, reportId);
         if (cloverXmlReport.exists()) {
             ProjectCoverage result = null;
             try {
@@ -204,8 +236,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 build.setResult(Result.FAILURE);
             }
 
-            listener.getLogger().println("Publishing Clover coverage results...");
-            build.addAction(CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget));
+            if (reportId > 0) {
+                listener.getLogger().println(String.format("Publishing Clover coverage results for %d...", reportId));
+            } else {
+                listener.getLogger().println("Publishing Clover coverage results...");
+            }
+            build.addAction(CloverBuildAction.load(workspacePath, result, reportId, healthyTarget, unhealthyTarget));
 
             final Set<CoverageMetric> failingMetrics = getFailingMetrics(result);
             if (!failingMetrics.isEmpty()) {
@@ -258,8 +294,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     "Clover XML file '%s' does not exist in '%s' and was not copied!%n", fileName, coverageReport);
             return false;
         }
-        listener.getLogger().println("Publishing Clover XML report...");
-        final FilePath toFile = buildTarget.child("clover.xml");
+        if (reportId > 0) {
+            listener.getLogger().println(String.format("Publishing Clover XML report for %d...", reportId));
+        } else {
+            listener.getLogger().println("Publishing Clover XML report...");
+        }
+        String targetFileName = (reportId <= 0) 
+            ? "clover.xml" 
+            : "clover-" + reportId + ".xml";
+        final FilePath toFile = buildTarget.child(targetFileName);
         cloverXmlPath.copyTo(toFile);
         return true;
     }
@@ -314,6 +357,26 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private void flagMissingCloverXml(TaskListener listener) {
         listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
                 + "'.  Did you generate the XML report for Clover?");
+    }
+
+    /**
+     * Generate a unique reportId to avoid collisions when multiple clover() calls are made
+     * without explicit reportId. Uses existing XML files to determine next available ID.
+     */
+    private int generateUniqueReportId(Run<?, ?> run) {
+        File buildDir = run.getRootDir();
+        
+        // Check if standard clover.xml exists (reportId 0)
+        if (!new File(buildDir, "clover.xml").exists()) {
+            return 0; // First report uses standard name for backward compatibility
+        }
+        
+        // Find next available numbered reportId by checking existing XML files
+        int reportId = 1;
+        while (new File(buildDir, "clover-" + reportId + ".xml").exists()) {
+            reportId++;
+        }
+        return reportId;
     }
 
     @Override
@@ -372,6 +435,16 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     fromRequest(req, "cloverUnhealthyTarget."),
                     fromRequest(req, "cloverFailingTarget.")
             );
+            // Set reportId if provided
+            String reportIdStr = req.getParameter("clover.reportId");
+            if (reportIdStr != null && !reportIdStr.trim().isEmpty()) {
+                try {
+                    int reportId = Integer.parseInt(reportIdStr);
+                    instance.setReportId(reportId);
+                } catch (NumberFormatException e) {
+                    // Ignore invalid reportId, will use auto-generated
+                }
+            }
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
                 instance.healthyTarget = new CoverageTarget(70, 80, 80);
