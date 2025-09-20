@@ -159,6 +159,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         return new File(build.getRootDir(), fileName);
     }
 
+    static String forReport(int reportId) {
+        return reportId == 0 ? "" : " for " + reportId;
+    }
+
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws InterruptedException, IOException {
@@ -217,11 +221,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      */
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
-        if (reportId > 0) {
-            listener.getLogger().println(String.format("Processing Clover XML report for %d ...", reportId));
-        } else {
-            listener.getLogger().println("Processing Clover XML report ...");
-        }
+        listener.getLogger().println(String.format("Processing Clover XML report%s ...", forReport(reportId)));
 
         final String workspacePath = withTrailingSeparator(getWorkspacePath(listener, workspace));
 
@@ -236,11 +236,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 build.setResult(Result.FAILURE);
             }
 
-            if (reportId > 0) {
-                listener.getLogger().println(String.format("Publishing Clover coverage results for %d...", reportId));
-            } else {
-                listener.getLogger().println("Publishing Clover coverage results...");
-            }
+            listener.getLogger().println(String.format("Publishing Clover coverage results%s...", forReport(reportId)));
             build.addAction(CloverBuildAction.load(workspacePath, result, reportId, healthyTarget, unhealthyTarget));
 
             final Set<CoverageMetric> failingMetrics = getFailingMetrics(result);
@@ -294,11 +290,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     "Clover XML file '%s' does not exist in '%s' and was not copied!%n", fileName, coverageReport);
             return false;
         }
-        if (reportId > 0) {
-            listener.getLogger().println(String.format("Publishing Clover XML report for %d...", reportId));
-        } else {
-            listener.getLogger().println("Publishing Clover XML report...");
-        }
+        listener.getLogger().println(String.format("Publishing Clover XML report%s...", forReport(reportId)));
         String targetFileName = (reportId <= 0) 
             ? "clover.xml" 
             : "clover-" + reportId + ".xml";
@@ -436,14 +428,9 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     fromRequest(req, "cloverFailingTarget.")
             );
             // Set reportId if provided
-            String reportIdStr = req.getParameter("clover.reportId");
-            if (reportIdStr != null && !reportIdStr.trim().isEmpty()) {
-                try {
-                    int reportId = Integer.parseInt(reportIdStr);
-                    instance.setReportId(reportId);
-                } catch (NumberFormatException e) {
-                    // Ignore invalid reportId, will use auto-generated
-                }
+            Integer id = getReportIdFromRequest(req);
+            if (id != null) {
+                instance.setReportId(id);
             }
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
@@ -464,6 +451,19 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     getIntParameter(req, namePrefix + "conditionalCoverage"),
                     getIntParameter(req, namePrefix + "statementCoverage")
             );
+        }
+
+        private static Integer getReportIdFromRequest(@NonNull StaplerRequest2 req) {
+            String reportIdStr = req.getParameter("clover.reportId");
+            if (reportIdStr != null && !reportIdStr.trim().isEmpty()) {
+                try {
+                    return Integer.parseInt(reportIdStr);
+                } catch (NumberFormatException e) {
+                    // Ignore invalid reportId, will use auto-generated
+                    return null;
+                }
+            }
+            return null;
         }
 
         private Integer getIntParameter(StaplerRequest2 req, String name) {

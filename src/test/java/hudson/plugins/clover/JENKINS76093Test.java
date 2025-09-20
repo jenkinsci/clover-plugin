@@ -24,6 +24,16 @@ class JENKINS76093Test {
     void setUp(JenkinsRule rule) {
         jenkinsRule = rule;
     }
+    
+    /**
+     * Helper method to set up clover.xml files in the specified directories
+     */
+    private void setupCloverXmlFiles(FilePath... directories) throws Exception {
+        for (FilePath dir : directories) {
+            dir.mkdirs();
+            dir.child("clover.xml").copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        }
+    }
 
     // Test multiple clover() calls with reportId create separate reports
     @Test
@@ -31,16 +41,10 @@ class JENKINS76093Test {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "multipleAppsProject");
         FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
         
-        // Create test directory structure
+        // Create test directory structure and clover.xml files
         FilePath app1Dir = workspace.child("coverage").child("apps").child("app1");
         FilePath app2Dir = workspace.child("coverage").child("apps").child("app2");
-        
-        FilePath app1CloverXml = app1Dir.child("clover.xml");
-        FilePath app2CloverXml = app2Dir.child("clover.xml");
-        
-        // Create test clover.xml files
-        app1CloverXml.copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
-        app2CloverXml.copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        setupCloverXmlFiles(app1Dir, app2Dir);
 
         // Pipeline with reportId parameter
         job.setDefinition(new CpsFlowDefinition(
@@ -136,8 +140,7 @@ class JENKINS76093Test {
         // Create test files
         FilePath app1Dir = workspace.child("app1");
         FilePath app2Dir = workspace.child("app2");
-        app1Dir.child("clover.xml").copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
-        app2Dir.child("clover.xml").copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        setupCloverXmlFiles(app1Dir, app2Dir);
 
         // Multiple clover() calls WITHOUT reportId - should auto-generate unique IDs
         job.setDefinition(new CpsFlowDefinition(
@@ -184,8 +187,8 @@ class JENKINS76093Test {
     void testBackwardCompatibility_SingleReport() throws Exception {
         WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "backwardCompatibility");
         FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
-        FilePath cloverXml = workspace.child("target").child("site").child("clover.xml");
-        cloverXml.copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        FilePath targetDir = workspace.child("target").child("site");
+        setupCloverXmlFiles(targetDir);
 
         job.setDefinition(new CpsFlowDefinition(
                 "node {\n" +

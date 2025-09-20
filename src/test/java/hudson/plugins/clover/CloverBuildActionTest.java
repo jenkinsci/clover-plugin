@@ -30,6 +30,14 @@ import java.util.List;
 class CloverBuildActionTest {
 
     private JenkinsRule j;
+    
+    // Test data constants
+    private static final CoverageTarget HEALTHY_TARGET_1 = new CoverageTarget(70, 80, 80);
+    private static final CoverageTarget UNHEALTHY_TARGET_1 = new CoverageTarget(50, 60, 60);
+    private static final CoverageTarget HEALTHY_TARGET_2 = new CoverageTarget(75, 85, 85);
+    private static final CoverageTarget UNHEALTHY_TARGET_2 = new CoverageTarget(55, 65, 65);
+    private static final String WORKSPACE_PATH_1 = "/workspace1";
+    private static final String WORKSPACE_PATH_2 = "/workspace2";
 
     @BeforeEach
     void setUp(JenkinsRule rule) {
@@ -178,19 +186,11 @@ class CloverBuildActionTest {
 
     @Test
     void testEqualsMethod() {
-        CoverageTarget healthyTarget1 = new CoverageTarget(70, 80, 80);
-        CoverageTarget unhealthyTarget1 = new CoverageTarget(50, 60, 60);
-        CoverageTarget healthyTarget2 = new CoverageTarget(75, 85, 85);
-        CoverageTarget unhealthyTarget2 = new CoverageTarget(55, 65, 65);
-        String workspacePath1 = "/workspace1";
-        String workspacePath2 = "/workspace2";
-        ProjectCoverage result = null;
-        
-        CloverBuildAction action1 = CloverBuildAction.load(workspacePath1, result, 1, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction action2 = CloverBuildAction.load(workspacePath1, result, 1, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction actionDiffReportId = CloverBuildAction.load(workspacePath1, result, 2, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction actionDiffWorkspace = CloverBuildAction.load(workspacePath2, result, 1, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction actionDiffTargets = CloverBuildAction.load(workspacePath1, result, 1, healthyTarget2, unhealthyTarget2);
+        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffReportId = CloverBuildAction.load(WORKSPACE_PATH_1, null, 2, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffWorkspace = CloverBuildAction.load(WORKSPACE_PATH_2, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffTargets = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_2, UNHEALTHY_TARGET_2);
         
         assertTrue(action1.equals(action1), "Action should equal itself");
         assertFalse(action1.equals(null), "Action should not equal null");
@@ -203,17 +203,9 @@ class CloverBuildActionTest {
 
     @Test
     void testHashCodeMethod() {
-        CoverageTarget healthyTarget1 = new CoverageTarget(70, 80, 80);
-        CoverageTarget unhealthyTarget1 = new CoverageTarget(50, 60, 60);
-        CoverageTarget healthyTarget2 = new CoverageTarget(75, 85, 85);
-        CoverageTarget unhealthyTarget2 = new CoverageTarget(55, 65, 65);
-        String workspacePath1 = "/workspace1";
-        String workspacePath2 = "/workspace2";
-        ProjectCoverage result = null; 
-        
-        CloverBuildAction action1 = CloverBuildAction.load(workspacePath1, result, 1, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction action2 = CloverBuildAction.load(workspacePath1, result, 1, healthyTarget1, unhealthyTarget1);
-        CloverBuildAction actionDiff = CloverBuildAction.load(workspacePath2, result, 2, healthyTarget2, unhealthyTarget2);
+        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiff = CloverBuildAction.load(WORKSPACE_PATH_2, null, 2, HEALTHY_TARGET_2, UNHEALTHY_TARGET_2);
         
         // Test hashCode consistency for equal objects
         assertEquals(action1.hashCode(), action2.hashCode(), "Objects with same fields should have same hashCode");
@@ -225,13 +217,7 @@ class CloverBuildActionTest {
 
     @Test
     void testBackwardCompatibilityLoadMethod() {
-        // Test data
-        CoverageTarget healthyTarget = new CoverageTarget(70, 80, 80);
-        CoverageTarget unhealthyTarget = new CoverageTarget(50, 60, 60);
-        String workspacePath = "/workspace";
-        ProjectCoverage result = null; 
-        
-        CloverBuildAction action = CloverBuildAction.load(workspacePath, result, healthyTarget, unhealthyTarget);
+        CloverBuildAction action = CloverBuildAction.load(WORKSPACE_PATH_1, null, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
         
         assertEquals(0, action.getReportId(), "Backward compatibility load should use reportId 0");
     }
