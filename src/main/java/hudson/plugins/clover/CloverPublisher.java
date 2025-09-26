@@ -153,10 +153,11 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * Gets the directory where the Clover Report is stored for the given build with a specific reportId.
      */
     static File getCloverXmlReport(Run<?, ?> build, int reportId) {
-        String fileName = (reportId <= 0) 
-            ? "clover.xml" 
-            : "clover-" + reportId + ".xml";
-        return new File(build.getRootDir(), fileName);
+        return new File(build.getRootDir(), getCloverXmlFileName(reportId));
+    }
+
+    private static String getCloverXmlFileName(int reportId) {
+        return (reportId <= 0) ? "clover.xml" : "clover-" + reportId + ".xml";
     }
 
     static String forReport(int reportId) {
@@ -167,7 +168,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws InterruptedException, IOException {
         synchronized (run) {
-            if (reportId <= 0) {
+            if (reportId == 0) {
                 reportId = generateUniqueReportId(run);
             }
             performImpl(run, workspace, listener);
@@ -177,7 +178,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private void performImpl(Run<?, ?> run, FilePath workspace, TaskListener listener)
             throws IOException, InterruptedException {
         final EnvVars env = run.getEnvironment(listener);
-        final File buildRootDir = run.getRootDir(); // should this top level?
+        final File buildRootDir = run.getRootDir();
         final FilePath buildTarget = new FilePath(buildRootDir);
         String reportDir = env.expand(cloverReportDir);
         FilePath coverageReportDir = workspace.child(reportDir);
@@ -291,9 +292,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             return false;
         }
         listener.getLogger().println(String.format("Publishing Clover XML report%s...", forReport(reportId)));
-        String targetFileName = (reportId <= 0) 
-            ? "clover.xml" 
-            : "clover-" + reportId + ".xml";
+        String targetFileName = getCloverXmlFileName(reportId);
         final FilePath toFile = buildTarget.child(targetFileName);
         cloverXmlPath.copyTo(toFile);
         return true;
@@ -301,7 +300,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     private boolean copyHtmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener)
             throws IOException, InterruptedException {
-        // Copy the HTML coverage report
         final FilePath htmlIndexHtmlPath = findOneDirDeep(coverageReport, "index.html");
         if (!htmlIndexHtmlPath.exists()) {
             listener.getLogger().printf(
@@ -332,7 +330,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
         FilePath dirContainingFile = startDir;
         if (!dirContainingFile.child(filename).exists()) {
-            // use the first directory with filename in it
             final List<FilePath> dirs = dirContainingFile.listDirectories();
             if (dirs != null) {
                 for (FilePath dir : dirs) {
@@ -358,12 +355,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     private int generateUniqueReportId(Run<?, ?> run) {
         File buildDir = run.getRootDir();
         
-        // Check if standard clover.xml exists (reportId 0)
         if (!new File(buildDir, "clover.xml").exists()) {
-            return 0; // First report uses standard name for backward compatibility
+            return 0;
         }
         
-        // Find next available numbered reportId by checking existing XML files
         int reportId = 1;
         while (new File(buildDir, "clover-" + reportId + ".xml").exists()) {
             reportId++;
@@ -373,7 +368,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     @Override
     public BuildStepDescriptor<Publisher> getDescriptor() {
-        // see Descriptor javadoc for more about what a descriptor is.
         return DESCRIPTOR;
     }
 
@@ -459,7 +453,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 try {
                     return Integer.parseInt(reportIdStr);
                 } catch (NumberFormatException e) {
-                    // Ignore invalid reportId, will use auto-generated
                     return null;
                 }
             }

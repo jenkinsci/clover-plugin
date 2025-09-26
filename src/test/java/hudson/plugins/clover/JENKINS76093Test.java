@@ -12,7 +12,10 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import java.io.File;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 // Test for JENKINS-76093: Cannot use Clover for multiple apps in project
 @WithJenkins
@@ -28,7 +31,7 @@ class JENKINS76093Test {
     /**
      * Helper method to set up clover.xml files in the specified directories
      */
-    private void setupCloverXmlFiles(FilePath... directories) throws Exception {
+    private static void setupCloverXmlFiles(FilePath... directories) throws Exception {
         for (FilePath dir : directories) {
             dir.mkdirs();
             dir.child("clover.xml").copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
@@ -47,27 +50,28 @@ class JENKINS76093Test {
         setupCloverXmlFiles(app1Dir, app2Dir);
 
         // Pipeline with reportId parameter
-        job.setDefinition(new CpsFlowDefinition(
-                "node {\n" +
-                "    stage('Report') {\n" +
-                "        script {\n" +
-                "            def apps = ['app1', 'app2']\n" +
-                "            apps.each { appName ->\n" +
-                "                def reportDir = \"coverage/apps/${appName}\"\n" +
-                "                def cloverFilePath = \"${reportDir}/clover.xml\"\n" +
-                "                echo \"[COVERAGE] Publishing Clover report for ${appName} (${cloverFilePath})\"\n" +
-                "                clover(\n" +
-                "                    cloverReportDir: reportDir,\n" +
-                "                    cloverReportFileName: 'clover.xml',\n" +
-                "                    reportId: (appName == 'app1' ? 1 : 2),\n" +
-                "                    healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],\n" +
-                "                    unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],\n" +
-                "                    failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]\n" +
-                "                )\n" +
-                "            }\n" +
-                "        }\n" +
-                "    }\n" +
-                "}\n", true)
+        job.setDefinition(new CpsFlowDefinition("""
+                node {
+                    stage('Report') {
+                        script {
+                            def apps = ['app1', 'app2']
+                            apps.each { appName ->
+                                def reportDir = "coverage/apps/${appName}"
+                                def cloverFilePath = "${reportDir}/clover.xml"
+                                echo "[COVERAGE] Publishing Clover report for ${appName} (${cloverFilePath})"
+                                clover(
+                                    cloverReportDir: reportDir,
+                                    cloverReportFileName: 'clover.xml',
+                                    reportId: (appName == 'app1' ? 1 : 2),
+                                    healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                                    unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],
+                                    failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+                                )
+                            }
+                        }
+                    }
+                }
+                """, true)
         );
 
         WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -88,47 +92,38 @@ class JENKINS76093Test {
             }
         }
         
-        assertNotNull(app1Action, "Should have a CloverBuildAction for reportId 1");
-        assertNotNull(app2Action, "Should have a CloverBuildAction for reportId 2");
+        assertThat(app1Action, is(notNullValue()));
+        assertThat(app2Action, is(notNullValue()));
         
         // Verify different URLs
-        assertNotEquals(app1Action.getUrlName(), app2Action.getUrlName(), 
-            "Actions should have different URLs to avoid conflicts");
-        assertEquals("clover-1", app1Action.getUrlName(), "first action should have URL 'clover-1'");
-        assertEquals("clover-2", app2Action.getUrlName(), "second action should have URL 'clover-2'");
+        assertThat(app1Action.getUrlName(), not(equalTo(app2Action.getUrlName())));
+        assertThat(app1Action.getUrlName(), equalTo("clover-1"));
+        assertThat(app2Action.getUrlName(), equalTo("clover-2"));
         
         // Verify different display names
-        assertNotEquals(app1Action.getDisplayName(), app2Action.getDisplayName(), 
-            "Actions should have different display names");
-        assertTrue(app1Action.getDisplayName().contains("1"), 
-            "first action display name should contain '1'");
-        assertTrue(app2Action.getDisplayName().contains("2"), 
-            "second action display name should contain '2'");
+        assertThat(app1Action.getDisplayName(), not(equalTo(app2Action.getDisplayName())));
+        assertThat(app1Action.getDisplayName(), containsString("1"));
+        assertThat(app2Action.getDisplayName(), containsString("2"));
         
         // Verify separate XML files created
         File buildDir = build.getRootDir();
         File app1XmlFile = new File(buildDir, "clover-1.xml");
         File app2XmlFile = new File(buildDir, "clover-2.xml");
         
-        assertTrue(app1XmlFile.exists(), "clover-1.xml should exist in build directory");
-        assertTrue(app2XmlFile.exists(), "clover-2.xml should exist in build directory");
-        assertNotEquals(app1XmlFile.getAbsolutePath(), app2XmlFile.getAbsolutePath(), 
-            "XML files should be separate files");
+        assertThat(app1XmlFile.exists(), is(true));
+        assertThat(app2XmlFile.exists(), is(true));
+        assertThat(app1XmlFile.getAbsolutePath(), not(equalTo(app2XmlFile.getAbsolutePath())));
         
         // Verify both actions have results
-        assertNotNull(app1Action.getResult(), "app1 action should have coverage results");
-        assertNotNull(app2Action.getResult(), "app2 action should have coverage results");
+        assertThat(app1Action.getResult(), is(notNullValue()));
+        assertThat(app2Action.getResult(), is(notNullValue()));
         
         // Verify build log shows both reports
         String buildLog = jenkinsRule.getLog(build);
-        assertTrue(buildLog.contains("[COVERAGE] Publishing Clover report for app1"), 
-            "Build log should show app1 report being published");
-        assertTrue(buildLog.contains("[COVERAGE] Publishing Clover report for app2"), 
-            "Build log should show app2 report being published");
-        assertTrue(buildLog.contains("Publishing Clover coverage results for 1"), 
-            "Build log should show reportId 1 results being published");
-        assertTrue(buildLog.contains("Publishing Clover coverage results for 2"), 
-            "Build log should show reportId 2 results being published");
+        assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app1"));
+        assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app2"));
+        assertThat(buildLog, containsString("Publishing Clover coverage results for 1"));
+        assertThat(buildLog, containsString("Publishing Clover coverage results for 2"));
     }
 
     // Test auto-generated reportId when not provided
@@ -143,18 +138,19 @@ class JENKINS76093Test {
         setupCloverXmlFiles(app1Dir, app2Dir);
 
         // Multiple clover() calls WITHOUT reportId - should auto-generate unique IDs
-        job.setDefinition(new CpsFlowDefinition(
-                "node {\n" +
-                "    ['app1', 'app2'].each { app ->\n" +
-                "        clover(\n" +
-                "            cloverReportDir: app,\n" +
-                "            cloverReportFileName: 'clover.xml',\n" +
-                "            healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],\n" +
-                "            unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],\n" +
-                "            failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]\n" +
-                "        )\n" +
-                "    }\n" +
-                "}\n", true)
+        job.setDefinition(new CpsFlowDefinition("""
+                node {
+                    ['app1', 'app2'].each { app ->
+                        clover(
+                            cloverReportDir: app,
+                            cloverReportFileName: 'clover.xml',
+                            healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                            unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],
+                            failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+                        )
+                    }
+                }
+                """, true)
         );
 
         WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -176,10 +172,10 @@ class JENKINS76093Test {
         
         // Verify separate XML files created
         File buildDir = build.getRootDir();
-        File xml1 = new File(buildDir, "clover.xml"); // First report uses standard name
-        File xml2 = new File(buildDir, "clover-1.xml"); // Second report uses numbered name
-        assertTrue(xml1.exists(), "First XML file should exist as clover.xml");
-        assertTrue(xml2.exists(), "Second XML file should exist as clover-1.xml");
+        File xml1 = new File(buildDir, "clover.xml"); 
+        File xml2 = new File(buildDir, "clover-1.xml"); 
+        assertThat(xml1.exists(), is(true));
+        assertThat(xml2.exists(), is(true));
     }
 
     // Test backward compatibility - single report without reportId
@@ -190,21 +186,22 @@ class JENKINS76093Test {
         FilePath targetDir = workspace.child("target").child("site");
         setupCloverXmlFiles(targetDir);
 
-        job.setDefinition(new CpsFlowDefinition(
-                "node {\n" +
-                "    clover(\n" +
-                "        cloverReportDir: 'target/site',\n" +
-                "        cloverReportFileName: 'clover.xml',\n" +
-                "        healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],\n" +
-                "        unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],\n" +
-                "        failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]\n" +
-                "    )\n" +
-                "}\n", true)
+        job.setDefinition(new CpsFlowDefinition("""
+                node {
+                    clover(
+                        cloverReportDir: 'target/site',
+                        cloverReportFileName: 'clover.xml',
+                        healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                        unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],
+                        failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+                    )
+                }
+                """, true)
         );
 
         WorkflowRun build = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0));
         
-        // Verify single action created - should maintain backward compatibility
+        // Verify single action created
         List<CloverBuildAction> cloverActions = build.getActions(CloverBuildAction.class);
         assertEquals(1, cloverActions.size(), "Should have exactly 1 CloverBuildAction instance");
         
