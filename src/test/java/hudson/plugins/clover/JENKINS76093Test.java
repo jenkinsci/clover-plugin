@@ -80,30 +80,22 @@ class JENKINS76093Test {
         List<CloverBuildAction> cloverActions = build.getActions(CloverBuildAction.class);
         assertEquals(2, cloverActions.size(), "Should have exactly 2 CloverBuildAction instances (one for each app)");
         
-        // Find actions by reportId
-        CloverBuildAction app1Action = null;
-        CloverBuildAction app2Action = null;
-        
-        for (CloverBuildAction action : cloverActions) {
-            if (1 == action.getReportId()) {
-                app1Action = action;
-            } else if (2 == action.getReportId()) {
-                app2Action = action;
-            }
-        }
-        
-        assertThat(app1Action, is(notNullValue()));
-        assertThat(app2Action, is(notNullValue()));
-        
-        // Verify different URLs
-        assertThat(app1Action.getUrlName(), not(equalTo(app2Action.getUrlName())));
-        assertThat(app1Action.getUrlName(), equalTo("clover-1"));
-        assertThat(app2Action.getUrlName(), equalTo("clover-2"));
-        
-        // Verify different display names
-        assertThat(app1Action.getDisplayName(), not(equalTo(app2Action.getDisplayName())));
-        assertThat(app1Action.getDisplayName(), containsString("1"));
-        assertThat(app2Action.getDisplayName(), containsString("2"));
+        // Verify actions have correct properties
+        assertThat(cloverActions, containsInAnyOrder(
+            allOf(
+                hasProperty("reportId", is(1)),
+                hasProperty("urlName", is("clover-1")),
+                hasProperty("displayName", containsString("1"))
+            ),
+            allOf(
+                hasProperty("reportId", is(2)),
+                hasProperty("urlName", is("clover-2")),
+                hasProperty("displayName", containsString("2"))
+            )
+        ));
+
+        CloverBuildAction app1Action = cloverActions.stream().filter(a -> a.getReportId() == 1).findFirst().get();
+        CloverBuildAction app2Action = cloverActions.stream().filter(a -> a.getReportId() == 2).findFirst().get();
         
         // Verify separate XML files created
         File buildDir = build.getRootDir();

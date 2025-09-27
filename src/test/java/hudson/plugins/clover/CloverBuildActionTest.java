@@ -18,7 +18,11 @@ import java.util.concurrent.TimeUnit;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.htmlunit.WebAssert.assertTextPresent;
@@ -154,22 +158,13 @@ class CloverBuildActionTest {
         CloverProjectAction cloverProjectAction = project.getAction(CloverProjectAction.class);
         assertNotNull(cloverProjectAction, "CloverProjectAction should be not Null");
 
-        CloverBuildAction action1 = null;
-        CloverBuildAction action2 = null;
-        
-        for (CloverBuildAction action : cloverActions) {
-            if (action.getReportId() == 1) {
-                action1 = action;
-            } else if (action.getReportId() == 2) {
-                action2 = action;
-            }
-        }
-        
-        assertNotNull(action1, "Should have action with reportId 1");
-        assertNotNull(action2, "Should have action with reportId 2");
-        
-        assertEquals("clover-1", action1.getUrlName(), "Action 1 should have URL 'clover-1'");
-        assertEquals("clover-2", action2.getUrlName(), "Action 2 should have URL 'clover-2'");
+        assertThat(cloverActions, containsInAnyOrder(
+            allOf(hasProperty("reportId", is(1)), hasProperty("urlName", is("clover-1"))),
+            allOf(hasProperty("reportId", is(2)), hasProperty("urlName", is("clover-2")))
+        ));
+
+        CloverBuildAction action1 = cloverActions.stream().filter(a -> a.getReportId() == 1).findFirst().get();
+        CloverBuildAction action2 = cloverActions.stream().filter(a -> a.getReportId() == 2).findFirst().get();
 
         try (JenkinsRule.WebClient wc = j.createWebClient()) {
             wc.getPage(project);
