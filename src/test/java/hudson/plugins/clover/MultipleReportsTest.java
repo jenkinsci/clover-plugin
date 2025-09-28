@@ -12,14 +12,21 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import java.io.File;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-// Test for JENKINS-76093: Cannot use Clover for multiple apps in project
 @WithJenkins
-class JENKINS76093Test {
+class MultipleReportsTest {
 
     private JenkinsRule jenkinsRule;
 
@@ -34,7 +41,7 @@ class JENKINS76093Test {
     private static void setupCloverXmlFiles(FilePath... directories) throws Exception {
         for (FilePath dir : directories) {
             dir.mkdirs();
-            dir.child("clover.xml").copyFrom(JENKINS76093Test.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+            dir.child("clover.xml").copyFrom(requireNonNull(MultipleReportsTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml")));
         }
     }
 
@@ -111,7 +118,7 @@ class JENKINS76093Test {
         assertThat(app2Action.getResult(), is(notNullValue()));
         
         // Verify build log shows both reports
-        String buildLog = jenkinsRule.getLog(build);
+        String buildLog = JenkinsRule.getLog(build);
         assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app1"));
         assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app2"));
         assertThat(buildLog, containsString("Publishing Clover coverage results for 1"));

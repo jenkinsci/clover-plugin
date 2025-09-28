@@ -17,6 +17,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -29,7 +30,6 @@ import static org.htmlunit.WebAssert.assertTextPresent;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.targets.CoverageTarget;
 import java.util.List;
 
@@ -125,8 +125,8 @@ class CloverBuildActionTest {
         app1Dir.mkdirs();
         app2Dir.mkdirs();
         
-        app1Dir.child("clover.xml").copyFrom(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
-        app2Dir.child("clover.xml").copyFrom(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
+        app1Dir.child("clover.xml").copyFrom(requireNonNull(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml")));
+        app2Dir.child("clover.xml").copyFrom(requireNonNull(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml")));
         
         CloverPublisher publisher1 = new CloverPublisher(
             "app1/target/site", "clover.xml", 
@@ -163,21 +163,16 @@ class CloverBuildActionTest {
             allOf(hasProperty("reportId", is(2)), hasProperty("urlName", is("clover-2")))
         ));
 
-        CloverBuildAction action1 = cloverActions.stream().filter(a -> a.getReportId() == 1).findFirst().get();
-        CloverBuildAction action2 = cloverActions.stream().filter(a -> a.getReportId() == 2).findFirst().get();
-
         try (JenkinsRule.WebClient wc = j.createWebClient()) {
             wc.getPage(project);
             wc.getPage(build);
-            
-            assertTextPresent(wc.getPage(build, action1.getUrlName()), "Clover Coverage Report");
-            assertTextPresent(wc.getPage(build, action2.getUrlName()), "Clover Coverage Report");
-            
+            for (CloverBuildAction action : cloverActions) {
+                assertTextPresent(wc.getPage(build, action.getUrlName()), "Clover Coverage Report");
+            }
             CloverBuildAction.invalidateReportCache();
-            
-            assertTextPresent(wc.getPage(build, action1.getUrlName()), "Clover Coverage Report");
-            assertTextPresent(wc.getPage(build, action2.getUrlName()), "Clover Coverage Report");
-            
+            for (CloverBuildAction action : cloverActions) {
+                assertTextPresent(wc.getPage(build, action.getUrlName()), "Clover Coverage Report");
+            }
             CloverBuildAction.invalidateReportCache();
         }
     }
