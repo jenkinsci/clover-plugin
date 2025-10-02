@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -40,6 +41,7 @@ import org.jvnet.localizer.Localizable;
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
     private transient Run<?, ?> owner;
     private String buildBaseDir;
+    private final int reportId;
     private final CoverageTarget healthyTarget;
     private final CoverageTarget unhealthyTarget;
     private transient List<CloverProjectAction> projectActions;
@@ -110,11 +112,16 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     public String getDisplayName() {
-        return Messages.CloverBuildAction_DisplayName();
+        String baseName = Messages.CloverBuildAction_DisplayName();
+        return reportId > 0 ? baseName + " (" + reportId + ")" : baseName;
     }
 
     public String getUrlName() {
-        return "clover";
+        return reportId > 0 ? "clover-" + reportId : "clover";
+    }
+
+    public int getReportId() {
+        return reportId;
     }
 
     public Object getTarget() {
@@ -126,7 +133,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     /**
-     * Gets the previous {@link CloverBuildAction} of the given build.
+     * Gets the previous {@link CloverBuildAction} of the given build with the same reportId.
      */
     private CloverBuildAction getPreviousResult(Run<?, ?> start) {
         Run<?, ?> b = start;
@@ -136,9 +143,12 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
                 return null;
             if (b.getResult() == Result.FAILURE)
                 continue;
-            CloverBuildAction r = b.getAction(CloverBuildAction.class);
-            if (r != null)
-                return r;
+            // Find action with matching reportId
+            for (CloverBuildAction action : b.getActions(CloverBuildAction.class)) {
+                if (this.reportId == action.reportId) {
+                    return action;
+                }
+            }
         }
     }
 
@@ -149,7 +159,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         return this.projectActions;
     }
 
-    CloverBuildAction(String workspacePath, ProjectCoverage r, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    CloverBuildAction(String workspacePath, ProjectCoverage r, int reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
         }
@@ -161,6 +171,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         } else if (!this.buildBaseDir.endsWith(File.separator)) {
             this.buildBaseDir += File.separator;
         }
+        this.reportId = reportId;
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
     }
@@ -197,7 +208,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     private ProjectCoverage computeResult() throws IOException {
-        File reportFile = CloverPublisher.getCloverXmlReport(owner);
+        File reportFile = CloverPublisher.getCloverXmlReport(owner, reportId);
         ProjectCoverage r = CloverCoverageParser.parse(reportFile, buildBaseDir);
         r.setOwner(owner);
         return r;
@@ -368,7 +379,28 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
+    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, int reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+        return new CloverBuildAction(workspacePath, result, reportId, healthyTarget, unhealthyTarget);
+    }
+
+    // Backward compatibility method
     public static CloverBuildAction load(String workspacePath, ProjectCoverage result, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
-        return new CloverBuildAction(workspacePath, result, healthyTarget, unhealthyTarget);
+        return new CloverBuildAction(workspacePath, result, 0, healthyTarget, unhealthyTarget);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        CloverBuildAction that = (CloverBuildAction) obj;
+        return reportId == that.reportId 
+            && Objects.equals(buildBaseDir, that.buildBaseDir)
+            && Objects.equals(healthyTarget, that.healthyTarget)
+            && Objects.equals(unhealthyTarget, that.unhealthyTarget);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(reportId, buildBaseDir, healthyTarget, unhealthyTarget);
     }
 }
