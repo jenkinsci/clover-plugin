@@ -27,6 +27,7 @@ import org.kohsuke.stapler.StaplerRequest2;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     private final String cloverReportDir;
     private final String cloverReportFileName;
-    private int reportId;
+    private String reportId;
 
     private CoverageTarget healthyTarget;
     private CoverageTarget unhealthyTarget;
@@ -47,7 +48,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
-        this.reportId = 0;
+        this.reportId = "";
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
@@ -64,7 +65,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
-        this.reportId = 0;
+        this.reportId = "";
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
         this.failingTarget = failingTarget;
@@ -79,13 +80,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 || cloverReportFileName.trim().length() == 0 ? "clover.xml" : cloverReportFileName;
     }
 
-    public int getReportId() {
+    public String getReportId() {
         return reportId;
     }
 
     @DataBoundSetter
-    public void setReportId(int reportId) {
-        this.reportId = reportId;
+    public void setReportId(String reportId) {
+        this.reportId = reportId != null ? reportId : "";
     }
 
     /**
@@ -152,27 +153,27 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * Gets the directory where the Clover Report is stored for the given build with a specific reportId.
      */
-    static File getCloverXmlReport(Run<?, ?> build, int reportId) {
+    static File getCloverXmlReport(Run<?, ?> build, String reportId) {
         return new File(build.getRootDir(), getCloverXmlFileName(reportId));
     }
 
-    private static String getCloverXmlFileName(int reportId) {
-        return (reportId <= 0) ? "clover.xml" : "clover-" + reportId + ".xml";
+    private static String getCloverXmlFileName(String reportId) {
+        return (reportId == null || reportId.isEmpty()) ? "clover.xml" : "clover-" + reportId + ".xml";
     }
 
-    static String forReport(int reportId) {
-        return reportId == 0 ? "" : " for " + reportId;
+    static String forReport(String reportId) {
+        return (reportId == null || reportId.isEmpty()) ? "" : " for " + reportId;
     }
 
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws InterruptedException, IOException {
-        synchronized (run) {
-            if (reportId == 0) {
-                reportId = generateUniqueReportId(run);
-            }
-            performImpl(run, workspace, listener);
+        // Generate unique reportId if not explicitly set
+        // This happens at configuration time for each CloverPublisher instance
+        if (reportId == null || reportId.isEmpty()) {
+            reportId = generateUniqueReportId();
         }
+        performImpl(run, workspace, listener);
     }
 
     private void performImpl(Run<?, ?> run, FilePath workspace, TaskListener listener)
@@ -349,21 +350,22 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     /**
-     * Generate a unique reportId to avoid collisions when multiple clover() calls are made
-     * without explicit reportId. Uses existing XML files to determine next available ID.
+     * Generate a unique reportId using SecureRandom and base36 encoding.
+     * This creates an ~8 character alphanumeric ID with near-zero collision probability.
      */
-    private int generateUniqueReportId(Run<?, ?> run) {
-        File buildDir = run.getRootDir();
-        
-        if (!new File(buildDir, "clover.xml").exists()) {
-            return 0;
+    private static String generateUniqueReportId() {
+        SecureRandom random = new SecureRandom();
+        // Generate a random long and convert to base36 (0-9, a-z)
+        // Using 6 bytes (48 bits) gives us ~8 characters in base36
+        byte[] bytes = new byte[6];
+        random.nextBytes(bytes);
+        long value = 0;
+        for (byte b : bytes) {
+            value = (value << 8) | (b & 0xFF);
         }
-        
-        int reportId = 1;
-        while (new File(buildDir, "clover-" + reportId + ".xml").exists()) {
-            reportId++;
-        }
-        return reportId;
+        // Ensure positive value
+        value = Math.abs(value);
+        return Long.toString(value, 36);
     }
 
     @Override
@@ -422,8 +424,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     fromRequest(req, "cloverFailingTarget.")
             );
             // Set reportId if provided
-            Integer id = getReportIdFromRequest(req);
-            if (id != null) {
+            String id = getReportIdFromRequest(req);
+            if (id != null && !id.isEmpty()) {
                 instance.setReportId(id);
             }
             // start ugly hack
@@ -447,14 +449,10 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             );
         }
 
-        private static Integer getReportIdFromRequest(@NonNull StaplerRequest2 req) {
+        private static String getReportIdFromRequest(@NonNull StaplerRequest2 req) {
             String reportIdStr = req.getParameter("clover.reportId");
             if (reportIdStr != null && !reportIdStr.trim().isEmpty()) {
-                try {
-                    return Integer.parseInt(reportIdStr);
-                } catch (NumberFormatException e) {
-                    return null;
-                }
+                return reportIdStr.trim();
             }
             return null;
         }

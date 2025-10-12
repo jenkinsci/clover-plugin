@@ -134,7 +134,7 @@ class CloverBuildActionTest {
             new CoverageTarget(50, 60, 60),
             new CoverageTarget(0, 0, 0)
         );
-        publisher1.setReportId(1);
+        publisher1.setReportId("1");
         
         CloverPublisher publisher2 = new CloverPublisher(
             "app2/target/site", "clover.xml",
@@ -142,7 +142,7 @@ class CloverBuildActionTest {
             new CoverageTarget(40, 50, 50),
             new CoverageTarget(0, 0, 0)
         );
-        publisher2.setReportId(2);
+        publisher2.setReportId("2");
         
         project.getPublishersList().add(publisher1);
         project.getPublishersList().add(publisher2);
@@ -159,8 +159,8 @@ class CloverBuildActionTest {
         assertNotNull(cloverProjectAction, "CloverProjectAction should be not Null");
 
         assertThat(cloverActions, containsInAnyOrder(
-            allOf(hasProperty("reportId", is(1)), hasProperty("urlName", is("clover-1"))),
-            allOf(hasProperty("reportId", is(2)), hasProperty("urlName", is("clover-2")))
+            allOf(hasProperty("reportId", is("1")), hasProperty("urlName", is("clover-1"))),
+            allOf(hasProperty("reportId", is("2")), hasProperty("urlName", is("clover-2")))
         ));
 
         try (JenkinsRule.WebClient wc = j.createWebClient()) {
@@ -179,11 +179,11 @@ class CloverBuildActionTest {
 
     @Test
     void testEqualsMethod() {
-        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
-        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
-        CloverBuildAction actionDiffReportId = CloverBuildAction.load(WORKSPACE_PATH_1, null, 2, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
-        CloverBuildAction actionDiffWorkspace = CloverBuildAction.load(WORKSPACE_PATH_2, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
-        CloverBuildAction actionDiffTargets = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_2, UNHEALTHY_TARGET_2);
+        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, "1", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, "1", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffReportId = CloverBuildAction.load(WORKSPACE_PATH_1, null, "2", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffWorkspace = CloverBuildAction.load(WORKSPACE_PATH_2, null, "1", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction actionDiffTargets = CloverBuildAction.load(WORKSPACE_PATH_1, null, "1", HEALTHY_TARGET_2, UNHEALTHY_TARGET_2);
         
         // Test reflexivity: object equals itself
         assertThat(action1, equalTo(action1));
@@ -209,8 +209,8 @@ class CloverBuildActionTest {
 
     @Test
     void testHashCodeMethod() {
-        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
-        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, 1, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction action1 = CloverBuildAction.load(WORKSPACE_PATH_1, null, "1", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
+        CloverBuildAction action2 = CloverBuildAction.load(WORKSPACE_PATH_1, null, "1", HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
         
         // Test hashCode consistency for equal objects 
         assertThat(action1.hashCode(), equalTo(action2.hashCode()));
@@ -220,7 +220,7 @@ class CloverBuildActionTest {
     void testBackwardCompatibilityLoadMethod() {
         CloverBuildAction action = CloverBuildAction.load(WORKSPACE_PATH_1, null, HEALTHY_TARGET_1, UNHEALTHY_TARGET_1);
         
-        assertThat(action.getReportId(), equalTo(0));
+        assertThat(action.getReportId(), equalTo(""));
     }
 
     @Test
@@ -236,28 +236,32 @@ class CloverBuildActionTest {
         assertThat(defaultReport.getName(), equalTo("clover.xml"));
         assertThat(defaultReport.getPath(), containsString(build.getRootDir().getPath()));
         
-        // Test method with reportId = 0 (should behave like default)
-        File reportId0 = CloverPublisher.getCloverXmlReport(build, 0);
-        assertThat(reportId0.getName(), equalTo("clover.xml"));
-        assertThat(reportId0.getPath(), equalTo(defaultReport.getPath()));
+        // Test method with empty reportId (should behave like default)
+        File reportIdEmpty = CloverPublisher.getCloverXmlReport(build, "");
+        assertThat(reportIdEmpty.getName(), equalTo("clover.xml"));
+        assertThat(reportIdEmpty.getPath(), equalTo(defaultReport.getPath()));
         
-        // Test method with negative reportId (should behave like default) 
-        File reportIdNegative = CloverPublisher.getCloverXmlReport(build, -1);
-        assertThat(reportIdNegative.getName(), equalTo("clover.xml"));
-        assertThat(reportIdNegative.getPath(), equalTo(defaultReport.getPath()));
+        // Test method with null reportId (should behave like default) 
+        File reportIdNull = CloverPublisher.getCloverXmlReport(build, null);
+        assertThat(reportIdNull.getName(), equalTo("clover.xml"));
+        assertThat(reportIdNull.getPath(), equalTo(defaultReport.getPath()));
         
-        // Test method with positive reportId
-        File reportId1 = CloverPublisher.getCloverXmlReport(build, 1);
+        // Test method with string reportId
+        File reportId1 = CloverPublisher.getCloverXmlReport(build, "1");
         assertThat(reportId1.getName(), equalTo("clover-1.xml"));
         assertThat(reportId1.getPath(), containsString(build.getRootDir().getPath()));
         
-        // Test method with different positive reportId
-        File reportId5 = CloverPublisher.getCloverXmlReport(build, 5);
-        assertThat(reportId5.getName(), equalTo("clover-5.xml"));
+        // Test method with different string reportId
+        File reportId5 = CloverPublisher.getCloverXmlReport(build, "abc123");
+        assertThat(reportId5.getName(), equalTo("clover-abc123.xml"));
         assertThat(reportId5.getPath(), containsString(build.getRootDir().getPath()));
         
         // Test that different reportIds generate different file names
         assertThat(reportId1.getName(), not(equalTo(reportId5.getName())));
         assertThat(reportId1.getName(), not(equalTo(defaultReport.getName())));
+        
+        // Test with base36 style reportId (what SecureRandom generates)
+        File reportIdBase36 = CloverPublisher.getCloverXmlReport(build, "a1b2c3d4");
+        assertThat(reportIdBase36.getName(), equalTo("clover-a1b2c3d4.xml"));
     }
 }

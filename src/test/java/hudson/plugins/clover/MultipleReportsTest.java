@@ -69,7 +69,7 @@ class MultipleReportsTest {
                                 clover(
                                     cloverReportDir: reportDir,
                                     cloverReportFileName: 'clover.xml',
-                                    reportId: (appName == 'app1' ? 1 : 2),
+                                    reportId: (appName == 'app1' ? 'app1' : 'app2'),
                                     healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
                                     unhealthyTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0],
                                     failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
@@ -90,24 +90,22 @@ class MultipleReportsTest {
         // Verify actions have correct properties
         assertThat(cloverActions, containsInAnyOrder(
             allOf(
-                hasProperty("reportId", is(1)),
-                hasProperty("urlName", is("clover-1")),
-                hasProperty("displayName", containsString("1"))
+                hasProperty("reportId", is("app1")),
+                hasProperty("urlName", is("clover-app1"))
             ),
             allOf(
-                hasProperty("reportId", is(2)),
-                hasProperty("urlName", is("clover-2")),
-                hasProperty("displayName", containsString("2"))
+                hasProperty("reportId", is("app2")),
+                hasProperty("urlName", is("clover-app2"))
             )
         ));
 
-        CloverBuildAction app1Action = cloverActions.stream().filter(a -> a.getReportId() == 1).findFirst().get();
-        CloverBuildAction app2Action = cloverActions.stream().filter(a -> a.getReportId() == 2).findFirst().get();
+        CloverBuildAction app1Action = cloverActions.stream().filter(a -> "app1".equals(a.getReportId())).findFirst().get();
+        CloverBuildAction app2Action = cloverActions.stream().filter(a -> "app2".equals(a.getReportId())).findFirst().get();
         
         // Verify separate XML files created
         File buildDir = build.getRootDir();
-        File app1XmlFile = new File(buildDir, "clover-1.xml");
-        File app2XmlFile = new File(buildDir, "clover-2.xml");
+        File app1XmlFile = new File(buildDir, "clover-app1.xml");
+        File app2XmlFile = new File(buildDir, "clover-app2.xml");
         
         assertThat(app1XmlFile.exists(), is(true));
         assertThat(app2XmlFile.exists(), is(true));
@@ -121,8 +119,8 @@ class MultipleReportsTest {
         String buildLog = JenkinsRule.getLog(build);
         assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app1"));
         assertThat(buildLog, containsString("[COVERAGE] Publishing Clover report for app2"));
-        assertThat(buildLog, containsString("Publishing Clover coverage results for 1"));
-        assertThat(buildLog, containsString("Publishing Clover coverage results for 2"));
+        assertThat(buildLog, containsString("Publishing Clover coverage results for app1"));
+        assertThat(buildLog, containsString("Publishing Clover coverage results for app2"));
     }
 
     // Test auto-generated reportId when not provided
@@ -158,29 +156,33 @@ class MultipleReportsTest {
         List<CloverBuildAction> cloverActions = build.getActions(CloverBuildAction.class);
         assertEquals(2, cloverActions.size(), "Should have exactly 2 CloverBuildAction instances");
         
-        // Verify auto-generated reportIds - first is 0 (backward compatible), second is numbered
+        // Verify both have unique auto-generated reportIds (base36 encoded ~8 chars)
         CloverBuildAction action1 = cloverActions.get(0);
         CloverBuildAction action2 = cloverActions.get(1);
         
-        assertEquals(0, action1.getReportId(), "First action should have reportId 0 (backward compatible)");
-        assertEquals(1, action2.getReportId(), "Second action should have reportId 1");
+        assertThat(action1.getReportId(), not(equalTo("")));
+        assertThat(action2.getReportId(), not(equalTo("")));
+        assertThat(action1.getReportId(), not(equalTo(action2.getReportId())));
+        assertThat(action1.getReportId().length(), is(8)); // base36 encoded ~8 chars
+        assertThat(action2.getReportId().length(), is(8));
         
         // Verify different URLs
-        assertEquals("clover", action1.getUrlName(), "First action should use 'clover' URL");
-        assertEquals("clover-1", action2.getUrlName(), "Second action should use 'clover-1' URL");
+        assertThat(action1.getUrlName(), containsString("clover-"));
+        assertThat(action2.getUrlName(), containsString("clover-"));
+        assertThat(action1.getUrlName(), not(equalTo(action2.getUrlName())));
         
         // Verify separate XML files created
         File buildDir = build.getRootDir();
-        File xml1 = new File(buildDir, "clover.xml"); 
-        File xml2 = new File(buildDir, "clover-1.xml"); 
+        File xml1 = new File(buildDir, "clover-" + action1.getReportId() + ".xml"); 
+        File xml2 = new File(buildDir, "clover-" + action2.getReportId() + ".xml"); 
         assertThat(xml1.exists(), is(true));
         assertThat(xml2.exists(), is(true));
     }
 
-    // Test backward compatibility - single report without reportId
+    // Test backward compatibility - single report without reportId gets auto-generated ID
     @Test
-    void testBackwardCompatibility_SingleReport() throws Exception {
-        WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "backwardCompatibility");
+    void testSingleReportWithoutExplicitId() throws Exception {
+        WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "singleReport");
         FilePath workspace = jenkinsRule.jenkins.getWorkspaceFor(job);
         FilePath targetDir = workspace.child("target").child("site");
         setupCloverXmlFiles(targetDir);
@@ -205,7 +207,9 @@ class MultipleReportsTest {
         assertEquals(1, cloverActions.size(), "Should have exactly 1 CloverBuildAction instance");
         
         CloverBuildAction action = cloverActions.get(0);
-        assertEquals(0, action.getReportId(), "First action should have reportId 0 for backward compatibility");
-        assertEquals("clover", action.getUrlName(), "URL should be 'clover' for backward compatibility");
+        // Even single reports now get auto-generated IDs
+        assertThat(action.getReportId(), not(equalTo("")));
+        assertThat(action.getReportId().length(), is(8));
+        assertThat(action.getUrlName(), containsString("clover-"));
     }
 }

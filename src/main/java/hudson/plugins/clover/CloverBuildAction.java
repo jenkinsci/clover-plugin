@@ -41,7 +41,7 @@ import org.jvnet.localizer.Localizable;
 public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
     private transient Run<?, ?> owner;
     private String buildBaseDir;
-    private final int reportId;
+    private final String reportId;
     private final CoverageTarget healthyTarget;
     private final CoverageTarget unhealthyTarget;
     private transient List<CloverProjectAction> projectActions;
@@ -112,15 +112,14 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
     }
 
     public String getDisplayName() {
-        String baseName = Messages.CloverBuildAction_DisplayName();
-        return reportId > 0 ? baseName + " (" + reportId + ")" : baseName;
+        return Messages.CloverBuildAction_DisplayName();
     }
 
     public String getUrlName() {
-        return reportId > 0 ? "clover-" + reportId : "clover";
+        return (reportId == null || reportId.isEmpty()) ? "clover" : "clover-" + reportId;
     }
 
-    public int getReportId() {
+    public String getReportId() {
         return reportId;
     }
 
@@ -145,7 +144,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
                 continue;
             // Find action with matching reportId
             for (CloverBuildAction action : b.getActions(CloverBuildAction.class)) {
-                if (this.reportId == action.reportId) {
+                if (this.reportId != null && this.reportId.equals(action.reportId)) {
                     return action;
                 }
             }
@@ -159,7 +158,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         return this.projectActions;
     }
 
-    CloverBuildAction(String workspacePath, ProjectCoverage r, int reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    CloverBuildAction(String workspacePath, ProjectCoverage r, String reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
         }
@@ -171,7 +170,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         } else if (!this.buildBaseDir.endsWith(File.separator)) {
             this.buildBaseDir += File.separator;
         }
-        this.reportId = reportId;
+        this.reportId = reportId != null ? reportId : "";
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
     }
@@ -379,13 +378,13 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, int reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, String reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
         return new CloverBuildAction(workspacePath, result, reportId, healthyTarget, unhealthyTarget);
     }
 
     // Backward compatibility method
     public static CloverBuildAction load(String workspacePath, ProjectCoverage result, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
-        return new CloverBuildAction(workspacePath, result, 0, healthyTarget, unhealthyTarget);
+        return new CloverBuildAction(workspacePath, result, "", healthyTarget, unhealthyTarget);
     }
 
     @Override
@@ -393,7 +392,7 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         CloverBuildAction that = (CloverBuildAction) obj;
-        return reportId == that.reportId 
+        return Objects.equals(reportId, that.reportId)
             && Objects.equals(buildBaseDir, that.buildBaseDir)
             && Objects.equals(healthyTarget, that.healthyTarget)
             && Objects.equals(unhealthyTarget, that.unhealthyTarget);
