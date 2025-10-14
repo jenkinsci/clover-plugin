@@ -48,7 +48,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
-        this.reportId = "";
+        this.reportId = ""; 
         this.healthyTarget = new CoverageTarget();
         this.unhealthyTarget = new CoverageTarget();
         this.failingTarget = new CoverageTarget();
@@ -65,7 +65,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
-        this.reportId = "";
+        this.reportId = ""; 
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
         this.failingTarget = failingTarget;
@@ -168,11 +168,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws InterruptedException, IOException {
-        // Generate unique reportId if not explicitly set
-        // This happens at configuration time for each CloverPublisher instance
-        if (reportId == null || reportId.isEmpty()) {
-            reportId = generateUniqueReportId();
-        }
         performImpl(run, workspace, listener);
     }
 
@@ -186,12 +181,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         try {
             listener.getLogger().println("Publishing Clover coverage report...");
 
-            // search one deep for the report dir, if it doesn't exist.
+            
             if (!coverageReportDir.exists()) {
                 coverageReportDir = findOneDirDeep(workspace, reportDir);
             }
 
-            // if the run has failed, then there's not much point in reporting an error
+            
             final Result result = run.getResult();
             final boolean buildFailure = result != null && result.isWorseOrEqualTo(Result.FAILURE);
             final boolean missingReport = !coverageReportDir.exists();
@@ -206,7 +201,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             copyXmlReport(coverageReportDir, buildTarget, listener, env.expand(getCloverReportFileName()));
 
             if (htmlExists) {
-                // only add the HTML run action, if the HTML report is available
+                
                 run.addAction(new CloverHtmlBuildAction());
             }
             processCloverXml(run, workspace, listener, coverageReportDir, buildTarget);
@@ -219,7 +214,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     /**
-     * Process the clover.xml from the build directory. The clover.xml must have been already copied to the build dir.
+     * Process the clover.xml from the build directory. The clover.xml already copied to the build dir.
      */
     private void processCloverXml(Run<?, ?> build, FilePath workspace, TaskListener listener,
                                   FilePath coverageReport, FilePath buildTarget) throws InterruptedException {
@@ -284,8 +279,6 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     private boolean copyXmlReport(FilePath coverageReport, FilePath buildTarget, TaskListener listener, String fileName)
             throws IOException, InterruptedException {
-        // check one directory deep for a clover.xml, if there is not one in the coverageReport dir already
-        // the clover auto-integration saves clover reports in: clover/${ant.project.name}/clover.xml
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
         if (!cloverXmlPath.exists()) {
             listener.getLogger().printf(
@@ -351,19 +344,17 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     /**
      * Generate a unique reportId using SecureRandom and base36 encoding.
-     * This creates an ~8 character alphanumeric ID with near-zero collision probability.
+     * This creates an ~8 character alphanumeric ID.
      */
     private static String generateUniqueReportId() {
         SecureRandom random = new SecureRandom();
-        // Generate a random long and convert to base36 (0-9, a-z)
-        // Using 6 bytes (48 bits) gives us ~8 characters in base36
+
         byte[] bytes = new byte[6];
         random.nextBytes(bytes);
         long value = 0;
         for (byte b : bytes) {
             value = (value << 8) | (b & 0xFF);
         }
-        // Ensure positive value
         value = Math.abs(value);
         return Long.toString(value, 36);
     }
@@ -375,6 +366,17 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
+    }
+
+    
+     // Called after deserialization to handle backward compatibility for old configurations.
+    protected Object readResolve() {
+        // If reportId is empty in a loaded configuration, keep it as empty for backward compatibility
+        if (reportId == null || reportId.isEmpty()) {
+            // Keep empty for backward compatibility with existing configurations
+            reportId = "";
+        }
+        return this;
     }
 
     /**
@@ -423,10 +425,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                     fromRequest(req, "cloverUnhealthyTarget."),
                     fromRequest(req, "cloverFailingTarget.")
             );
-            // Set reportId if provided
+
             String id = getReportIdFromRequest(req);
             if (id != null && !id.isEmpty()) {
-                instance.setReportId(id);
+                instance.reportId = id;  
+            } else {
+                
+                instance.reportId = generateUniqueReportId();
             }
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
