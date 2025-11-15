@@ -15,9 +15,6 @@ import hudson.plugins.clover.results.PackageCoverage;
 import hudson.plugins.clover.results.ProjectCoverage;
 import hudson.plugins.clover.targets.CoverageMetric;
 import hudson.plugins.clover.targets.CoverageTarget;
-import org.jetbrains.annotations.NotNull;
-import org.kohsuke.stapler.StaplerProxy;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,16 +26,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
+import org.jetbrains.annotations.NotNull;
 import org.jvnet.localizer.Localizable;
-
+import org.kohsuke.stapler.StaplerProxy;
 
 /**
  * A health reporter for the individual build page.
  */
-public class CloverBuildAction extends AbstractPackageAggregatedMetrics implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
+public class CloverBuildAction extends AbstractPackageAggregatedMetrics
+        implements HealthReportingAction, StaplerProxy, RunAction2, SimpleBuildStep.LastBuildAction {
     private transient Run<?, ?> owner;
     private String buildBaseDir;
     private final String reportId;
@@ -54,10 +52,10 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
                 }
             };
 
-    private static final LoadingCache<CloverBuildAction, ProjectCoverage> reports = CacheBuilder.newBuilder().
-            weakKeys().
-            expireAfterAccess(60, TimeUnit.MINUTES).
-            build(coverageCacheLoader);
+    private static final LoadingCache<CloverBuildAction, ProjectCoverage> reports = CacheBuilder.newBuilder()
+            .weakKeys()
+            .expireAfterAccess(60, TimeUnit.MINUTES)
+            .build(coverageCacheLoader);
 
     static void invalidateReportCache() {
         reports.invalidateAll();
@@ -138,10 +136,8 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         Run<?, ?> b = start;
         while (true) {
             b = b.getPreviousBuild();
-            if (b == null)
-                return null;
-            if (b.getResult() == Result.FAILURE)
-                continue;
+            if (b == null) return null;
+            if (b.getResult() == Result.FAILURE) continue;
             // Find action with matching reportId
             for (CloverBuildAction action : b.getActions(CloverBuildAction.class)) {
                 if (this.reportId != null && this.reportId.equals(action.reportId)) {
@@ -158,7 +154,12 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         return this.projectActions;
     }
 
-    CloverBuildAction(String workspacePath, ProjectCoverage r, String reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    CloverBuildAction(
+            String workspacePath,
+            ProjectCoverage r,
+            String reportId,
+            CoverageTarget healthyTarget,
+            CoverageTarget unhealthyTarget) {
         if (r != null) {
             reports.put(this, r);
         }
@@ -378,12 +379,21 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
 
     private static final Logger logger = Logger.getLogger(CloverBuildAction.class.getName());
 
-    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, String reportId, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    public static CloverBuildAction load(
+            String workspacePath,
+            ProjectCoverage result,
+            String reportId,
+            CoverageTarget healthyTarget,
+            CoverageTarget unhealthyTarget) {
         return new CloverBuildAction(workspacePath, result, reportId, healthyTarget, unhealthyTarget);
     }
 
     // Backward compatibility method
-    public static CloverBuildAction load(String workspacePath, ProjectCoverage result, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget) {
+    public static CloverBuildAction load(
+            String workspacePath,
+            ProjectCoverage result,
+            CoverageTarget healthyTarget,
+            CoverageTarget unhealthyTarget) {
         return new CloverBuildAction(workspacePath, result, "", healthyTarget, unhealthyTarget);
     }
 
@@ -393,9 +403,9 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics implemen
         if (obj == null || getClass() != obj.getClass()) return false;
         CloverBuildAction that = (CloverBuildAction) obj;
         return Objects.equals(reportId, that.reportId)
-            && Objects.equals(buildBaseDir, that.buildBaseDir)
-            && Objects.equals(healthyTarget, that.healthyTarget)
-            && Objects.equals(unhealthyTarget, that.unhealthyTarget);
+                && Objects.equals(buildBaseDir, that.buildBaseDir)
+                && Objects.equals(healthyTarget, that.healthyTarget)
+                && Objects.equals(unhealthyTarget, that.unhealthyTarget);
     }
 
     @Override
