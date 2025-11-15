@@ -31,12 +31,16 @@ import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Clover {@link Publisher}.
  */
 public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
+    // Pattern for validating reportId to prevent path traversal, XSS, and URL injection
+    private static final Pattern VALID_REPORT_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]{1,50}$");
+    
     private final String cloverReportDir;
     private final String cloverReportFileName;
     private String reportId;
@@ -65,7 +69,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     public CloverPublisher(String cloverReportDir, String cloverReportFileName, CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
-        this.reportId = ""; 
+        this.reportId = generateUniqueReportId(); 
         this.healthyTarget = healthyTarget;
         this.unhealthyTarget = unhealthyTarget;
         this.failingTarget = failingTarget;
@@ -86,7 +90,16 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setReportId(String reportId) {
-        this.reportId = reportId != null ? reportId : "";
+        if (reportId != null && !reportId.trim().isEmpty()) {
+            String trimmed = reportId.trim();
+            if (!VALID_REPORT_ID_PATTERN.matcher(trimmed).matches()) {
+                throw new IllegalArgumentException(
+                    "Invalid reportId '" + trimmed + "': must contain only letters, numbers, hyphens, and underscores (1-100 characters). " +
+                    "Invalid characters detected. Valid examples: 'app1', 'backend-service', 'web_ui_123'"
+                );
+            }
+            this.reportId = trimmed;
+        }
     }
 
     /**
@@ -344,19 +357,22 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     /**
      * Generate a unique reportId using SecureRandom and base36 encoding.
-     * This creates an ~8 character alphanumeric ID.
+     * This creates exactly an 8 character alphanumeric ID.
+     * 
+     * The range [36^7, 36^8) ensures exactly 8 digits in base36.
+     * This provides ~41 bits of entropy with negligible collision probability.
      */
     private static String generateUniqueReportId() {
         SecureRandom random = new SecureRandom();
-
-        byte[] bytes = new byte[6];
-        random.nextBytes(bytes);
-        long value = 0;
-        for (byte b : bytes) {
-            value = (value << 8) | (b & 0xFF);
-        }
-        value = Math.abs(value);
-        return Long.toString(value, 36);
+        
+        long min = 78_364_164_096L;  // 36^7
+        long max = 2_821_109_907_455L; // 36^8 - 1
+        long range = max - min + 1;
+        
+        // Generate random value in range [min, max]
+        long randomValue = min + Math.abs(random.nextLong() % range);
+        
+        return Long.toString(randomValue, 36);
     }
 
     @Override
@@ -428,10 +444,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
             String id = getReportIdFromRequest(req);
             if (id != null && !id.isEmpty()) {
-                instance.reportId = id;  
-            } else {
-                
-                instance.reportId = generateUniqueReportId();
+                instance.setReportId(id);  
             }
             // start ugly hack
             if (instance.healthyTarget.isEmpty()) {
