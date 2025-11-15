@@ -54,7 +54,7 @@ class DeclarativePipelineTest {
 
         r.assertBuildStatusSuccess(run);
         r.assertLogContains("hello from echo", run); // Trivial check
-        r.assertLogContains("Publishing Clover coverage results...", run); // Actual check (first report has no suffix)
+        r.assertLogContains("Publishing Clover coverage results for", run); // Actual check (reports now include reportId)
     }
 
     /**

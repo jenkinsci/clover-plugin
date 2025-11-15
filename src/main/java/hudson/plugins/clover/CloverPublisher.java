@@ -40,6 +40,9 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     // Pattern for validating reportId to prevent path traversal, XSS, and URL injection
     private static final Pattern VALID_REPORT_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]{1,50}$");
 
+    // Reusable SecureRandom instance for generating report IDs
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final String cloverReportDir;
     private final String cloverReportFileName;
     private String reportId;
@@ -375,14 +378,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
      * This provides ~41 bits of entropy with negligible collision probability.
      */
     private static String generateUniqueReportId() {
-        SecureRandom random = new SecureRandom();
-
         long min = 78_364_164_096L; // 36^7
         long max = 2_821_109_907_455L; // 36^8 - 1
         long range = max - min + 1;
 
         // Generate random value in range [min, max]
-        long randomValue = min + Math.abs(random.nextLong() % range);
+        long randomValue = min + Math.abs(SECURE_RANDOM.nextLong() % range);
 
         return Long.toString(randomValue, 36);
     }
