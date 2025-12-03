@@ -21,7 +21,6 @@ import hudson.tasks.Recorder;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -31,6 +30,8 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
+
+import static java.util.Collections.emptySet;
 
 /**
  * Clover {@link Publisher}.
@@ -61,19 +62,15 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     /**
-     * @param cloverReportDir report directory
+     * @param cloverReportDir      report directory
      * @param cloverReportFileName file name
-     * @param healthyTarget target values for healthy build
-     * @param unhealthyTarget target values for unhealthy build
-     * @param failingTarget target values for failing build
+     * @param healthyTarget        target values for healthy build
+     * @param unhealthyTarget      target values for unhealthy build
+     * @param failingTarget        target values for failing build
      */
     @DataBoundConstructor
-    public CloverPublisher(
-            String cloverReportDir,
-            String cloverReportFileName,
-            CoverageTarget healthyTarget,
-            CoverageTarget unhealthyTarget,
-            CoverageTarget failingTarget) {
+    public CloverPublisher(String cloverReportDir, String cloverReportFileName,
+                           CoverageTarget healthyTarget, CoverageTarget unhealthyTarget, CoverageTarget failingTarget) {
         this.cloverReportDir = cloverReportDir;
         this.cloverReportFileName = cloverReportFileName;
         this.reportId = generateUniqueReportId();
@@ -102,8 +99,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             String trimmed = reportId.trim();
             if (!VALID_REPORT_ID_PATTERN.matcher(trimmed).matches()) {
                 throw new IllegalArgumentException("Invalid reportId '" + trimmed
-                        + "': must contain only letters, numbers, hyphens, and underscores (1-100 characters). "
-                        + "Invalid characters detected. Valid examples: 'app1', 'backend-service', 'web_ui_123'");
+                        + "': must contain only alphanumeric, hyphens, and underscores.");
             }
             this.reportId = trimmed;
         }
@@ -214,9 +210,8 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             final boolean missingReport = !coverageReportDir.exists();
 
             if (buildFailure || missingReport) {
-                listener.getLogger()
-                        .println("No Clover report will be published due to a "
-                                + (buildFailure ? "build Failure" : "missing report"));
+                listener.getLogger().println("No Clover report will be published due to a "
+                        + (buildFailure ? "build failure" : "missing report"));
                 return;
             }
 
@@ -224,15 +219,13 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             copyXmlReport(coverageReportDir, buildTarget, listener, env.expand(getCloverReportFileName()));
 
             if (htmlExists) {
-
                 run.addAction(new CloverHtmlBuildAction());
             }
             processCloverXml(run, workspace, listener, coverageReportDir, buildTarget);
 
         } catch (IOException e) {
             Util.displayIOException(e, listener);
-            e.printStackTrace(
-                    listener.fatalError("Unable to copy coverage from " + coverageReportDir + " to " + buildTarget));
+            e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReportDir + " to " + buildTarget));
             run.setResult(Result.FAILURE);
         }
     }
@@ -254,8 +247,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
                 result = CloverCoverageParser.parse(cloverXmlReport, workspacePath);
             } catch (IOException e) {
                 Util.displayIOException(e, listener);
-                e.printStackTrace(
-                        listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + buildTarget));
+                e.printStackTrace(listener.fatalError("Unable to copy coverage from " + coverageReport + " to " + buildTarget));
                 build.setResult(Result.FAILURE);
             }
 
@@ -290,7 +282,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
 
     @NonNull
     private Set<CoverageMetric> getFailingMetrics(ProjectCoverage result) {
-        return failingTarget != null ? failingTarget.getFailingMetrics(result) : Collections.<CoverageMetric>emptySet();
+        return failingTarget != null ? failingTarget.getFailingMetrics(result) : emptySet();
     }
 
     private void logFailingMetrics(TaskListener listener, Set<CoverageMetric> failingMetrics) {
@@ -305,10 +297,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException {
         final FilePath cloverXmlPath = findOneDirDeep(coverageReport, fileName);
         if (!cloverXmlPath.exists()) {
-            listener.getLogger()
-                    .printf(
-                            "Clover XML file '%s' does not exist in '%s' and was not copied!%n",
-                            fileName, coverageReport);
+            listener.getLogger().printf("Clover XML file '%s' does not exist in '%s' and was not copied!%n", fileName, coverageReport);
             return false;
         }
         listener.getLogger().println(String.format("Publishing Clover XML report%s...", forReport(reportId)));
@@ -327,9 +316,7 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
         }
         final FilePath htmlDirPath = htmlIndexHtmlPath.getParent();
         if (htmlDirPath == null) {
-            listener.getLogger()
-                    .println("Parent directory of " + htmlIndexHtmlPath.getRemote()
-                            + " is null, not publishing Clover HTML report.");
+            listener.getLogger().println("Parent directory of " + htmlIndexHtmlPath.getRemote() + " is null, not publishing Clover HTML report.");
             return false;
         }
         listener.getLogger().println("Publishing Clover HTML report...");
@@ -340,10 +327,11 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     /**
      * Searches the current directory and its immediate children directories for filename.
      * The first occurrence is returned.
+     *
      * @param startDir the dir to start searching in
      * @param filename the filename to search for
      * @return the path of filename
-     * @throws IOException on error
+     * @throws IOException          on error
      * @throws InterruptedException on error
      */
     private FilePath findOneDirDeep(final FilePath startDir, final String filename)
@@ -365,15 +353,12 @@ public class CloverPublisher extends Recorder implements SimpleBuildStep {
     }
 
     private void flagMissingCloverXml(TaskListener listener) {
-        listener.getLogger()
-                .println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName()
-                        + "'.  Did you generate the XML report for Clover?");
+        listener.getLogger().println("Could not find '" + cloverReportDir + "/" + getCloverReportFileName() + "'.  Did you generate the XML report for Clover?");
     }
 
     /**
      * Generate a unique reportId using SecureRandom and base36 encoding.
      * This creates exactly an 8 character alphanumeric ID.
-     *
      * The range [36^7, 36^8) ensures exactly 8 digits in base36.
      * This provides ~41 bits of entropy with negligible collision probability.
      */

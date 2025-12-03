@@ -136,8 +136,12 @@ public class CloverBuildAction extends AbstractPackageAggregatedMetrics
         Run<?, ?> b = start;
         while (true) {
             b = b.getPreviousBuild();
-            if (b == null) return null;
-            if (b.getResult() == Result.FAILURE) continue;
+            if (b == null) {
+                return null;
+            }
+            if (b.getResult() == Result.FAILURE) {
+                continue;
+            }
             // Find action with matching reportId
             for (CloverBuildAction action : b.getActions(CloverBuildAction.class)) {
                 if (this.reportId != null && this.reportId.equals(action.reportId)) {
