@@ -67,19 +67,17 @@ class CloverBuildActionTest {
         FilePath mavenSettings = workspace.child("target").child("site").child("clover.xml");
         mavenSettings.copyFrom(CloverWorkflowTest.class.getResourceAsStream("/hudson/plugins/clover/clover.xml"));
         pipeline.setDefinition(new CpsFlowDefinition(
-                "node {\n" + "step([$class: 'CloverPublisher', "
-                        + "cloverReportDir: 'target/site', "
-                        + "cloverReportFileName: 'clover.xml', "
-                        + "healthyTarget: [methodCoverage: 10, "
-                        + "conditionalCoverage: 50, "
-                        + "statementCoverage: 10], "
-                        + "unhealthyTarget: [methodCoverage: 5, "
-                        + "conditionalCoverage: 25, "
-                        + "statementCoverage: 5], "
-                        + "failingTarget: [methodCoverage: 0, "
-                        + "conditionalCoverage: 0, "
-                        + "statementCoverage: 0]])\n"
-                        + "}\n",
+                """
+                node {
+                    step([
+                        $class: 'CloverPublisher',
+                        cloverReportDir: 'target/site',
+                        cloverReportFileName: 'clover.xml',
+                        healthyTarget: [methodCoverage: 10, conditionalCoverage: 50, statementCoverage: 10],
+                        unhealthyTarget: [methodCoverage: 5, conditionalCoverage: 25, statementCoverage: 5],
+                        failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]])
+                }
+                """,
                 true));
         WorkflowRun build = j.assertBuildStatusSuccess(pipeline.scheduleBuild2(0));
         checkCloverReports(build, pipeline);
