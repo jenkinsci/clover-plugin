@@ -32,7 +32,7 @@
     </scm>
     <properties>
         <gpg.skip>true</gpg.skip> <!-- sign only when releasing -->
-        <revision>4.14.2</revision>
+        <revision>4.15.0</revision>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
         <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
