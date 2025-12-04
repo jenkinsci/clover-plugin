@@ -1,5 +1,20 @@
 # Version history
 
+## Version 4.15.0 (December 4, 2025)
+
+- JENKINS-76093 Support multiple Clover reports per build
+- Requires Jenkins 2.479 or newer.
+
+## Version 4.14.2 (February 1, 2024)
+- Upgrade to OpenClover 4.5.2 bug-fix release. See the [OpenClover 4.5.2 release notes](http://openclover.org/doc/openclover-4.5.2-release-notes.html)
+  for more details.
+- Requires Jenkins 2.401.3 or newer.
+
+## Version 4.14.1 (October 29, 2023)
+
+- Upgrade to OpenClover 4.5.1 bug-fix release. See the [OpenClover 4.5.1 release notes](http://openclover.org/doc/openclover-4.5.1-release-notes.html)
+  for more details.
+
 ## Version 4.14.0 (October 4, 2023)
 
 - Upgrade to OpenClover 4.5.0 feature release. This version brings support for annotations on java types
