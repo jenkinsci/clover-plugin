@@ -1,5 +1,11 @@
 # Version history
 
+## Version 4.16.0 (December 4, 2025)
+
+- Bumped parent org.jenkins-ci.plugins:plugin to 6.2138.v03274d462c13.
+- Requires Java 17 or newer.
+- Requires Jenkins 2.516.3 or newer.
+
 ## Version 4.15.0 (December 4, 2025)
 
 - JENKINS-76093 Support multiple Clover reports per build
