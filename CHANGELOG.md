@@ -1,5 +1,9 @@
 # Version history
 
+## Version 5.1.1 (October 1, 2026)
+
+- Upgrade to OpenClover 5.1.1, see the [OpenClover 5.1.1 release notes](https://openclover.org/doc/openclover-5.1.1-release-notes.html)
+
 ## Version 5.1.0 (July 26, 2026)
 
 - Upgrade to OpenClover 5.1.0, see the [OpenClover 5.1.0 release notes](https://openclover.org/doc/openclover-5.1.0-release-notes.html)
